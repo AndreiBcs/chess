@@ -2,20 +2,14 @@
 
 public abstract class Piece
 {
-    public PieceColor Color { get; set; }
+    public Color Color { get; init; }
     
-    public abstract PieceType Type { get; set; }
-    public abstract char LetterId { get; set; }
-    public abstract char Icon { get; set; } // nu merge
-    public abstract byte Points { get; set; }
+    public abstract PieceType Type { get; init; }
+    public abstract char LetterId { get; init; }
+    public abstract char Icon { get; init; } // nu merge
+    public abstract int Points { get; init; }
 
     public abstract bool[][] GetPossibleMoves(Board board);
-}
-
-public enum PieceColor
-{
-    White,
-    Black
 }
 
 public enum  PieceType

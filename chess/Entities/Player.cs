@@ -4,95 +4,56 @@ namespace chess.Entities;
 
 public class Player
 {
-    public PlayerColor Color { get; set; }
-    public byte Score { get; set; }
-    public List<Pawn> Pawns { get; set; } = [];
-    public List<Rook> Rooks { get; set; } = [];
-    public List<Knight> Knights { get; set; } = [];
-    public List<Bishop> Bishops { get; set; } = [];
+    public Color Color { get; init; }
+    public int Score { get; set; } = 0;
+    public Pawn[] Pawns { get; set; } = [];
+    public Rook[] Rooks { get; set; } = [];
+    public Knight[] Knights { get; set; } = [];
+    public Bishop[] Bishops { get; set; } = [];
     public Queen Queen { get; set; } = new();
     public King King { get; set; } = new();
 
-    public void InitializePlayer(PlayerColor color)
+    public void InitializePlayer()
     {
-        Color = color;
-        
-        Score = 0;
-        
-        var pieceColor = color == PlayerColor.PlayerWhite ? 
-                            PieceColor.White : 
-                            PieceColor.Black;
-        
-        var isWhite = color == PlayerColor.PlayerWhite;
-        
-        for (var i = 0; i < 8; i++)
-        {
-            Pawns.Add(new Pawn
-            {
-                Color = pieceColor, 
-                LetterId = isWhite ? 'P' : 'p',
-                Icon = isWhite ? '♟' : '♙'
-            });
-        }
-        
-        Rooks.Add(new Rook
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'R' : 'r',
-            Icon = isWhite ? '♜' : '♖'
-        });
-        Rooks.Add(new Rook
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'R' : 'r',
-            Icon = isWhite ? '♜' : '♖'
-        });
-        
-        Knights.Add(new Knight
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'N' : 'n',
-            Icon = isWhite ? '♞' : '♘'
-        });
-        Knights.Add(new Knight
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'N' : 'n',
-            Icon = isWhite ? '♞' : '♘'
-        });
-        
-        Bishops.Add(new Bishop
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'B' : 'b',
-            Icon = isWhite ? '♝' : '♗'
-        });
-        Bishops.Add(new Bishop
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'B' : 'b',
-            Icon = isWhite ? '♝' : '♗'
-        });
-        
+        Pawns = CreatePiece<Pawn>(Color, 'P', '_', 8);
+        Rooks  = CreatePiece<Rook>(Color, 'R', '_', 2);
+        Knights = CreatePiece<Knight>(Color, 'N', '_', 2);
+        Bishops = CreatePiece<Bishop>(Color, 'B', '_', 2);
         Queen = new Queen
         {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'Q' : 'q',
-            Icon = isWhite ? '♛' : '♕'
+            Color = Color,
+            LetterId = Color == Color.White ? 'Q' : 'q',
+            Icon = Color == Color.White ? ' ' : '_'
         };
-        
-        King = new King
-        {
-            Color = pieceColor, 
-            LetterId = isWhite ? 'K' : 'k',
-            Icon = isWhite ? '♚' : '♔'
+        King = new King{
+            Color = Color,
+            LetterId = Color == Color.White ? 'K' : 'k',
+            Icon = Color == Color.White ? ' ' : '_'
         };
     }
-}
 
-public enum PlayerColor
-{
-    // unrelated to piece color or square color
-    PlayerWhite,
-    PlayerBlack
+    private static T[] CreatePiece<T>
+    (
+        Color color, 
+        char letter, 
+        char icon, 
+        int howMany) 
+        where T : Piece, new()
+    {
+        var pieces = new T[howMany];
+        
+        for (var i = 0; i < howMany; i++)
+        {
+            pieces[i] = new T
+            {
+                Color = color,
+                LetterId = color == Color.White ? 
+                    letter.ToString().ToUpper().First() : 
+                    letter.ToString().ToLower().First(),
+                Icon = color == Color.White ? ' ' : icon
+            };
+        }
+
+        return pieces;
+    }
 }

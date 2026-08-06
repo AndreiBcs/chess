@@ -1,21 +1,18 @@
-﻿using chess.Entities;
+﻿using chess.Cli;
+using chess.Entities;
 
 namespace chess.Game;
 
 public class Game
 {
-    private Player PlayerWhite { get; set; } = new Player();
-    private Player PlayerBlack { get; set; } = new Player();
-    private Board Board { get; set; } = new Board();
+    private Player PlayerWhite { get; } = new() { Color = Color.White };
+    private Player PlayerBlack { get; } = new() { Color = Color.Black };
+    private Board Board { get; } = new();
 
     public void StartGame()
     {
-        PlayerWhite = new Player();
-        PlayerBlack = new Player();
-        Board = new Board();
-
-        PlayerWhite.InitializePlayer(PlayerColor.PlayerWhite);
-        PlayerBlack.InitializePlayer(PlayerColor.PlayerBlack);
+        PlayerWhite.InitializePlayer();
+        PlayerBlack.InitializePlayer();
         Board.InitializeStartingBoard(PlayerWhite, PlayerBlack);
         Board.PrintBoard();
     }

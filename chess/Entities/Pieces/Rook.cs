@@ -2,10 +2,11 @@
 
 public class Rook : Piece
 {
-    public override PieceType Type { get; set; } = PieceType.Rook;
-    public override char LetterId { get; set; }
-    public override char Icon { get; set; }
-    public override byte Points { get; set; } = 5;
+    public override PieceType Type { get; init; } = PieceType.Rook;
+    public override char LetterId { get; init; }
+    public override char Icon { get; init; }
+    public override int Points { get; init; } = 5;
+
     public override bool[][] GetPossibleMoves(Board board)
     {
         throw new NotImplementedException();
