@@ -6,7 +6,7 @@ public abstract class Piece
     
     public abstract PieceType Type { get; set; }
     public abstract char LetterId { get; set; }
-    public abstract char Icon { get; set; }
+    public abstract char Icon { get; set; } // nu merge
     public abstract byte Points { get; set; }
 
     public abstract bool[][] GetPossibleMoves(Board board);

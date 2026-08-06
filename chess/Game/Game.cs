@@ -4,9 +4,9 @@ namespace chess.Game;
 
 public class Game
 {
-    Player PlayerWhite { get; set; }
-    Player PlayerBlack { get; set; }
-    Board Board { get; set; }
+    private Player PlayerWhite { get; set; } = new Player();
+    private Player PlayerBlack { get; set; } = new Player();
+    private Board Board { get; set; } = new Board();
 
     public void StartGame()
     {
@@ -17,5 +17,6 @@ public class Game
         PlayerWhite.InitializePlayer(PlayerColor.PlayerWhite);
         PlayerBlack.InitializePlayer(PlayerColor.PlayerBlack);
         Board.InitializeStartingBoard(PlayerWhite, PlayerBlack);
+        Board.PrintBoard();
     }
 }

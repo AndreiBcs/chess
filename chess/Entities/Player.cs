@@ -10,8 +10,8 @@ public class Player
     public List<Rook> Rooks { get; set; } = [];
     public List<Knight> Knights { get; set; } = [];
     public List<Bishop> Bishops { get; set; } = [];
-    public Queen Queen { get; set; } = new Queen();
-    public King King { get; set; } = new King();
+    public Queen Queen { get; set; } = new();
+    public King King { get; set; } = new();
 
     public void InitializePlayer(PlayerColor color)
     {
