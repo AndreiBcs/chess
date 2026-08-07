@@ -14,6 +14,7 @@ public class Game
         PlayerWhite.InitializePlayer();
         PlayerBlack.InitializePlayer();
         Board.InitializeStartingBoard(PlayerWhite, PlayerBlack);
-        Board.PrintBoard();
+        //Board.DrawBoard();
+        Board.Run();
     }
 }
