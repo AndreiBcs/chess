@@ -1,7 +1,11 @@
-﻿using Chess.Cli.Board;
+﻿using System.Text;
+using Chess.Cli.Board;
 using Chess.Cli.GameRunner;
 using Chess.Cli.Interactions;
 using chess.Game;
+
+Console.OutputEncoding = Encoding.UTF8;
+
 
 var useText = args.Length > 0 && args[0] == "--text";
 

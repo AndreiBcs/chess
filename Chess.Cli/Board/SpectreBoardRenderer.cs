@@ -1,31 +1,26 @@
-﻿using System.Text;
-using Chess.Cli.GameRunner;
+﻿using Chess.Cli.GameRunner;
 using Spectre.Console;
 
 namespace Chess.Cli.Board;
 
 public class SpectreBoardRenderer : IBoardRenderer
 {
+    private readonly Table _table = new Table().Border(TableBorder.None).HideHeaders();
+
     public void Render(chess.Entities.Board board)
     {
-        Console.OutputEncoding = Encoding.UTF8;
-
-        var table = new Table()
-            .Border(TableBorder.None)
-            .HideHeaders();
-
-        table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
+        _table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         for (var i = 0; i < 8; i++)
         {
-            table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
+            _table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         }
 
-        var headerRow = new List<string> { "   " }; // space above row numbers
+        var headerRow = new List<string> { "   " };
         foreach (var file in new[] { "A", "B", "C", "D", "E", "F", "G", "H" })
         {
             headerRow.Add($"[bold yellow] {file} [/]");
         }
-        table.AddRow(headerRow.ToArray());
+        _table.AddRow(headerRow.ToArray());
 
         for (var i = 0; i < 8; i++)
         {
@@ -47,10 +42,10 @@ public class SpectreBoardRenderer : IBoardRenderer
                 rowCells.Add($"[{fgColor} on {bgColor}] {symbol} [/]");
             }
 
-            table.AddRow(rowCells.ToArray());
+            _table.AddRow(rowCells.ToArray());
         }
 
-        AnsiConsole.Write(Align.Center(table));
+        AnsiConsole.Write(Align.Center(_table));
     }
 
     private static string GetPieceSymbol(char? letterId) => letterId switch
