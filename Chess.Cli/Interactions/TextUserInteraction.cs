@@ -1,15 +1,10 @@
-﻿namespace Chess.Cli.Interactions;
+﻿using Chess.Cli.GameRunner;
+
+namespace Chess.Cli.Interactions;
 
 public class TextUserInteraction : IUserInteraction
 {
-    private readonly IBoardRenderer _renderer;
-
-    public TextUserInteraction(IBoardRenderer renderer)
-    {
-        _renderer = renderer;
-    }
-
-    public (string from, string to) ReadMove(chess.Entities.Board board)
+    public ((int rowFrom, int colFrom), (int rowTo, int colTo)) ReadMove()
     {
         throw new NotImplementedException();
     }

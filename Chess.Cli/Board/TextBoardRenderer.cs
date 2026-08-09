@@ -1,4 +1,6 @@
-﻿namespace Chess.Cli.Board;
+﻿using Chess.Cli.GameRunner;
+
+namespace Chess.Cli.Board;
 
 public class TextBoardRenderer : IBoardRenderer
 {

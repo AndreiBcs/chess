@@ -1,4 +1,4 @@
-﻿namespace Chess.Cli;
+﻿namespace Chess.Cli.GameRunner;
 
 public interface IBoardRenderer
 {

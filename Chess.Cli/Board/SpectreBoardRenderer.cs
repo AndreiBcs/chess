@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Chess.Cli.GameRunner;
 using Spectre.Console;
 
 namespace Chess.Cli.Board;
