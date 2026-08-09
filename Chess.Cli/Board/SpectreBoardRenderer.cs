@@ -1,26 +1,11 @@
 ﻿using System.Text;
-using chess.Entities;
 using Spectre.Console;
 
-namespace chess.Cli;
+namespace Chess.Cli.Board;
 
-public static class PrintGame
+public class SpectreBoardRenderer : IBoardRenderer
 {
-    public static void PrintBoard(this Board Board)
-    {
-        for (var i = 0; i < 8; i++)
-        {
-            for (var j = 0; j < 8; j++)
-            {
-                Console.Write(Board.Squares[i,j].Piece != null ? 
-                    Board.Squares[i,j].Piece?.LetterId + "  " :
-                    Board.Squares[i,j].Position + ' ');
-            }
-            Console.WriteLine();
-        }
-    }
-
-    public static void DrawBoard(this Board board)
+    public void Render(chess.Entities.Board board)
     {
         Console.OutputEncoding = Encoding.UTF8;
 

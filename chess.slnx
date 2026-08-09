@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="chess/chess.csproj" />
+  <Project Path="Chess.Cli/Chess.Cli.csproj" />
+  <Project Path="Chess.Core/Chess.Core.csproj" />
+  <Project Path="Chess.Engine/Chess.Engine.csproj" />
 </Solution>
