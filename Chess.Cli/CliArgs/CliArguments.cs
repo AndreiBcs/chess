@@ -22,6 +22,11 @@ public sealed class CliArguments
         DefaultValueFactory = _ => chess.Entities.Color.White
     };
 
+    public sealed record ParsedOptions(
+        bool UseTextRenderer,
+        Difficulty Difficulty, 
+        chess.Entities.Color PlayerColor);
+
     public RootCommand Build()
     {
         var root = new RootCommand("Chess CLI")
@@ -29,5 +34,22 @@ public sealed class CliArguments
             Options = { TextRender, Difficulty, PlayerColor }
         };
         return root;
+    }
+
+    public Task<int> InvokeAsync(string[] args, Func<ParsedOptions, int> run)
+    {
+        var root = Build();
+
+        root.SetAction(parseResult =>
+        {
+            var options = new ParsedOptions(
+                parseResult.GetValue(TextRender),
+                parseResult.GetValue(Difficulty),
+                parseResult.GetValue(PlayerColor));
+
+            return run(options);
+        });
+
+        return root.Parse(args).InvokeAsync();
     }
 }

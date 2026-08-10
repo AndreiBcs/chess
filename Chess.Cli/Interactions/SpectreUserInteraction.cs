@@ -11,7 +11,6 @@ public partial class SpectreUserInteraction : IUserInteraction
     {
         while (true)
         {
-            AnsiConsole.Clear();
             AnsiConsole.WriteLine();
 
             var fromSquare = AnsiConsole.Prompt(
