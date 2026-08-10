@@ -15,7 +15,7 @@ public class Game
     {
         PlayerWhite.InitializePlayer();
         PlayerBlack.InitializePlayer();
-        Board.InitializeStartingBoard(PlayerWhite, PlayerBlack);
+        Board.InitializeStartingBoard(PlayerWhite, PlayerBlack, IsUserWhite);
         GameLoop();
     }
 
