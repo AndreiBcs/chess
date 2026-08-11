@@ -5,11 +5,29 @@ namespace chess.Entities.Pieces;
 
 public abstract class Piece
 {
-    public required Player.Player Owner { get; init; }
+    public Player.Player Owner { get; init; }
     public Color Color => Owner.Color;
     public bool IsCaptured { get; set; } = false;
-    //public Position Position { get; set; }
-    public abstract required PieceType Type { get; init; }
-    public abstract required char LetterId { get; init; }
+    public abstract PieceType Type { get; }
+    public char LetterId
+    {
+        get
+        {
+            var letter = Type switch
+            {
+                PieceType.Pawn => 'P',
+                PieceType.Rook => 'R',
+                PieceType.Knight => 'N',
+                PieceType.Bishop => 'B',
+                PieceType.Queen => 'Q',
+                PieceType.King => 'K',
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            
+            return Color == Color.White ? letter : char.ToLower(letter);
+        }
+    }
+    
+    public Position Position { get; set; }
     public abstract IEnumerable<Position> GetLegalMoves(Board.Board board, Position from);
 }

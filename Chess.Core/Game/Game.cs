@@ -1,5 +1,4 @@
-﻿using chess.Entities;
-using chess.Entities.Board;
+﻿using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Player;
 
@@ -20,6 +19,7 @@ public class Game
         PlayerBlack.InitializePlayer();
         Board.InitializeStartingBoard(PlayerWhite, PlayerBlack, IsUserWhite);
         GameLoop();
+        PlayerBlack.Pie
     }
 
     private void GameLoop()
@@ -47,11 +47,7 @@ public class Game
         
     }
 
-    public void ApplyMove(((int fromRow, int fromCol), (int toRow, int toCol)) move)
-    {
-        var (fromRow, fromCol) = move;
-        // TODO
-    }
+    
 }
 
 public enum Difficulty

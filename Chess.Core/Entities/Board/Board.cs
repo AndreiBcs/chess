@@ -65,5 +65,16 @@ public class Board
         }
     }
     
+    public void ApplyMove(Move move)
+    {
+        // TODO
+    }
+
+    public string ToFen()
+    {
+        // TODO
+        return "";
+    }
+    
 }
 

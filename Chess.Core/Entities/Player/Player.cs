@@ -7,47 +7,38 @@ namespace chess.Entities.Player;
 public class Player
 {
     public Color Color { get; init; }
-    public List<Piece> Pieces { get; } = [];
+    private List<Piece> Pieces { get; } = [];
     public King King { get; private set; } = null!;
-    public IEnumerable<Piece> ActivePieces => Pieces.Where(p => !p.IsCaptured);
+    public IEnumerable<Piece> ActivePieces =>
+        Pieces.Where(p => !p.IsCaptured);
 
     public void InitializePlayer()
     {
-        Pawns = CreatePiece<Pawn>(Color, 'P', 8);
-        Rooks  = CreatePiece<Rook>(Color, 'R', 2);
-        Knights = CreatePiece<Knight>(Color, 'N', 2);
-        Bishops = CreatePiece<Bishop>(Color, 'B', 2);
-        Queen = new Queen
+        Pieces.Clear();
+
+        AddPieces<Pawn>(8);
+        AddPieces<Rook>(2);
+        AddPieces<Knight>(2);
+        AddPieces<Bishop>(2);
+        AddPieces<Queen>(1);
+
+        King = new King
         {
-            Color = Color,
-            LetterId = Color == Color.White ? 'Q' : 'q'
+            Owner = this
         };
-        King = new King{
-            Color = Color,
-            LetterId = Color == Color.White ? 'K' : 'k'
-        };
+        
+        Pieces.Add(King);
     }
 
-    private static T[] CreatePiece<T>
-    (
-        Color color, 
-        char letter, 
-        int howMany) 
+    private void AddPieces<T>(int howMany)
         where T : Piece, new()
     {
-        var pieces = new T[howMany];
-        
         for (var i = 0; i < howMany; i++)
         {
-            pieces[i] = new T
+            Pieces.Add(new T
             {
-                Color = color,
-                LetterId = color == Color.White ? 
-                    letter.ToString().ToUpper().First() : 
-                    letter.ToString().ToLower().First()
-            };
+                Owner = this
+            });
         }
-
-        return pieces;
     }
 }
