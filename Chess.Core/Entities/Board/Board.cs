@@ -1,73 +1,63 @@
 ﻿using chess.Entities.Common;
+using chess.Entities.Pieces.Types;
 
 namespace chess.Entities.Board;
 
 public class Board
 {
-    public Square[,] Squares { get; set; } = new Square[8, 8];
+    public Square[,] Squares { get; } = new Square[8, 8];
 
-    public void InitializeStartingBoard(Player.Player white, Player.Player black, bool isUserWhite)
+    public void InitializeBoard(Player.Player white, Player.Player black)
     {
-        for (var i = 0; i < 8; i++)
+        InitializeSquares();
+        SetupPlayerSide(white, 0, 1);
+        SetupPlayerSide(black, 7, 6);
+    }
+
+    private void InitializeSquares()
+    {
+        for (var row = 0; row < 8; row++)
         {
-            for (var j = 0; j < 8; j++)
+            for (var col = 0; col < 8; col++)
             {
-                Squares[i,j] = new Square
+                Squares[row, col] = new Square
                 {
-                    Position = $"{(char)('a' + j)}{8 - i}",
-                    BoardPosition = (i, j),
-                    Color = (i + j) % 2 == 0 ? Color.White : Color.Black
+                    Color = (row + col) % 2 == 0
+                        ? Color.White
+                        : Color.Black,
+                    Position = new Position(row, col)
                 };
             }
         }
-        PlaceStartingPieces(white, black, isUserWhite);
-    }
-
-    private void PlaceStartingPieces(Player.Player white, Player.Player black, bool isUserWhite)
-    {
-        if (isUserWhite)
-        {
-            SetupPlayerSide(black, majorRow: 0, pawnRow: 1, true);
-            SetupPlayerSide(white, majorRow: 7, pawnRow: 6, true);
-        }
-        else
-        {
-            SetupPlayerSide(black, majorRow: 7, pawnRow: 6, false);
-            SetupPlayerSide(white, majorRow: 0, pawnRow: 1, false);
-        }
     }
     
-    private void SetupPlayerSide(Player.Player player, int majorRow, int pawnRow, bool isUserWhite)
+    private void SetupPlayerSide(Player.Player player, int majorRow, int pawnRow)
     {
-        Squares[majorRow, 0].Piece = player.Rooks[0];
-        Squares[majorRow, 7].Piece = player.Rooks[1];
+        var rooks = player.ActivePieces.OfType<Rook>().ToArray();
+        var pawns = player.ActivePieces.OfType<Pawn>().ToArray();
+        var knights = player.ActivePieces.OfType<Knight>().ToArray();
+        var bishops = player.ActivePieces.OfType<Bishop>().ToArray();
+        var queen = player.ActivePieces.OfType<Queen>().Single();
+        var king = player.ActivePieces.OfType<King>().Single();
         
-        Squares[majorRow, 1].Piece = player.Knights[0];
-        Squares[majorRow, 6].Piece = player.Knights[1];
-        
-        Squares[majorRow, 2].Piece = player.Bishops[0];
-        Squares[majorRow, 5].Piece = player.Bishops[1];
+        Squares[majorRow, 0].Piece = rooks[0];
+        Squares[majorRow, 1].Piece = knights[0];
+        Squares[majorRow, 2].Piece = bishops[0];
 
-        if (isUserWhite)
-        {
-            Squares[majorRow, 3].Piece = player.Queen;
-            Squares[majorRow, 4].Piece = player.King;
-        }
-        else
-        {
-            Squares[majorRow, 4].Piece = player.Queen;
-            Squares[majorRow, 3].Piece = player.King;
-        }
+        Squares[majorRow, 3].Piece =
+            player.Color == Color.White ? queen : king;
+
+        Squares[majorRow, 4].Piece =
+            player.Color == Color.White ? king : queen;
+
+        Squares[majorRow, 5].Piece = bishops[1];
+        Squares[majorRow, 6].Piece = knights[1];
+        Squares[majorRow, 7].Piece = rooks[1];
 
         for (var i = 0; i < 8; i++)
         {
-            Squares[pawnRow, i].Piece = player.Pawns[i];
+            Squares[pawnRow, i].Piece = pawns[i];
         }
-    }
-    
-    public void ApplyMove(Move move)
-    {
-        // TODO
     }
 
     public string ToFen()

@@ -8,6 +8,7 @@ public class Game
 {
     public bool IsOver { get; set; } = false;
     public bool IsUserWhite { get; init; } = true;
+    public Color CurrentTurn { get; set; } = Color.White;
     public Difficulty Difficulty { get; set; } = Difficulty.Normal;
     private Player PlayerWhite { get; } = new() { Color = Color.White };
     private Player PlayerBlack { get; } = new() { Color = Color.Black };
@@ -17,36 +18,29 @@ public class Game
     {
         PlayerWhite.InitializePlayer();
         PlayerBlack.InitializePlayer();
-        Board.InitializeStartingBoard(PlayerWhite, PlayerBlack, IsUserWhite);
+        Board.InitializeBoard(PlayerWhite, PlayerBlack);
         GameLoop();
-        PlayerBlack.Pie
     }
 
     private void GameLoop()
     {
-        while (IsOver)
+        while (!IsOver)
         {
-            if (IsUserWhite)
+            if (CurrentTurn == Color.White)
             {
-                StartAsWhite();
+                
             }
             else
             {
-                StartAsBlack();
+                return;
             }
         }
     }
-
-    private void StartAsWhite()
+    
+    public void MakeMove(Move move)
     {
-        
+        // TODO
     }
-
-    private void StartAsBlack()
-    {
-        
-    }
-
     
 }
 
