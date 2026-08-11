@@ -1,10 +1,12 @@
-﻿namespace chess.Entities;
+﻿using chess.Entities.Common;
+
+namespace chess.Entities.Board;
 
 public class Board
 {
     public Square[,] Squares { get; set; } = new Square[8, 8];
 
-    public void InitializeStartingBoard(Player white, Player black, bool isUserWhite)
+    public void InitializeStartingBoard(Player.Player white, Player.Player black, bool isUserWhite)
     {
         for (var i = 0; i < 8; i++)
         {
@@ -21,7 +23,7 @@ public class Board
         PlaceStartingPieces(white, black, isUserWhite);
     }
 
-    private void PlaceStartingPieces(Player white, Player black, bool isUserWhite)
+    private void PlaceStartingPieces(Player.Player white, Player.Player black, bool isUserWhite)
     {
         if (isUserWhite)
         {
@@ -35,7 +37,7 @@ public class Board
         }
     }
     
-    private void SetupPlayerSide(Player player, int majorRow, int pawnRow, bool isUserWhite)
+    private void SetupPlayerSide(Player.Player player, int majorRow, int pawnRow, bool isUserWhite)
     {
         Squares[majorRow, 0].Piece = player.Rooks[0];
         Squares[majorRow, 7].Piece = player.Rooks[1];
@@ -63,13 +65,5 @@ public class Board
         }
     }
     
-}
-
-public record struct Square
-{
-    public Color Color { get; init; }  
-    public string Position { get; init; }
-    public (int Row, int Col) BoardPosition { get; init; }
-    public Piece? Piece { get; set; }
 }
 

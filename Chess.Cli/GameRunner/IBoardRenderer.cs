@@ -2,5 +2,5 @@
 
 public interface IBoardRenderer
 {
-    void Render(chess.Entities.Board board);
+    void Render(chess.Entities.Board.Board board);
 }

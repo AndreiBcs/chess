@@ -7,7 +7,7 @@ public class SpectreBoardRenderer : IBoardRenderer
 {
     private readonly Table _table = new Table().Border(TableBorder.None).HideHeaders();
 
-    public void Render(chess.Entities.Board board)
+    public void Render(chess.Entities.Board.Board board)
     {
         _table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         for (var i = 0; i < 8; i++)

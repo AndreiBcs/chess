@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using chess.Entities.Common;
 using chess.Game;
 
 namespace Chess.Cli.CliArgs;
@@ -16,16 +17,16 @@ public sealed class CliArguments
         DefaultValueFactory = _ => chess.Game.Difficulty.Normal
     };
 
-    private Option<chess.Entities.Color> PlayerColor { get; } = new("--play-as")
+    private Option<Color> PlayerColor { get; } = new("--play-as")
     {
         Description = "Choose the side to play as: White or Black",
-        DefaultValueFactory = _ => chess.Entities.Color.White
+        DefaultValueFactory = _ => Color.White
     };
 
     public sealed record ParsedOptions(
         bool UseTextRenderer,
         Difficulty Difficulty, 
-        chess.Entities.Color PlayerColor);
+        Color PlayerColor);
 
     public RootCommand Build()
     {

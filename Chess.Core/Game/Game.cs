@@ -1,4 +1,7 @@
 ﻿using chess.Entities;
+using chess.Entities.Board;
+using chess.Entities.Common;
+using chess.Entities.Player;
 
 namespace chess.Game;
 

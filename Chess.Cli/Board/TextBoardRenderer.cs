@@ -4,7 +4,7 @@ namespace Chess.Cli.Board;
 
 public class TextBoardRenderer : IBoardRenderer
 {
-    public void Render(chess.Entities.Board board)
+    public void Render(chess.Entities.Board.Board board)
     {
         for (var i = 0; i < 8; i++)
         {
