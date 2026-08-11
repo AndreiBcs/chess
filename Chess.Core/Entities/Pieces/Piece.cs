@@ -5,7 +5,7 @@ namespace chess.Entities.Pieces;
 
 public abstract class Piece
 {
-    public Player.Player Owner { get; init; }
+    public Player.Player Owner { get; init; } = null!;
     public Color Color => Owner.Color;
     public bool IsCaptured { get; set; } = false;
     public abstract PieceType Type { get; }

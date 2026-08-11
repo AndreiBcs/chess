@@ -21,7 +21,6 @@ public class CliGameLoop
         {
             _renderer.Render(_game.Board);
             var move = _interaction.ReadMove();
-            _game.ApplyMove(move);
         }
     }
 }

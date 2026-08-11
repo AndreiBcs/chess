@@ -1,5 +1,6 @@
 ﻿using Chess.Cli.GameRunner;
 using Spectre.Console;
+using Color = chess.Entities.Common.Color;
 
 namespace Chess.Cli.Board;
 
@@ -32,9 +33,7 @@ public class SpectreBoardRenderer : IBoardRenderer
             {
                 var square = board.Squares[i, j];
 
-                var isLightSquare = (i + j) % 2 == 0;
-                var bgColor = isLightSquare ? "#b89a74" : "#6b4f35";
-
+                var bgColor = square.Color == Color.White ? "#b89a74" : "#6b4f35";
                 var letterId = square.Piece?.LetterId;
                 var symbol = GetPieceSymbol(letterId);
                 var fgColor = GetPieceTextColor(letterId);
