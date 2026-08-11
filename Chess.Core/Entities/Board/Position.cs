@@ -6,7 +6,7 @@ public readonly record struct Position(int Row, int Column)
 {
     public override string ToString()
     {
-        return $"{'a' + Column}{8 - Row}";
+        return $"{(char)('a' + Column)}{8 - Row}";
     }
 }
 

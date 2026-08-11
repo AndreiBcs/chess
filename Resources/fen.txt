@@ -1,0 +1,18 @@
+﻿Piece Placement: Starts from rank 8 down to rank 1, separated by slashes (/).
+
+Uppercase letters (P, N, B, R, Q, K) represent White pieces, 
+lowercase letters (p, n, b, r, q, k) represent Black pieces, 
+and numbers represent consecutive empty squares.
+
+Active Color: w means White is to move, and b means Black is to move.
+
+Castling Rights: Shows KQkq rights available for White and Black (kingside/queenside) or - if none remain.
+
+En Passant Target Square: The coordinate of the square where an en passant capture is valid, or - if unavailable.
+
+Halfmove Clock: Number of halfmoves since the last capture or pawn advance, used for the 50-move draw rule.
+
+Fullmove Number: The number of the full move, starting at 1 and increasing after Black's turn.
+
+Example Starting PositionThe standard starting setup of a chess game is written in FEN as:
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1

@@ -10,8 +10,8 @@ public class Board
     public void InitializeBoard(Player.Player white, Player.Player black)
     {
         InitializeSquares();
-        SetupPlayerSide(white, 0, 1);
-        SetupPlayerSide(black, 7, 6);
+        SetupPlayerSide(white, 7, 6);
+        SetupPlayerSide(black, 0, 1);
     }
 
     private void InitializeSquares()
@@ -42,14 +42,8 @@ public class Board
         
         Squares[majorRow, 0].Piece = rooks[0];
         Squares[majorRow, 1].Piece = knights[0];
-        Squares[majorRow, 2].Piece = bishops[0];
-
-        Squares[majorRow, 3].Piece =
-            player.Color == Color.White ? queen : king;
-
-        Squares[majorRow, 4].Piece =
-            player.Color == Color.White ? king : queen;
-
+        Squares[majorRow, 2].Piece = bishops[0];Squares[majorRow, 3].Piece = queen;
+        Squares[majorRow, 4].Piece = king;
         Squares[majorRow, 5].Piece = bishops[1];
         Squares[majorRow, 6].Piece = knights[1];
         Squares[majorRow, 7].Piece = rooks[1];

@@ -1,13 +1,13 @@
 ﻿using System.Text.RegularExpressions;
 using Chess.Cli.GameRunner;
+using chess.Entities.Board;
 using Spectre.Console;
 
 namespace Chess.Cli.Interactions;
 
 public partial class SpectreUserInteraction : IUserInteraction
 {
-    public ((int rowFrom, int colFrom), (int rowTo, int colTo)) 
-        ReadMove()
+    public Move ReadMove()
     {
         while (true)
         {
@@ -55,7 +55,11 @@ public partial class SpectreUserInteraction : IUserInteraction
             var (fromRow, fromCol) = ParseNotation(fromSquare);
             var (toRow, toCol) = ParseNotation(toSquare);
             
-            return ((fromRow, fromCol), (toRow, toCol));
+            return new Move
+            {
+                From = new Position(fromRow, fromCol),
+                To = new Position(toRow, toCol)
+            };
         }
     }
 

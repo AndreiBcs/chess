@@ -1,10 +1,11 @@
 ﻿using Chess.Cli.GameRunner;
+using chess.Entities.Board;
 
 namespace Chess.Cli.Interactions;
 
 public class TextUserInteraction : IUserInteraction
 {
-    public ((int rowFrom, int colFrom), (int rowTo, int colTo)) ReadMove()
+    public Move ReadMove()
     {
         throw new NotImplementedException();
     }

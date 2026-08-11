@@ -22,19 +22,19 @@ public class Game
         GameLoop();
     }
 
-    private void GameLoop()
+    private void GameLoop() // TODO
     {
-        while (!IsOver)
-        {
-            if (CurrentTurn == Color.White)
-            {
-                
-            }
-            else
-            {
-                return;
-            }
-        }
+        // while (!IsOver)
+        // {
+        //     if (CurrentTurn == Color.White)
+        //     {
+        //         
+        //     }
+        //     else
+        //     {
+        //         return;
+        //     }
+        // }
     }
     
     public void MakeMove(Move move)

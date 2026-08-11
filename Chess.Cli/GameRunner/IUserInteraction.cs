@@ -1,6 +1,8 @@
-﻿namespace Chess.Cli.GameRunner;
+﻿using chess.Entities.Board;
+
+namespace Chess.Cli.GameRunner;
 
 public interface IUserInteraction
 {
-    ((int rowFrom, int colFrom), (int rowTo, int colTo)) ReadMove();
+    Move ReadMove();
 }

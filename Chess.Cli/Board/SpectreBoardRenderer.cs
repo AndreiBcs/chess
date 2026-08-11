@@ -32,7 +32,7 @@ public class SpectreBoardRenderer : IBoardRenderer
             for (var j = 0; j < 8; j++)
             {
                 var square = board.Squares[i, j];
-
+                
                 var bgColor = square.Color == Color.White ? "#b89a74" : "#6b4f35";
                 var letterId = square.Piece?.LetterId;
                 var symbol = GetPieceSymbol(letterId);
