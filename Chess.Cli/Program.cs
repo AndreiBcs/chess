@@ -1,16 +1,22 @@
 ﻿using System.Text;
 using Chess.Cli.Board;
+using Chess.Cli.CliArgs;
 using Chess.Cli.GameRunner;
 using Chess.Cli.Interactions;
 
 Console.OutputEncoding = Encoding.UTF8;
 
 
-var useText = args.Length > 0 && args[0] == "--text";
+var options = new CliArguments().Parse(args);
 
-IBoardRenderer renderer = !useText ? new TextBoardRenderer() : new SpectreBoardRenderer();
-IUserInteraction userInteraction = useText ? new TextUserInteraction() : new SpectreUserInteraction();
+IBoardRenderer renderer = options.UseTextRenderer 
+    ? new TextBoardRenderer() 
+    : new SpectreBoardRenderer();
 
-var gameLoop = new CliGameLoop(renderer, userInteraction);
-gameLoop.Run();
+IUserInteraction userInteraction = options.UseTextRenderer 
+    ? new TextUserInteraction() 
+    : new SpectreUserInteraction();
+
+var gameRunner = new GameRunner(renderer, userInteraction, options.Difficulty, options.PlayerColor);
+gameRunner.Run();
 

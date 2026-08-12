@@ -7,7 +7,7 @@ namespace chess.Game;
 public class Game
 {
     public bool IsOver { get; set; } = false;
-    public bool IsUserWhite { get; init; } = true;
+    public Color UserColor { get; init; } = Color.White;
     public Color CurrentTurn { get; set; } = Color.White;
     public Difficulty Difficulty { get; set; } = Difficulty.Normal;
     private Player PlayerWhite { get; } = new() { Color = Color.White };

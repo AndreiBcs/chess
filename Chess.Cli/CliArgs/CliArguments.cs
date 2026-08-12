@@ -6,18 +6,24 @@ namespace Chess.Cli.CliArgs;
 
 public sealed class CliArguments
 {
-    private Option<bool> TextRender { get; } = new("--text-render")
+    private readonly Option<bool> _textRender = new(
+        "--text-render",
+        aliases: ["--text", "-t"])
     {
         Description = "Render the board as plain text"
     };
     
-    private Option<Difficulty> Difficulty { get; } = new("--difficulty")
+    private readonly Option<Difficulty> _difficulty = new(
+        "--difficulty",
+        aliases: ["-d"])
     {
         Description = "Choose the difficulty: Easy | Normal | Hard",
-        DefaultValueFactory = _ => chess.Game.Difficulty.Normal
+        DefaultValueFactory = _ => Difficulty.Normal
     };
 
-    private Option<Color> PlayerColor { get; } = new("--play-as")
+    private readonly Option<Color> _playerColor = new(
+        "--play-as",
+        aliases: ["--color", "-c"])
     {
         Description = "Choose the side to play as: White or Black",
         DefaultValueFactory = _ => Color.White
@@ -28,29 +34,19 @@ public sealed class CliArguments
         Difficulty Difficulty, 
         Color PlayerColor);
 
-    public RootCommand Build()
+    public ParsedOptions Parse(string[] args)
     {
         var root = new RootCommand("Chess CLI")
         {
-            Options = { TextRender, Difficulty, PlayerColor }
+            _textRender, 
+            _difficulty, 
+            _playerColor 
         };
-        return root;
-    }
-
-    public Task<int> InvokeAsync(string[] args, Func<ParsedOptions, int> run)
-    {
-        var root = Build();
-
-        root.SetAction(parseResult =>
-        {
-            var options = new ParsedOptions(
-                parseResult.GetValue(TextRender),
-                parseResult.GetValue(Difficulty),
-                parseResult.GetValue(PlayerColor));
-
-            return run(options);
-        });
-
-        return root.Parse(args).InvokeAsync();
+        var parseResult = root.Parse(args);
+        
+        return new ParsedOptions(
+            parseResult.GetValue(_textRender),
+            parseResult.GetValue(_difficulty),
+            parseResult.GetValue(_playerColor));
     }
 }
