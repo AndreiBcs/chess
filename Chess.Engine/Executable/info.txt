@@ -1,0 +1,2 @@
+﻿in this directory must be a copy of the executable downloaded
+from here: https://stockfishchess.org/download/
