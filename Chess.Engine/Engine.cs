@@ -4,9 +4,9 @@ namespace Chess.Engine;
 
 public class Engine
 {
-    private Process _process;
-    private StreamReader _reader;
-    private StreamWriter _writer;
+    private readonly Process _process;
+    private readonly StreamReader _reader;
+    private readonly StreamWriter _writer;
     
     public Engine()
     {
@@ -29,17 +29,9 @@ public class Engine
                 CreateNoWindow = true
             }
         };
+        _process.Start();
         _reader = _process.StandardOutput;
         _writer = _process.StandardInput;
-        
-        try
-        {
-            _process.Start();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-        }
         
         StartUci();
     }
@@ -47,30 +39,53 @@ public class Engine
     private void StartUci()
     {
         SendCommand("uci");
+        WaitForResponse("uciok");
         
-        while (true)
+        SendCommand("isready");
+        WaitForResponse("readyok");
+    }
+
+    private void WaitForResponse(string expectedResponse)
+    {
+        string? line;
+        while ((line = _reader.ReadLine()) is not null)
         {
-            var line = _reader.ReadLine();
-            if (string.Equals(line, "uciok", 
+            if (string.Equals(line, expectedResponse, 
                     StringComparison.OrdinalIgnoreCase))
             {
-                break;
+                return;
             }
         }
         
-        SendCommand("isready");
+        throw new InvalidOperationException(
+            $"Stockfish exited before sending '{expectedResponse}'"
+        );
+    }
+
+    public string GetBestMove(string fen, int depth)
+    {
+        SendCommand($"position fen {fen}");
+        SendCommand($"go depth {depth}");
         
-        var ready = _reader.ReadLine();
-        if (ready is null || !string.Equals(ready, "readyok",
-                StringComparison.OrdinalIgnoreCase))
+        string? line;
+        while ((line = _reader.ReadLine()) is not null)
         {
-            QuitUci();
-            
+            if (line.StartsWith("bestmove"))
+            {
+                var parts = line.Split(' ');
+                return  parts[1];
+            }
         }
+
+        throw new InvalidOperationException(
+            "Engine did not return a best move"
+        );
     }
     
     public void QuitUci()
     {
+        if (_process.HasExited) return;
+        
         SendCommand("quit");
         _process.WaitForExit();
     }

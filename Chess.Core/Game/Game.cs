@@ -1,4 +1,5 @@
-﻿using chess.Entities.Board;
+﻿using Chess.Engine;
+using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Player;
 
@@ -13,6 +14,7 @@ public class Game
     private Player PlayerWhite { get; } = new() { Color = Color.White };
     private Player PlayerBlack { get; } = new() { Color = Color.Black };
     public Board Board { get; } = new();
+    private Engine ChessEngine { get; } = new();
 
     public void StartGame()
     {
