@@ -1,2 +1,6 @@
 ﻿in this directory must be a copy of the executable downloaded
 from here: https://stockfishchess.org/download/
+
+this uses the Universal Chess Interface protocol (stdin & stdout communication)
+https://official-stockfish.github.io/docs/stockfish-wiki/Developers.html#using-stockfish-in-your-own-project
+https://backscattering.de/chess/uci/

@@ -44,6 +44,16 @@ public class Game
         // TODO
     }
     
+    public void SetDifficulty(Difficulty difficulty)
+    {
+        var elo = difficulty switch
+        {
+            Difficulty.Easy => 1000,
+            Difficulty.Normal => 1500,
+            Difficulty.Hard => 2000,
+            _ => throw new ArgumentOutOfRangeException(nameof(difficulty))
+        };
+    }
 }
 
 public enum Difficulty

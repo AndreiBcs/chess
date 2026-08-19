@@ -2,11 +2,12 @@
 
 namespace Chess.Engine;
 
-public class Engine
+public class Engine : IDisposable
 {
     private readonly Process _process;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
+    private bool _disposed;
     
     public Engine()
     {
@@ -62,7 +63,28 @@ public class Engine
         );
     }
 
-    public string GetBestMove(string fen, int depth)
+    public void NewGame()
+    {
+        SendCommand("ucinewgame");
+        SendCommand("isready");
+        WaitForResponse("readyok");
+    }
+    
+    private void SetOption(string name, string value)
+    {
+        SendCommand($"setoption name {name} value {value}");
+    }
+
+    public void SetElo(int elo)
+    {
+        SetOption("UCI_LimitStrength", "true");
+        SetOption("UCI_Elo", elo.ToString());
+
+        SendCommand("isready");
+        WaitForResponse("readyok");
+    }
+    
+    public string GetBestMove(string fen, int depth = 15)
     {
         SendCommand($"position fen {fen}");
         SendCommand($"go depth {depth}");
@@ -82,17 +104,28 @@ public class Engine
         );
     }
     
-    public void QuitUci()
-    {
-        if (_process.HasExited) return;
-        
-        SendCommand("quit");
-        _process.WaitForExit();
-    }
-    
     private void SendCommand(string command)
     {
         _writer.WriteLine(command);
         _writer.Flush();
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        
+        if (!_process.HasExited)
+        {
+            SendCommand("quit");
+            _process.WaitForExit();
+        }
+        _reader.Dispose();
+        _writer.Dispose();
+        _process.Dispose();
     }
 }
