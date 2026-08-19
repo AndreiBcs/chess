@@ -12,7 +12,7 @@ public class TextBoardRenderer : IBoardRenderer
             {
                 Console.Write(board.Squares[i, j].Piece != null
                     ? board.Squares[i, j].Piece?.LetterId + "  "
-                    : board.Squares[i, j].Position.ToString() + ' ');
+                    : "_  ");
             }
 
             Console.WriteLine();

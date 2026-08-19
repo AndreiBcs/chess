@@ -6,3 +6,4 @@ riderModule.iml
 .idea/
 .git/
 stockfish.exe
+stockfish-windows-x86-64-avx2.exe

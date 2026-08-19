@@ -11,7 +11,7 @@ public class Engine : IDisposable
     
     public Engine()
     {
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Executable", "stockfish.exe");
+        var path = Path.Combine(AppContext.BaseDirectory, "Executable", "stockfish-windows-x86-64-avx2.exe");
 
         if (!File.Exists(path))
         {
@@ -30,6 +30,10 @@ public class Engine : IDisposable
                 CreateNoWindow = true
             }
         };
+        Console.WriteLine($"Engine path: {path}");
+        Console.WriteLine($"Exists: {File.Exists(path)}");
+        var fileInfo = new FileInfo(path);
+        Console.WriteLine($"Size: {fileInfo.Length} bytes");
         _process.Start();
         _reader = _process.StandardOutput;
         _writer = _process.StandardInput;
