@@ -6,8 +6,38 @@ public class Knight : Piece
 {
     public override PieceType Type => PieceType.Knight;
 
-    public override IEnumerable<Position> GetLegalMoves(Board.Board board, Position from)
+    public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
     {
-        throw new NotImplementedException();
+        var legalMoves = new List<Position>();
+        
+        var moves = new (int row, int column)[]
+        {
+            (-2, -1),
+            (-2, 1),
+            (-1, -2),
+            (-1, 2),
+            (1, -2),
+            (1, 2),
+            (2, -1),
+            (2, 1)
+        };
+
+        foreach (var (rowOffset, colOffset) in moves)
+        {
+            var row = from.Row + rowOffset;
+            var col = from.Column + colOffset;
+
+            if (row is < 0 or >= 8 || col is < 0 or >= 8)
+                continue;
+            
+            var piece = board.Squares[row, col].Piece;
+
+            if (piece?.Owner == Owner)
+                continue;
+            
+            legalMoves.Add(new Position(row, col));
+        }
+        
+        return legalMoves;
     }
 }

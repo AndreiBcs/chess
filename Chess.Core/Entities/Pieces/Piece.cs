@@ -29,5 +29,5 @@ public abstract class Piece
     }
     
     public Position Position { get; set; }
-    public abstract IEnumerable<Position> GetLegalMoves(Board.Board board, Position from);
+    public abstract IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from);
 }

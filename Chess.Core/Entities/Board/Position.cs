@@ -10,4 +10,4 @@ public readonly record struct Position(int Row, int Column)
     }
 }
 
-public readonly record struct Move(Position From, Position To, PieceType? Promotion = null);
+public readonly record struct Move(Position From, Position To, Piece? Piece = null);
