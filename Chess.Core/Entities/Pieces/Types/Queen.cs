@@ -8,7 +8,7 @@ public class Queen : Piece
 
     public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
     {
-        var legalMoves = new List<Position>();
+        var possiblePositions = new List<Position>();
         
         var directions = new (int row, int column)[]
         {
@@ -36,18 +36,18 @@ public class Queen : Piece
                 {
                     if (piece.Owner != Owner)
                     {
-                        legalMoves.Add(pos);
+                        possiblePositions.Add(pos);
                     }
 
                     break;
                 }
-                legalMoves.Add(pos);
+                possiblePositions.Add(pos);
                 
                 row += rowDir;
                 col += colDir;
             }
         }
         
-        return legalMoves;
+        return possiblePositions;
     }
 }
