@@ -53,12 +53,6 @@ public class Board
             Squares[pawnRow, i].Piece = pawns[i];
         }
     }
-
-    public string ToFen()
-    {
-        // TODO
-        return "";
-    }
     
 }
 
