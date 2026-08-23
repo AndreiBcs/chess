@@ -12,6 +12,22 @@ public class Board
         InitializeSquares();
         SetupPlayerSide(white, 7, 6);
         SetupPlayerSide(black, 0, 1);
+        SetPiecePositions();
+    }
+
+    public void MovePiece(Position from, Position to)
+    {
+        Squares[to.Row, to.Column].Piece = Squares[from.Row, from.Column].Piece;
+        Squares[to.Row, to.Column].Piece!.Position = new Position(to.Row, to.Column);
+        Squares[from.Row, from.Column].Piece = null;
+    }
+
+    private void SetPiecePositions()
+    {
+        foreach (var sq in Squares)
+        {
+            sq.Piece?.Position = new Position(sq.Position.Row, sq.Position.Column);
+        }
     }
 
     private void InitializeSquares()

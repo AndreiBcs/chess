@@ -11,11 +11,13 @@ public class Game
     public Color UserColor { get; init; } = Color.White;
     public Color CurrentTurn { get; set; } = Color.White;
     public Difficulty Difficulty { get; set; } = Difficulty.Normal;
-    private Player PlayerWhite { get; } = new() { Color = Color.White };
-    private Player PlayerBlack { get; } = new() { Color = Color.Black };
+    public Player PlayerWhite { get; } = new() { Color = Color.White };
+    public Player PlayerBlack { get; } = new() { Color = Color.Black };
     public Board Board { get; } = new();
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
+    public Move CurrentMove { get; set; }
+    public Move PreviousMove { get; set; }
     private Engine ChessEngine { get; } = new();
 
     public void StartGame()
