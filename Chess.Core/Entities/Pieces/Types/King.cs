@@ -38,6 +38,34 @@ public class King : Piece
             possiblePositions.Add(new Position(row, col));
         }
         
+        if (!HasMoved)
+        {
+            // kingside castling
+            var kingSideRook =
+                board.Squares[from.Row, from.Column + 3].Piece;
+
+            if (kingSideRook is Rook {HasMoved: false} &&
+                kingSideRook.Owner == Owner &&
+                board.Squares[from.Row, from.Column + 1].Piece is null &&
+                board.Squares[from.Row, from.Column + 2].Piece is null)
+            {
+                possiblePositions.Add(new Position(from.Row, from.Column + 2));
+            }
+
+            // queenside castling
+            var queenSideRook =
+                board.Squares[from.Row, from.Column - 4].Piece;
+
+            if (queenSideRook is Rook {HasMoved: false} &&
+                queenSideRook.Owner == Owner &&
+                board.Squares[from.Row, from.Column - 1].Piece is null &&
+                board.Squares[from.Row, from.Column - 2].Piece is null &&
+                board.Squares[from.Row, from.Column - 3].Piece is null)
+            {
+                possiblePositions.Add(new Position(from.Row, from.Column - 2));
+            }
+        }
+        
         return possiblePositions;
     }
 

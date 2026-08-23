@@ -76,7 +76,7 @@ public class Pawn : Piece
             {
                 var piece = board.Squares[from.Row, from.Column - 1].Piece;
 
-                if (piece is not null && piece.Owner != Owner)
+                if (piece is not null && piece.Owner != Owner && piece.Type is PieceType.Pawn)
                 {
                     possiblePositions.Add(new Position(
                         from.Row + direction,
@@ -88,7 +88,7 @@ public class Pawn : Piece
             {
                 var piece = board.Squares[from.Row, from.Column + 1].Piece;
 
-                if (piece is not null && piece.Owner != Owner)
+                if (piece is not null && piece.Owner != Owner && piece.Type is PieceType.Pawn)
                 {
                     possiblePositions.Add(new Position(
                         from.Row + direction,
