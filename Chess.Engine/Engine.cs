@@ -88,7 +88,7 @@ public class Engine : IDisposable
         WaitForResponse("readyok");
     }
     
-    public string GetBestMove(string fen, int depth = 15)
+    public string GetMove(string fen, int depth = 15)
     {
         SendCommand($"position fen {fen}");
         SendCommand($"go depth {depth}");
