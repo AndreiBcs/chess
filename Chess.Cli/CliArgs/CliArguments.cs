@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using chess.Entities.Common;
+using chess.Entities.Player.ChessEngine;
 using chess.Game;
 
 namespace Chess.Cli.CliArgs;

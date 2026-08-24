@@ -9,6 +9,7 @@ public class Player
     public Color Color { get; init; }
     private List<Piece> Pieces { get; } = [];
     public King King { get; private set; } = null!;
+    public IPlayerTypeActions PlayerTypeActions { get; init; } 
     public IEnumerable<Piece> ActivePieces =>
         Pieces.Where(p => !p.IsCaptured);
 

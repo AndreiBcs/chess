@@ -1,4 +1,4 @@
-﻿namespace chess.Game;
+﻿namespace chess.Entities.Player.ChessEngine;
 
 public enum Difficulty
 {
