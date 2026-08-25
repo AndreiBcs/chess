@@ -5,8 +5,12 @@ namespace chess.Entities.Pieces;
 
 public abstract class Piece
 {
-    public Player.Player Owner { get; init; } = null!;
-    public Color Color => Owner.Color;
+    protected Piece(Color color)
+    {
+        Color = color;
+    }
+
+    public Color Color { get; init; }
     public bool IsCaptured { get; set; } = false;
     public abstract PieceType Type { get; }
     public char LetterId
@@ -27,7 +31,6 @@ public abstract class Piece
             return Color == Color.White ? letter : char.ToLower(letter);
         }
     }
-    
-    public Position Position { get; set; }
-    public abstract IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from);
+    public abstract IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from);
+    public abstract Piece Copy();
 }

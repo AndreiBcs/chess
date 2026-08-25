@@ -1,33 +1,47 @@
 ﻿using chess.Entities.Common;
+using chess.Entities.Pieces;
 using chess.Entities.Pieces.Types;
 
 namespace chess.Entities.Board;
 
-public class Board
+public class Board : IReadOnlyBoard
 {
     public Square[,] Squares { get; } = new Square[8, 8];
 
-    public void InitializeBoard(Player.Player white, Player.Player black)
+    public void InitializeBoard()
     {
         InitializeSquares();
-        SetupPlayerSide(white, 7, 6);
-        SetupPlayerSide(black, 0, 1);
-        SetPiecePositions();
+        SetupPlayerSide(Color.White, 7, 6);
+        SetupPlayerSide(Color.Black, 0, 1);
+    }
+    
+    public Piece? GetPiece(Position position)
+    {
+        return Squares[position.Row, position.Column].Piece;
+    }
+
+    public bool IsValidMove(Move move)
+    {
+        var piece = GetPiece(move.From);
+        
+        if(piece is null) return false;
+        
+        var boardCopy = Copy();
+        boardCopy.MovePiece(move.From, move.To);
+        
+        return !IsKingInCheck(boardCopy, piece.Color);
     }
 
     public void MovePiece(Position from, Position to)
     {
-        Squares[to.Row, to.Column].Piece = Squares[from.Row, from.Column].Piece;
-        Squares[to.Row, to.Column].Piece!.Position = new Position(to.Row, to.Column);
-        Squares[from.Row, from.Column].Piece = null;
-    }
+        var piece = Squares[from.Row, from.Column].Piece;
 
-    private void SetPiecePositions()
-    {
-        foreach (var sq in Squares)
-        {
-            sq.Piece?.Position = new Position(sq.Position.Row, sq.Position.Column);
-        }
+        if (piece is null)
+            throw new InvalidOperationException(
+                "Cannot move a piece from an empty square.");
+
+        Squares[to.Row, to.Column].Piece = piece;
+        Squares[from.Row, from.Column].Piece = null;
     }
 
     private void InitializeSquares()
@@ -47,28 +61,89 @@ public class Board
         }
     }
     
-    private void SetupPlayerSide(Player.Player player, int majorRow, int pawnRow)
+    private void SetupPlayerSide(Color color, int majorRow, int pawnRow)
     {
-        var rooks = player.ActivePieces.OfType<Rook>().ToArray();
-        var pawns = player.ActivePieces.OfType<Pawn>().ToArray();
-        var knights = player.ActivePieces.OfType<Knight>().ToArray();
-        var bishops = player.ActivePieces.OfType<Bishop>().ToArray();
-        var queen = player.ActivePieces.OfType<Queen>().Single();
-        var king = player.ActivePieces.OfType<King>().Single();
-        
-        Squares[majorRow, 0].Piece = rooks[0];
-        Squares[majorRow, 1].Piece = knights[0];
-        Squares[majorRow, 2].Piece = bishops[0];Squares[majorRow, 3].Piece = queen;
-        Squares[majorRow, 4].Piece = king;
-        Squares[majorRow, 5].Piece = bishops[1];
-        Squares[majorRow, 6].Piece = knights[1];
-        Squares[majorRow, 7].Piece = rooks[1];
+        Squares[majorRow, 0].Piece = new Rook(color, false);
+        Squares[majorRow, 1].Piece = new Knight(color);
+        Squares[majorRow, 2].Piece = new Bishop(color);
+        Squares[majorRow, 3].Piece = new Queen(color);
+        Squares[majorRow, 4].Piece = new King(color, false);
+        Squares[majorRow, 5].Piece = new Bishop(color);
+        Squares[majorRow, 6].Piece = new Knight(color);
+        Squares[majorRow, 7].Piece = new Rook(color, false);
 
         for (var i = 0; i < 8; i++)
         {
-            Squares[pawnRow, i].Piece = pawns[i];
+            Squares[pawnRow, i].Piece = new Pawn(color, false);
         }
     }
+
+    private Position GetKingPosition(Color color)
+    {
+        var pos = new Position();
+        foreach (var sq in Squares)
+        {
+            if (sq.Piece?.Color == color &&
+                sq.Piece.Type == PieceType.King)
+            {
+                pos = sq.Position;
+            }
+        }
+
+        return pos;
+    }
     
+    private Board Copy()
+    {
+        var board = new Board();
+
+        for (var row = 0; row < 8; row++)
+        {
+            for (var column = 0; column < 8; column++)
+            {
+                var originalSquare = Squares[row, column];
+
+                board.Squares[row, column] = new Square
+                {
+                    Color = originalSquare.Color,
+                    Position = new Position(row, column),
+                    Piece = originalSquare.Piece?.Copy()
+                };
+            }
+        }
+
+        return board;
+    }
+    
+    private static bool IsKingInCheck(Board board, Color kingColor)
+    {
+        var kingPosition = board.GetKingPosition(kingColor);
+
+        var enemyColor = kingColor == Color.White
+            ? Color.Black
+            : Color.White;
+
+        foreach (var square in board.Squares)
+        {
+            var piece = square.Piece;
+
+            if (piece?.Color != enemyColor)
+                continue;
+
+            if (piece.GetPossiblePositions(board, square.Position)
+                .Contains(kingPosition))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+public interface IReadOnlyBoard
+{
+    Piece? GetPiece(Position position);
+    bool IsValidMove(Move move);
 }
 

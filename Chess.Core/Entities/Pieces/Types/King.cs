@@ -1,12 +1,19 @@
 ﻿using chess.Entities.Board;
+using chess.Entities.Common;
 
 namespace chess.Entities.Pieces.Types;
 
 public class King : Piece
 {
-    public override PieceType Type => PieceType.King;
+    public King(Color color, bool hasMoved) : base(color)
+    {
+        HasMoved = hasMoved;
+    }
 
-    public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
+    public override PieceType Type => PieceType.King;
+    public bool HasMoved { get; set; }
+
+    public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
         var possiblePositions = new List<Position>();
         
@@ -30,44 +37,50 @@ public class King : Piece
             if (row is < 0 or >= 8 || col is < 0 or >= 8)
                 continue;
             
-            var piece = board.Squares[row, col].Piece;
+            var pos = new Position(row, col);
+            var piece = board.GetPiece(pos);
 
-            if (piece?.Owner == Owner)
+            if (piece?.Color == Color)
                 continue;
             
-            possiblePositions.Add(new Position(row, col));
+            possiblePositions.Add(pos);
         }
         
         if (!HasMoved)
         {
+            var pos = new Position(from.Row, from.Column);
+            
             // kingside castling
             var kingSideRook =
-                board.Squares[from.Row, from.Column + 3].Piece;
+                board.GetPiece(pos with {Column = from.Column + 3});
 
             if (kingSideRook is Rook {HasMoved: false} &&
-                kingSideRook.Owner == Owner &&
-                board.Squares[from.Row, from.Column + 1].Piece is null &&
-                board.Squares[from.Row, from.Column + 2].Piece is null)
+                kingSideRook.Color == Color &&
+                board.GetPiece(pos with {Column = from.Column + 1}) is null &&
+                board.GetPiece(pos with {Column = from.Column + 2}) is null)
             {
-                possiblePositions.Add(new Position(from.Row, from.Column + 2));
+                possiblePositions.Add(pos with {Column = from.Column + 2});
             }
 
             // queenside castling
             var queenSideRook =
-                board.Squares[from.Row, from.Column - 4].Piece;
+                board.GetPiece(pos with {Column = from.Column - 4});
 
             if (queenSideRook is Rook {HasMoved: false} &&
-                queenSideRook.Owner == Owner &&
-                board.Squares[from.Row, from.Column - 1].Piece is null &&
-                board.Squares[from.Row, from.Column - 2].Piece is null &&
-                board.Squares[from.Row, from.Column - 3].Piece is null)
+                queenSideRook.Color == Color &&
+                board.GetPiece(pos with {Column = from.Column - 1}) is null &&
+                board.GetPiece(pos with {Column = from.Column - 2}) is null &&
+                board.GetPiece(pos with {Column = from.Column - 3}) is null)
             {
-                possiblePositions.Add(new Position(from.Row, from.Column - 2));
+                possiblePositions.Add(pos with {Column = from.Column - 2});
             }
         }
         
         return possiblePositions;
     }
 
-    public bool HasMoved { get; set; } = false;
+    public override Piece Copy()
+    {
+        return new King(Color, HasMoved);
+    }
 }

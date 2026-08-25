@@ -1,4 +1,5 @@
-﻿using chess.Entities.Common;
+﻿using Chess.Engine.Configs;
+using chess.Entities.Common;
 using chess.Game;
 
 namespace Chess.Cli.GameRunner;
@@ -17,11 +18,7 @@ public class GameRunner
     {
         _renderer = renderer;
         _interaction = userInteraction;
-        _game = new Game
-        {
-            Difficulty = difficulty,
-            UserColor = playerColor
-        };
+        //_game = new Game();
     }
 
     public void Run()

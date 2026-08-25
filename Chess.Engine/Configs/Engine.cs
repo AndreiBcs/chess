@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Chess.Engine;
+namespace Chess.Engine.Configs;
 
 public class Engine : IDisposable
 {
@@ -8,7 +8,20 @@ public class Engine : IDisposable
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
     private bool _disposed;
-    
+    public int Elo
+    {
+        get;
+        set
+        {
+            field = value;
+            SetOption("UCI_LimitStrength", "true");
+            SetOption("UCI_Elo", Elo.ToString());
+
+            SendCommand("isready");
+            WaitForResponse("readyok");
+        }
+    }
+
     public Engine()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "Executable", "stockfish-windows-x86-64-avx2.exe");
@@ -40,6 +53,52 @@ public class Engine : IDisposable
         
         StartUci();
     }
+    
+    public void NewGame()
+    {
+        SendCommand("ucinewgame");
+        SendCommand("isready");
+        WaitForResponse("readyok");
+    }
+    
+    public string GetMove(string fen, int depth = 15)
+    {
+        SendCommand($"position fen {fen}");
+        SendCommand($"go depth {depth}");
+        
+        string? line;
+        while ((line = _reader.ReadLine()) is not null)
+        {
+            if (line.StartsWith("bestmove"))
+            {
+                var parts = line.Split(' ');
+                return  parts[1];
+            }
+        }
+
+        throw new InvalidOperationException(
+            "Engine did not return a best move"
+        );
+    }
+    
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        
+        if (!_process.HasExited)
+        {
+            SendCommand("quit");
+            _process.WaitForExit();
+        }
+        _reader.Dispose();
+        _writer.Dispose();
+        _process.Dispose();
+    }
 
     private void StartUci()
     {
@@ -66,70 +125,15 @@ public class Engine : IDisposable
             $"Stockfish exited before sending '{expectedResponse}'"
         );
     }
-
-    public void NewGame()
-    {
-        SendCommand("ucinewgame");
-        SendCommand("isready");
-        WaitForResponse("readyok");
-    }
     
     private void SetOption(string name, string value)
     {
         SendCommand($"setoption name {name} value {value}");
-    }
-
-    public void SetElo(int elo)
-    {
-        SetOption("UCI_LimitStrength", "true");
-        SetOption("UCI_Elo", elo.ToString());
-
-        SendCommand("isready");
-        WaitForResponse("readyok");
-    }
-    
-    public string GetMove(string fen, int depth = 15)
-    {
-        SendCommand($"position fen {fen}");
-        SendCommand($"go depth {depth}");
-        
-        string? line;
-        while ((line = _reader.ReadLine()) is not null)
-        {
-            if (line.StartsWith("bestmove"))
-            {
-                var parts = line.Split(' ');
-                return  parts[1];
-            }
-        }
-
-        throw new InvalidOperationException(
-            "Engine did not return a best move"
-        );
     }
     
     private void SendCommand(string command)
     {
         _writer.WriteLine(command);
         _writer.Flush();
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-        
-        if (!_process.HasExited)
-        {
-            SendCommand("quit");
-            _process.WaitForExit();
-        }
-        _reader.Dispose();
-        _writer.Dispose();
-        _process.Dispose();
     }
 }

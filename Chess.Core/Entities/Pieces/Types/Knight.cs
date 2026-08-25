@@ -1,12 +1,17 @@
 ﻿using chess.Entities.Board;
+using chess.Entities.Common;
 
 namespace chess.Entities.Pieces.Types;
 
 public class Knight : Piece
 {
+    public Knight(Color color) : base(color)
+    {
+    }
+
     public override PieceType Type => PieceType.Knight;
 
-    public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
+    public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
         var possiblePositions = new List<Position>();
         
@@ -30,14 +35,20 @@ public class Knight : Piece
             if (row is < 0 or >= 8 || col is < 0 or >= 8)
                 continue;
             
-            var piece = board.Squares[row, col].Piece;
+            var pos = new Position(row, col);
+            var piece = board.GetPiece(pos);
 
-            if (piece?.Owner == Owner)
+            if (piece?.Color == Color)
                 continue;
             
-            possiblePositions.Add(new Position(row, col));
+            possiblePositions.Add(pos);
         }
         
         return possiblePositions;
+    }
+
+    public override Piece Copy()
+    {
+        return new Knight(Color);
     }
 }
