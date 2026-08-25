@@ -7,32 +7,12 @@ namespace chess.Entities.Player.ChessEngine;
 public class ChessEngine : IPlayerTypeActions
 {
     private readonly Engine _engine;
-    private readonly ChessEngineDifficulty _difficulty;
 
     public ChessEngine(ChessEngineDifficulty difficulty)
     {
         _engine = new Engine();
-        _difficulty = difficulty;
+        _engine.Elo = difficulty.GetDifficultyElo();
     }
-
-    public void StartEngine()
-    {
-        try
-        {
-            _engine.NewGame();
-            _engine.SetElo(_difficulty.GetDifficultyElo());
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-    }
-
-    public void StopEngine()
-    {
-        _engine.Dispose();
-    }
-    
     public Move GetMove()
     {
         try
