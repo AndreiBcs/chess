@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Chess.Engine;
+namespace Chess.Engine.Configs;
 
 public class Engine : IDisposable
 {

@@ -1,4 +1,5 @@
-﻿using chess.Entities.Common;
+﻿using Chess.Engine.Configs;
+using chess.Entities.Common;
 using chess.Game;
 
 namespace Chess.Cli.GameRunner;

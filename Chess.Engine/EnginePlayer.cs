@@ -1,19 +1,19 @@
-﻿using chess.Entities.Board;
+﻿using Chess.Engine.Configs;
+using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Pieces;
 using chess.Entities.Player;
-using chess.Game;
 using chess.Game.GameState;
 
 namespace Chess.Engine;
 
 public class EnginePlayer : Player
 {
-    private readonly Engine _engine;
+    private readonly Configs.Engine _engine;
 
     public EnginePlayer(ChessEngineDifficulty difficulty)
     {
-        _engine = new Engine();
+        _engine = new Configs.Engine();
         _engine.Elo = difficulty.GetDifficultyElo();
     }
     

@@ -1,7 +1,7 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
 
-namespace chess.Game;
+namespace chess.Game.Validators;
 
 public static class MoveValidator
 {
