@@ -12,7 +12,7 @@ public class Pawn : Piece
     public override PieceType Type => PieceType.Pawn;
     public bool HasMoved { get; set; } = false;
 
-    public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
+    public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
         var possiblePositions = new List<Position>();
 
@@ -24,7 +24,7 @@ public class Pawn : Piece
 
         if (oneForward.Row is >= 0 and < 8 &&
             oneForward.Column is >= 0 and < 8 &&
-            board.Squares[oneForward.Row, oneForward.Column].Piece is null)
+            board.GetPiece(oneForward) is null)
         {
             possiblePositions.Add(oneForward);
 
@@ -34,7 +34,7 @@ public class Pawn : Piece
 
             if (!HasMoved &&
                 twoForward.Row is >= 0 and < 8 &&
-                board.Squares[twoForward.Row, twoForward.Column].Piece is null)
+                board.GetPiece(twoForward) is null)
             {
                 possiblePositions.Add(twoForward);
             }
@@ -48,7 +48,7 @@ public class Pawn : Piece
         if (leftCapture.Row is >= 0 and < 8 &&
             leftCapture.Column is >= 0 and < 8)
         {
-            var piece = board.Squares[leftCapture.Row, leftCapture.Column].Piece;
+            var piece = board.GetPiece(leftCapture);
 
             if (piece is not null && piece.Color != Color)
             {
@@ -64,7 +64,7 @@ public class Pawn : Piece
         if (rightCapture.Row is >= 0 and < 8 &&
             rightCapture.Column is >= 0 and < 8)
         {
-            var piece = board.Squares[rightCapture.Row, rightCapture.Column].Piece;
+            var piece = board.GetPiece(rightCapture);
 
             if (piece is not null && piece.Color != Color)
             {
@@ -79,25 +79,23 @@ public class Pawn : Piece
         {
             if (from.Column - 1 >= 0)
             {
-                var piece = board.Squares[from.Row, from.Column - 1].Piece;
+                var pos = new Position(from.Row, from.Column - 1);
+                var piece = board.GetPiece(pos);
 
                 if (piece is not null && piece.Color != Color && piece.Type is PieceType.Pawn)
                 {
-                    possiblePositions.Add(new Position(
-                        from.Row + direction,
-                        from.Column - 1));
+                    possiblePositions.Add(pos);
                 }
             }
 
             if (from.Column + 1 < 8)
             {
-                var piece = board.Squares[from.Row, from.Column + 1].Piece;
+                var pos = new Position(from.Row, from.Column + 1);
+                var piece = board.GetPiece(pos);
 
                 if (piece is not null && piece.Color != Color && piece.Type is PieceType.Pawn)
                 {
-                    possiblePositions.Add(new Position(
-                        from.Row + direction,
-                        from.Column + 1));
+                    possiblePositions.Add(pos);
                 }
             }
         }

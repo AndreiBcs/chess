@@ -11,7 +11,7 @@ public class Queen : Piece
 
     public override PieceType Type => PieceType.Queen;
 
-    public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
+    public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
         var possiblePositions = new List<Position>();
         
@@ -35,7 +35,7 @@ public class Queen : Piece
             while (row is >= 0 and < 8 && col is >= 0 and < 8)
             {
                 var pos = new Position(row, col);
-                var piece = board.Squares[pos.Row, pos.Column].Piece;
+                var piece = board.GetPiece(pos);
 
                 if (piece is not null)
                 {

@@ -31,6 +31,5 @@ public abstract class Piece
             return Color == Color.White ? letter : char.ToLower(letter);
         }
     }
-    // TODO change to IReadOnlyBoard
-    public abstract IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from);
+    public abstract IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from);
 }

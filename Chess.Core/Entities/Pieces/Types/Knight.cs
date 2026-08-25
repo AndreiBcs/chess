@@ -11,7 +11,7 @@ public class Knight : Piece
 
     public override PieceType Type => PieceType.Knight;
 
-    public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
+    public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
         var possiblePositions = new List<Position>();
         
@@ -35,12 +35,13 @@ public class Knight : Piece
             if (row is < 0 or >= 8 || col is < 0 or >= 8)
                 continue;
             
-            var piece = board.Squares[row, col].Piece;
+            var pos = new Position(row, col);
+            var piece = board.GetPiece(pos);
 
             if (piece?.Color == Color)
                 continue;
             
-            possiblePositions.Add(new Position(row, col));
+            possiblePositions.Add(pos);
         }
         
         return possiblePositions;

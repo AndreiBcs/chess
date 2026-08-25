@@ -1,6 +1,5 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
-using chess.Entities.Pieces;
 
 namespace chess.Game;
 

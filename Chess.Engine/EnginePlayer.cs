@@ -65,14 +65,14 @@ public class EnginePlayer : Player
 
             while (col < 8)
             {
-                if (snapshot.Board.Squares[i, col].Piece is not null) // TODO change to IReadOnlyBoard
+                if (snapshot.Board.GetPiece(new Position(i, col)) is not null)
                 {
-                    fen += snapshot.Board.Squares[i, col].Piece!.LetterId;
+                    fen += snapshot.Board.GetPiece(new Position(i, col))!.LetterId;
                     col++;
                 }
                 else
                 {
-                    while (snapshot.Board.Squares[i, col++].Piece is null)
+                    while (snapshot.Board.GetPiece(new Position(i, col++)) is null)
                     {
                         empty++;
                     }

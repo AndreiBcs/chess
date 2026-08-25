@@ -1,5 +1,4 @@
 ﻿using chess.Entities.Common;
-using chess.Entities.Player.ChessEngine;
 using chess.Game;
 
 namespace Chess.Cli.GameRunner;
@@ -18,7 +17,7 @@ public class GameRunner
     {
         _renderer = renderer;
         _interaction = userInteraction;
-        _game = new Game();
+        //_game = new Game();
     }
 
     public void Run()
