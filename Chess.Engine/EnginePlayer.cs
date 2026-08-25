@@ -1,4 +1,5 @@
 ﻿using chess.Entities.Board;
+using chess.Entities.Common;
 using chess.Entities.Pieces;
 using chess.Entities.Player;
 using chess.Game;
@@ -20,29 +21,89 @@ public class EnginePlayer : Player
     {
         try
         {
-            var move = _engine.GetMove(snapshot.ToFen());
-
-            var from = Position.ParsePosition(move[..2]);
-            var to = Position.ParsePosition(move[2..4]);
-
-            PieceType? promotion = move.Length switch
+            try
             {
-                5 => move[4] switch
+                var move = _engine.GetMove(ToFen(snapshot));
+
+                var from = Position.ParsePosition(move[..2]);
+                var to = Position.ParsePosition(move[2..4]);
+
+                PieceType? promotion = move.Length switch
                 {
-                    'q' => PieceType.Queen,
-                    'r' => PieceType.Rook,
-                    'b' => PieceType.Bishop,
-                    'n' => PieceType.Knight,
+                    5 => move[4] switch
+                    {
+                        'q' => PieceType.Queen,
+                        'r' => PieceType.Rook,
+                        'b' => PieceType.Bishop,
+                        'n' => PieceType.Knight,
+                        _ => null
+                    },
                     _ => null
-                },
-                _ => null
-            };
+                };
             
-            return new Move(from, to, promotion);
+                return Task.FromResult(new Move(from, to, promotion));
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message, e);
+            }
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            throw new Exception(e.Message, e);
+            return Task.FromException<Move>(exception);
         }
+    }
+    
+    private static string ToFen(GameSnapshot snapshot)
+    {
+        var fen = "";
+
+        for (var i = 0; i < 8; i++)
+        {
+            var empty = 0;
+            var col = 0;
+
+            while (col < 8)
+            {
+                if (snapshot.Board.Squares[i, col].Piece is not null) // TODO change to IReadOnlyBoard
+                {
+                    fen += snapshot.Board.Squares[i, col].Piece!.LetterId;
+                    col++;
+                }
+                else
+                {
+                    while (snapshot.Board.Squares[i, col++].Piece is null)
+                    {
+                        empty++;
+                    }
+
+                    fen += empty.ToString();
+                }
+            }
+
+            switch (i)
+            {
+                case < 7:
+                    fen += "/";
+                    break;
+                case 7:
+                    fen += " ";
+                    break;
+            }
+        }
+
+        fen += snapshot.CurrentTurn == Color.White ? "w" : "b";
+        
+        // TODO castling rights
+        fen += "-";
+        
+        // TODO en-passant valid square
+        fen += "-";
+        
+        fen += snapshot.HalfMoveCounter.ToString();
+        fen += " ";
+        fen += snapshot.FullMoveCounter.ToString();
+        
+        return fen;
     }
 }

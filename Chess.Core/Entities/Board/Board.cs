@@ -1,9 +1,10 @@
 ﻿using chess.Entities.Common;
+using chess.Entities.Pieces;
 using chess.Entities.Pieces.Types;
 
 namespace chess.Entities.Board;
 
-public class Board
+public class Board : IReadOnlyBoard
 {
     public Square[,] Squares { get; } = new Square[8, 8];
 
@@ -12,6 +13,11 @@ public class Board
         InitializeSquares();
         SetupPlayerSide(Color.White, 7, 6);
         SetupPlayerSide(Color.Black, 0, 1);
+    }
+    
+    public Piece? GetPiece(Position position)
+    {
+        return Squares[position.Row, position.Column].Piece;
     }
 
     public void MovePiece(Position from, Position to)
@@ -60,5 +66,10 @@ public class Board
         }
     }
     
+}
+
+public interface IReadOnlyBoard
+{
+    Piece? GetPiece(Position position);
 }
 

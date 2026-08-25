@@ -1,6 +1,7 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Player;
+using chess.Game.GameState;
 
 namespace chess.Game;
 
@@ -21,11 +22,10 @@ public class Game
     public int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
     public Move CurrentMove { get; set; }
     public Move PreviousMove { get; set; }
+    // TODO add en-passant & castling info
 
     public void StartGame()
     {
-        // PlayerWhite.InitializePlayer();
-        // PlayerBlack.InitializePlayer();
         Board.InitializeBoard();
         GameLoop();
     }
@@ -34,15 +34,21 @@ public class Game
     {
         while (!IsOver)
         {
-            if (CurrentTurn == Color.White)
-            {
-                
-            }
-            else
-            {
-                return;
-            }
+            var currentPlayer = CurrentTurn == Color.White
+                ? PlayerWhite
+                : PlayerBlack;
+
+            var snapshot = CreateSnapshot();
+
+            var move = currentPlayer.GetMoveAsync(snapshot);
+
+            // TODO validate move + game state update
         }
+    }
+
+    private GameSnapshot CreateSnapshot()
+    {
+        return new GameSnapshot(CurrentTurn, Board, FullMoveCounter, HalfMoveCounter);
     }
     
 }
