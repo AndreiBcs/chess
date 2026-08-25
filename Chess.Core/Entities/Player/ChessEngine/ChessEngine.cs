@@ -7,9 +7,9 @@ namespace chess.Entities.Player.ChessEngine;
 public class ChessEngine : IPlayerTypeActions
 {
     private readonly Engine _engine;
-    private readonly Difficulty _difficulty;
+    private readonly ChessEngineDifficulty _difficulty;
 
-    public ChessEngine(Difficulty difficulty)
+    public ChessEngine(ChessEngineDifficulty difficulty)
     {
         _engine = new Engine();
         _difficulty = difficulty;
@@ -20,7 +20,7 @@ public class ChessEngine : IPlayerTypeActions
         try
         {
             _engine.NewGame();
-            _engine.SetElo(GetDifficultyElo(_difficulty));
+            _engine.SetElo(_difficulty.GetDifficultyElo());
         }
         catch (Exception e)
         {
@@ -61,17 +61,6 @@ public class ChessEngine : IPlayerTypeActions
         {
             throw new Exception(e.Message, e);
         }
-    }
-    
-    private static int GetDifficultyElo(Difficulty difficulty)
-    {
-        return difficulty switch
-        {
-            Difficulty.Easy => 1000,
-            Difficulty.Normal => 1500,
-            Difficulty.Hard => 2000,
-            _ => throw new ArgumentOutOfRangeException(nameof(difficulty))
-        };
     }
     
 }
