@@ -2,6 +2,7 @@
 using chess.Entities.Pieces;
 using chess.Entities.Player;
 using chess.Game;
+using chess.Game.GameState;
 
 namespace Chess.Engine;
 
@@ -15,11 +16,11 @@ public class EnginePlayer : Player
         _engine.Elo = difficulty.GetDifficultyElo();
     }
     
-    public override Task<Move> GetMoveAsync()
+    public override Task<Move> GetMoveAsync(GameSnapshot snapshot)
     {
         try
         {
-            var move = _engine.GetMove(ToFen());
+            var move = _engine.GetMove(snapshot.ToFen());
 
             var from = Position.ParsePosition(move[..2]);
             var to = Position.ParsePosition(move[2..4]);
@@ -31,13 +32,13 @@ public class EnginePlayer : Player
                     'q' => PieceType.Queen,
                     'r' => PieceType.Rook,
                     'b' => PieceType.Bishop,
-                    'n' => PieceType.King,
+                    'n' => PieceType.Knight,
                     _ => null
                 },
                 _ => null
             };
             
-            return new Task<Move>(from, to,null, promotion);
+            return new Move(from, to, promotion);
         }
         catch (Exception e)
         {

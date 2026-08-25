@@ -7,12 +7,11 @@ public class Board
 {
     public Square[,] Squares { get; } = new Square[8, 8];
 
-    public void InitializeBoard(Player.Player white, Player.Player black)
+    public void InitializeBoard()
     {
         InitializeSquares();
-        SetupPlayerSide(white, 7, 6);
-        SetupPlayerSide(black, 0, 1);
-        SetPiecePositions();
+        SetupPlayerSide(Color.White, 7, 6);
+        SetupPlayerSide(Color.Black, 0, 1);
     }
 
     public void MovePiece(Position from, Position to)
@@ -20,14 +19,6 @@ public class Board
         Squares[to.Row, to.Column].Piece = Squares[from.Row, from.Column].Piece;
         Squares[to.Row, to.Column].Piece!.Position = new Position(to.Row, to.Column);
         Squares[from.Row, from.Column].Piece = null;
-    }
-
-    private void SetPiecePositions()
-    {
-        foreach (var sq in Squares)
-        {
-            sq.Piece?.Position = new Position(sq.Position.Row, sq.Position.Column);
-        }
     }
 
     private void InitializeSquares()
@@ -47,26 +38,56 @@ public class Board
         }
     }
     
-    private void SetupPlayerSide(Player.Player player, int majorRow, int pawnRow)
+    private void SetupPlayerSide(Color color, int majorRow, int pawnRow)
     {
-        var rooks = player.ActivePieces.OfType<Rook>().ToArray();
-        var pawns = player.ActivePieces.OfType<Pawn>().ToArray();
-        var knights = player.ActivePieces.OfType<Knight>().ToArray();
-        var bishops = player.ActivePieces.OfType<Bishop>().ToArray();
-        var queen = player.ActivePieces.OfType<Queen>().Single();
-        var king = player.ActivePieces.OfType<King>().Single();
-        
-        Squares[majorRow, 0].Piece = rooks[0];
-        Squares[majorRow, 1].Piece = knights[0];
-        Squares[majorRow, 2].Piece = bishops[0];Squares[majorRow, 3].Piece = queen;
-        Squares[majorRow, 4].Piece = king;
-        Squares[majorRow, 5].Piece = bishops[1];
-        Squares[majorRow, 6].Piece = knights[1];
-        Squares[majorRow, 7].Piece = rooks[1];
+        Squares[majorRow, 0].Piece = new Rook
+        {
+            Color = color, 
+            Position = new Position(majorRow, 0)
+        };
+        Squares[majorRow, 1].Piece = new Knight
+        {
+            Color = color,
+            Position = new Position(majorRow, 1)
+        };
+        Squares[majorRow, 2].Piece = new Bishop
+        {
+            Color = color,
+            Position = new Position(majorRow, 2)
+        };
+        Squares[majorRow, 3].Piece = new Queen
+        {
+            Color = color,
+            Position = new Position(majorRow, 3)
+        };
+        Squares[majorRow, 4].Piece = new King
+        {
+            Color = color,
+            Position = new Position(majorRow, 4)
+        };
+        Squares[majorRow, 5].Piece = new Bishop
+        {
+            Color = color,
+            Position = new Position(majorRow, 5)
+        };
+        Squares[majorRow, 6].Piece = new Knight
+        {
+            Color = color,
+            Position = new Position(majorRow, 6)
+        };
+        Squares[majorRow, 7].Piece = new Rook
+        {
+            Color = color,
+            Position = new Position(majorRow, 7)
+        };
 
         for (var i = 0; i < 8; i++)
         {
-            Squares[pawnRow, i].Piece = pawns[i];
+            Squares[pawnRow, i].Piece = new Pawn
+            {
+                Color = color,
+                Position = new Position(pawnRow, i)
+            };
         }
     }
     
