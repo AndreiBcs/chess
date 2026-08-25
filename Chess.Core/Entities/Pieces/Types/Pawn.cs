@@ -5,12 +5,13 @@ namespace chess.Entities.Pieces.Types;
 
 public class Pawn : Piece
 {
-    public Pawn(Color color) : base(color)
+    public Pawn(Color color, bool hasMoved) : base(color)
     {
+        HasMoved = hasMoved;
     }
 
     public override PieceType Type => PieceType.Pawn;
-    public bool HasMoved { get; set; } = false;
+    public bool HasMoved { get; set; }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -101,5 +102,10 @@ public class Pawn : Piece
         }
         
         return possiblePositions;
+    }
+
+    public override Piece Copy()
+    {
+        return new Pawn(Color, HasMoved);
     }
 }

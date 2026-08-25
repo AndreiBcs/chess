@@ -1,45 +1,20 @@
 ﻿using chess.Entities.Board;
-using chess.Entities.Common;
+using chess.Game.GameState;
 
 namespace chess.Game.Validators;
 
 public static class MoveValidator
 {
-    public static bool ValidateMove(this Game game)
+    public static bool ValidateMove(GameSnapshot snapshot, Move move)
     {
-        var move = game.CurrentMove;
-        var possibleMoves = move.Piece?
-            .GetPossiblePositions(game.Board, move.From);
-
-        if (possibleMoves is null || !possibleMoves.Contains(move.To))
-        {
-            return false;
-        }
+        var piece = snapshot.Board.GetPiece(move.From);
         
-        game.Board.MovePiece(move.From, move.To);
-        
-        // get every covered square for Checks
+        if (piece is null) return false;
 
-        var enemyPlayer = game.CurrentTurn == Color.White ? 
-            game.PlayerBlack : game.PlayerWhite;
+        var possibleMoves = piece
+            .GetPossiblePositions(snapshot.Board, move.From);
 
-        var squaresCoveredByEnemy = new List<Position>();
-
-        foreach (var p in enemyPlayer.ActivePieces)
-        {
-            var positions = p.GetPossiblePositions(game.Board, p.Position).ToList();
-            squaresCoveredByEnemy.AddRange(positions);
-        }
-        
-        var king = game.CurrentTurn == Color.White ? 
-            game.PlayerWhite.King : game.PlayerBlack.King;
-
-        if (squaresCoveredByEnemy.Contains(king.Position))
-        {
-            game.Board.MovePiece(move.To, move.From); // put piece back
-            return false;
-        }
-        
-        return true;
+        return possibleMoves.Contains(move.To) &&
+               snapshot.Board.IsValidMove(move);
     }
 }

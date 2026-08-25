@@ -46,4 +46,9 @@ public class Knight : Piece
         
         return possiblePositions;
     }
+
+    public override Piece Copy()
+    {
+        return new Knight(Color);
+    }
 }

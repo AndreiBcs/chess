@@ -51,4 +51,9 @@ public class Bishop : Piece
         
         return possiblePositions;
     }
+
+    public override Piece Copy()
+    {
+        return new Bishop(Color);
+    }
 }

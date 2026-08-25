@@ -20,6 +20,18 @@ public class Board : IReadOnlyBoard
         return Squares[position.Row, position.Column].Piece;
     }
 
+    public bool IsValidMove(Move move)
+    {
+        var piece = GetPiece(move.From);
+        
+        if(piece is null) return false;
+        
+        var boardCopy = Copy();
+        boardCopy.MovePiece(move.From, move.To);
+        
+        return !IsKingInCheck(boardCopy, piece.Color);
+    }
+
     public void MovePiece(Position from, Position to)
     {
         var piece = Squares[from.Row, from.Column].Piece;
@@ -51,25 +63,87 @@ public class Board : IReadOnlyBoard
     
     private void SetupPlayerSide(Color color, int majorRow, int pawnRow)
     {
-        Squares[majorRow, 0].Piece = new Rook(color);
+        Squares[majorRow, 0].Piece = new Rook(color, false);
         Squares[majorRow, 1].Piece = new Knight(color);
         Squares[majorRow, 2].Piece = new Bishop(color);
         Squares[majorRow, 3].Piece = new Queen(color);
-        Squares[majorRow, 4].Piece = new King(color);
+        Squares[majorRow, 4].Piece = new King(color, false);
         Squares[majorRow, 5].Piece = new Bishop(color);
         Squares[majorRow, 6].Piece = new Knight(color);
-        Squares[majorRow, 7].Piece = new Rook(color);
+        Squares[majorRow, 7].Piece = new Rook(color, false);
 
         for (var i = 0; i < 8; i++)
         {
-            Squares[pawnRow, i].Piece = new Pawn(color);
+            Squares[pawnRow, i].Piece = new Pawn(color, false);
         }
     }
+
+    private Position GetKingPosition(Color color)
+    {
+        var pos = new Position();
+        foreach (var sq in Squares)
+        {
+            if (sq.Piece?.Color == color &&
+                sq.Piece.Type == PieceType.King)
+            {
+                pos = sq.Position;
+            }
+        }
+
+        return pos;
+    }
     
+    private Board Copy()
+    {
+        var board = new Board();
+
+        for (var row = 0; row < 8; row++)
+        {
+            for (var column = 0; column < 8; column++)
+            {
+                var originalSquare = Squares[row, column];
+
+                board.Squares[row, column] = new Square
+                {
+                    Color = originalSquare.Color,
+                    Position = new Position(row, column),
+                    Piece = originalSquare.Piece?.Copy()
+                };
+            }
+        }
+
+        return board;
+    }
+    
+    private static bool IsKingInCheck(Board board, Color kingColor)
+    {
+        var kingPosition = board.GetKingPosition(kingColor);
+
+        var enemyColor = kingColor == Color.White
+            ? Color.Black
+            : Color.White;
+
+        foreach (var square in board.Squares)
+        {
+            var piece = square.Piece;
+
+            if (piece?.Color != enemyColor)
+                continue;
+
+            if (piece.GetPossiblePositions(board, square.Position)
+                .Contains(kingPosition))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 public interface IReadOnlyBoard
 {
     Piece? GetPiece(Position position);
+    bool IsValidMove(Move move);
 }
 

@@ -5,12 +5,13 @@ namespace chess.Entities.Pieces.Types;
 
 public class Rook : Piece
 {
-    public Rook(Color color) : base(color)
+    public Rook(Color color, bool hasMoved) : base(color)
     {
+        HasMoved = hasMoved;
     }
 
     public override PieceType Type => PieceType.Rook;
-    public bool HasMoved { get; set; } = false;
+    public bool HasMoved { get; set; }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -51,5 +52,10 @@ public class Rook : Piece
         }
         
         return possiblePositions;
+    }
+
+    public override Piece Copy()
+    {
+        return new Rook(Color, HasMoved);
     }
 }

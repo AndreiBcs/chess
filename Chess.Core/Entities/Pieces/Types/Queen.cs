@@ -55,4 +55,9 @@ public class Queen : Piece
         
         return possiblePositions;
     }
+
+    public override Piece Copy()
+    {
+        return new Queen(Color);
+    }
 }

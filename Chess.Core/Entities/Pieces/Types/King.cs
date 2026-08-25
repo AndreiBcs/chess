@@ -5,12 +5,13 @@ namespace chess.Entities.Pieces.Types;
 
 public class King : Piece
 {
-    public King(Color color) : base(color)
+    public King(Color color, bool hasMoved) : base(color)
     {
+        HasMoved = hasMoved;
     }
 
     public override PieceType Type => PieceType.King;
-    public bool HasMoved { get; set; } = false;
+    public bool HasMoved { get; set; }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -76,5 +77,10 @@ public class King : Piece
         }
         
         return possiblePositions;
+    }
+
+    public override Piece Copy()
+    {
+        return new King(Color, HasMoved);
     }
 }
