@@ -16,8 +16,13 @@ public class Board
 
     public void MovePiece(Position from, Position to)
     {
-        Squares[to.Row, to.Column].Piece = Squares[from.Row, from.Column].Piece;
-        Squares[to.Row, to.Column].Piece!.Position = new Position(to.Row, to.Column);
+        var piece = Squares[from.Row, from.Column].Piece;
+
+        if (piece is null)
+            throw new InvalidOperationException(
+                "Cannot move a piece from an empty square.");
+
+        Squares[to.Row, to.Column].Piece = piece;
         Squares[from.Row, from.Column].Piece = null;
     }
 
@@ -40,54 +45,18 @@ public class Board
     
     private void SetupPlayerSide(Color color, int majorRow, int pawnRow)
     {
-        Squares[majorRow, 0].Piece = new Rook
-        {
-            Color = color, 
-            Position = new Position(majorRow, 0)
-        };
-        Squares[majorRow, 1].Piece = new Knight
-        {
-            Color = color,
-            Position = new Position(majorRow, 1)
-        };
-        Squares[majorRow, 2].Piece = new Bishop
-        {
-            Color = color,
-            Position = new Position(majorRow, 2)
-        };
-        Squares[majorRow, 3].Piece = new Queen
-        {
-            Color = color,
-            Position = new Position(majorRow, 3)
-        };
-        Squares[majorRow, 4].Piece = new King
-        {
-            Color = color,
-            Position = new Position(majorRow, 4)
-        };
-        Squares[majorRow, 5].Piece = new Bishop
-        {
-            Color = color,
-            Position = new Position(majorRow, 5)
-        };
-        Squares[majorRow, 6].Piece = new Knight
-        {
-            Color = color,
-            Position = new Position(majorRow, 6)
-        };
-        Squares[majorRow, 7].Piece = new Rook
-        {
-            Color = color,
-            Position = new Position(majorRow, 7)
-        };
+        Squares[majorRow, 0].Piece = new Rook(color);
+        Squares[majorRow, 1].Piece = new Knight(color);
+        Squares[majorRow, 2].Piece = new Bishop(color);
+        Squares[majorRow, 3].Piece = new Queen(color);
+        Squares[majorRow, 4].Piece = new King(color);
+        Squares[majorRow, 5].Piece = new Bishop(color);
+        Squares[majorRow, 6].Piece = new Knight(color);
+        Squares[majorRow, 7].Piece = new Rook(color);
 
         for (var i = 0; i < 8; i++)
         {
-            Squares[pawnRow, i].Piece = new Pawn
-            {
-                Color = color,
-                Position = new Position(pawnRow, i)
-            };
+            Squares[pawnRow, i].Piece = new Pawn(color);
         }
     }
     

@@ -1,10 +1,16 @@
 ﻿using chess.Entities.Board;
+using chess.Entities.Common;
 
 namespace chess.Entities.Pieces.Types;
 
 public class King : Piece
 {
+    public King(Color color) : base(color)
+    {
+    }
+
     public override PieceType Type => PieceType.King;
+    public bool HasMoved { get; set; } = false;
 
     public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
     {
@@ -32,7 +38,7 @@ public class King : Piece
             
             var piece = board.Squares[row, col].Piece;
 
-            if (piece?.Owner == Owner)
+            if (piece?.Color == Color)
                 continue;
             
             possiblePositions.Add(new Position(row, col));
@@ -45,7 +51,7 @@ public class King : Piece
                 board.Squares[from.Row, from.Column + 3].Piece;
 
             if (kingSideRook is Rook {HasMoved: false} &&
-                kingSideRook.Owner == Owner &&
+                kingSideRook.Color == Color &&
                 board.Squares[from.Row, from.Column + 1].Piece is null &&
                 board.Squares[from.Row, from.Column + 2].Piece is null)
             {
@@ -57,7 +63,7 @@ public class King : Piece
                 board.Squares[from.Row, from.Column - 4].Piece;
 
             if (queenSideRook is Rook {HasMoved: false} &&
-                queenSideRook.Owner == Owner &&
+                queenSideRook.Color == Color &&
                 board.Squares[from.Row, from.Column - 1].Piece is null &&
                 board.Squares[from.Row, from.Column - 2].Piece is null &&
                 board.Squares[from.Row, from.Column - 3].Piece is null)
@@ -68,6 +74,4 @@ public class King : Piece
         
         return possiblePositions;
     }
-
-    public bool HasMoved { get; set; } = false;
 }

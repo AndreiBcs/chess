@@ -1,9 +1,14 @@
 ﻿using chess.Entities.Board;
+using chess.Entities.Common;
 
 namespace chess.Entities.Pieces.Types;
 
 public class Knight : Piece
 {
+    public Knight(Color color) : base(color)
+    {
+    }
+
     public override PieceType Type => PieceType.Knight;
 
     public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
@@ -32,7 +37,7 @@ public class Knight : Piece
             
             var piece = board.Squares[row, col].Piece;
 
-            if (piece?.Owner == Owner)
+            if (piece?.Color == Color)
                 continue;
             
             possiblePositions.Add(new Position(row, col));

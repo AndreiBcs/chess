@@ -5,13 +5,18 @@ namespace chess.Entities.Pieces.Types;
 
 public class Pawn : Piece
 {
+    public Pawn(Color color) : base(color)
+    {
+    }
+
     public override PieceType Type => PieceType.Pawn;
+    public bool HasMoved { get; set; } = false;
 
     public override IEnumerable<Position> GetPossiblePositions(Board.Board board, Position from)
     {
         var possiblePositions = new List<Position>();
 
-        var direction = Owner.Color == Color.White ? -1 : 1;
+        var direction = Color == Color.White ? -1 : 1;
 
         var oneForward = new Position(
             from.Row + direction,
@@ -45,7 +50,7 @@ public class Pawn : Piece
         {
             var piece = board.Squares[leftCapture.Row, leftCapture.Column].Piece;
 
-            if (piece is not null && piece.Owner != Owner)
+            if (piece is not null && piece.Color != Color)
             {
                 possiblePositions.Add(leftCapture);
             }
@@ -61,7 +66,7 @@ public class Pawn : Piece
         {
             var piece = board.Squares[rightCapture.Row, rightCapture.Column].Piece;
 
-            if (piece is not null && piece.Owner != Owner)
+            if (piece is not null && piece.Color != Color)
             {
                 possiblePositions.Add(rightCapture);
             }
@@ -76,7 +81,7 @@ public class Pawn : Piece
             {
                 var piece = board.Squares[from.Row, from.Column - 1].Piece;
 
-                if (piece is not null && piece.Owner != Owner && piece.Type is PieceType.Pawn)
+                if (piece is not null && piece.Color != Color && piece.Type is PieceType.Pawn)
                 {
                     possiblePositions.Add(new Position(
                         from.Row + direction,
@@ -88,7 +93,7 @@ public class Pawn : Piece
             {
                 var piece = board.Squares[from.Row, from.Column + 1].Piece;
 
-                if (piece is not null && piece.Owner != Owner && piece.Type is PieceType.Pawn)
+                if (piece is not null && piece.Color != Color && piece.Type is PieceType.Pawn)
                 {
                     possiblePositions.Add(new Position(
                         from.Row + direction,
@@ -99,6 +104,4 @@ public class Pawn : Piece
         
         return possiblePositions;
     }
-
-    public bool HasMoved { get; set; } = false;
 }
