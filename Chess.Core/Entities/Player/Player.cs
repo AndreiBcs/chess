@@ -1,17 +1,19 @@
-﻿using chess.Entities.Common;
+﻿using chess.Entities.Board;
+using chess.Entities.Common;
 using chess.Entities.Pieces;
 using chess.Entities.Pieces.Types;
 
 namespace chess.Entities.Player;
 
-public class Player
+public abstract class Player
 {
     public Color Color { get; init; }
     private List<Piece> Pieces { get; } = [];
     public King King { get; private set; } = null!;
-    public IPlayerTypeActions PlayerTypeActions { get; init; } 
     public IEnumerable<Piece> ActivePieces =>
         Pieces.Where(p => !p.IsCaptured);
+
+    public abstract Task<Move> GetMoveAsync();
 
     public void InitializePlayer()
     {

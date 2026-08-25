@@ -1,19 +1,21 @@
-﻿using Chess.Engine;
-using chess.Entities.Board;
+﻿using chess.Entities.Board;
 using chess.Entities.Pieces;
+using chess.Entities.Player;
+using chess.Game;
 
-namespace chess.Entities.Player.ChessEngine;
+namespace Chess.Engine;
 
-public class ChessEngine : IPlayerTypeActions
+public class EnginePlayer : Player
 {
     private readonly Engine _engine;
 
-    public ChessEngine(ChessEngineDifficulty difficulty)
+    public EnginePlayer(ChessEngineDifficulty difficulty)
     {
         _engine = new Engine();
         _engine.Elo = difficulty.GetDifficultyElo();
     }
-    public Move GetMove()
+    
+    public override Task<Move> GetMoveAsync()
     {
         try
         {
@@ -35,12 +37,11 @@ public class ChessEngine : IPlayerTypeActions
                 _ => null
             };
             
-            return new Move(from, to,null, promotion);
+            return new Task<Move>(from, to,null, promotion);
         }
         catch (Exception e)
         {
             throw new Exception(e.Message, e);
         }
     }
-    
 }
