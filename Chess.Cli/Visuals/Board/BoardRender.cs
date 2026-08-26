@@ -1,10 +1,9 @@
-﻿using Chess.Cli.GameRunner;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Color = chess.Entities.Common.Color;
 
-namespace Chess.Cli.Board;
+namespace Chess.Cli.Visuals.Board;
 
-public class SpectreBoardRenderer : IBoardRenderer
+public class BoardRender
 {
     private readonly Table _table = new Table().Border(TableBorder.None).HideHeaders();
 

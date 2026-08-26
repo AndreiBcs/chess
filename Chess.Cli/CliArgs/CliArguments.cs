@@ -5,47 +5,48 @@ namespace Chess.Cli.CliArgs;
 
 public sealed class CliArguments
 {
-    private readonly Option<bool> _textRender = new(
-        "--text-render",
-        aliases: ["--text", "-t"])
-    {
-        Description = "Render the board as plain text"
-    };
-    
-    private readonly Option<int> _elo = new(
-        "--difficulty",
-        aliases: ["-d"])
-    {
-        Description = "Choose the elo > 1320 & < 3190",
-        DefaultValueFactory = _ => 1320
-    };
-
     private readonly Option<Color> _playerColor = new(
-        "--play-as",
-        aliases: ["--color", "-c"])
+        "--color", aliases: ["-c"])
     {
-        Description = "Choose the side to play as: White or Black",
+        Description = "Choose the color to play as",
         DefaultValueFactory = _ => Color.White
     };
 
-    public sealed record ParsedOptions(
-        bool UseTextRenderer,
-        int Elo, 
-        Color PlayerColor);
+    private readonly Option<ChessEngine> _chessEngine = new(
+        "--engine")
+    {
+        Description = "Choose the engine to play against",
+        DefaultValueFactory = _ => ChessEngine.Stockfish
+    };
+    
+    private readonly Option<int> _elo = new(
+        "--elo")
+    {
+        Description = "Choose the elo of the engine",
+        DefaultValueFactory = _ => 1400
+    };
+
+
+    public sealed record ParsedOptions(Color PlayerColor, ChessEngine Engine, int Elo);
 
     public ParsedOptions Parse(string[] args)
     {
-        var root = new RootCommand("Chess CLI")
-        {
-            _textRender, 
-            _elo, 
-            _playerColor 
+        var root = new RootCommand("Chess")
+        { 
+            _playerColor,
+            _chessEngine,
+            _elo
         };
         var parseResult = root.Parse(args);
         
         return new ParsedOptions(
-            parseResult.GetValue(_textRender),
-            parseResult.GetValue(_elo),
-            parseResult.GetValue(_playerColor));
+            parseResult.GetValue(_playerColor),
+            parseResult.GetValue(_chessEngine),
+            parseResult.GetValue(_elo));
     }
+}
+
+public enum ChessEngine
+{
+    Stockfish
 }

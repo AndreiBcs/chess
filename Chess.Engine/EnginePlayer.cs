@@ -10,7 +10,7 @@ public class EnginePlayer : Player
 {
     public readonly Uci Uci;
 
-    public EnginePlayer(Uci uci)
+    public EnginePlayer(Uci uci, Color color) : base(color)
     {
         Uci = uci;
     }

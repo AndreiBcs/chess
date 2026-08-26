@@ -1,22 +1,41 @@
-﻿using chess.Entities.Common;
+﻿using Chess.Cli.CliArgs;
+using Chess.Cli.Player;
+using Chess.Cli.Visuals.Board;
+using Chess.Engine;
+using Chess.Engine.Stockfish;
+using chess.Entities.Common;
 using chess.Game;
+using UserInteraction = Chess.Cli.Visuals.Interactions.UserInteraction;
 
 namespace Chess.Cli.GameRunner;
 
 public class GameRunner
 {
-    private readonly IBoardRenderer _renderer;
-    private readonly IUserInteraction _interaction;
+    private readonly BoardRender _render;
+    private readonly UserInteraction _interaction;
     private readonly Game _game;
 
-    public GameRunner(
-        IBoardRenderer renderer, 
-        IUserInteraction userInteraction, 
-        Color playerColor)
+    public GameRunner(CliArguments.ParsedOptions options)
     {
-        _renderer = renderer;
-        _interaction = userInteraction;
-        //_game = new Game();
+        _render = new BoardRender();
+        _interaction = new UserInteraction();
+
+        var userColor = options.PlayerColor;
+        var engineColor = userColor == Color.White?
+            Color.Black : 
+            Color.White;
+
+        var engineType = options.Engine;
+        var engine = engineType switch
+        {
+            ChessEngine.Stockfish => new Stockfish(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
+        var player1 = new HumanPlayer(userColor);
+        var player2 = new EnginePlayer(engine, engineColor);
+            
+        _game = new Game(player1, player2);
     }
 
     public void Run()
@@ -24,8 +43,7 @@ public class GameRunner
         _game.StartGame();
         while (!_game.IsOver)
         {
-            _renderer.Render(_game.Board);
-            var move = _interaction.ReadMove();
+            _render.Render(_game.Board);
         }
     }
 }

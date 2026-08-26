@@ -1,11 +1,10 @@
 ﻿using System.Text.RegularExpressions;
-using Chess.Cli.GameRunner;
 using chess.Entities.Board;
 using Spectre.Console;
 
-namespace Chess.Cli.Interactions;
+namespace Chess.Cli.Visuals.Interactions;
 
-public partial class SpectreUserInteraction : IUserInteraction
+public partial class UserInteraction 
 {
     public Move ReadMove()
     {

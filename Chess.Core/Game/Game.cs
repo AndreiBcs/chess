@@ -7,48 +7,60 @@ namespace chess.Game;
 
 public class Game
 {
-    public Game(Player playerWhite, Player playerBlack)
+    public Game(Player player1, Player player2)
     {
-        PlayerWhite = playerWhite;
-        PlayerBlack = playerBlack;
+        Players = [player1, player2];
     }
 
     public bool IsOver { get; set; } = false;
-    public Color CurrentTurn { get; set; } = Color.White;
-    public Player PlayerWhite { get; }
-    public Player PlayerBlack { get; }
-    public Board Board { get; } = new();
-    public int FullMoveCounter { get; set; } = 1; // increase after black's turn
-    public int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
-    public Move CurrentMove { get; set; }
-    public Move PreviousMove { get; set; }
-    // TODO add en-passant & castling info
-
-    public void StartGame()
+    private Color CurrentTurn { get; set; } = Color.White;
+    private void SwitchTurn()
     {
-        Board.InitializeBoard();
-        GameLoop();
+        CurrentTurn = CurrentTurn == Color.White ? 
+            Color.Black : 
+            Color.White;
     }
 
-    private void GameLoop()
+    private IReadOnlyList<Player> Players { get; }
+    private Player GetPlayer(Color color)
     {
+        return Players.Single(p => p.Color == color);
+    }
+    
+    public Board Board { get; } = new();
+    private int FullMoveCounter { get; set; } = 1; // increase after black's turn
+    private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
+    private Move CurrentMove { get; set; }
+    private Move PreviousMove { get; set; }
+    // TODO add en-passant & castling info
+
+    public async Task StartGame()
+    {
+        Board.InitializeBoard();
+        await GameLoop();
+    }
+
+    private async Task GameLoop()
+    {
+        var currentPlayer = GetPlayer(CurrentTurn);
+        
         while (!IsOver)
         {
-            var currentPlayer = CurrentTurn == Color.White
-                ? PlayerWhite
-                : PlayerBlack;
-
             var snapshot = CreateSnapshot();
 
-            var move = currentPlayer.GetMoveAsync(snapshot);
+            var move = await currentPlayer.GetMoveAsync(snapshot);
 
             // TODO validate move + game state update
+            Board.MovePiece(move.From, move.To);
+            
+            SwitchTurn();
+            currentPlayer = GetPlayer(CurrentTurn);
         }
     }
 
     private GameSnapshot CreateSnapshot()
     {
-        return new GameSnapshot(CurrentTurn, Board, FullMoveCounter, HalfMoveCounter);
+        return new GameSnapshot(IsOver, CurrentTurn, Board, FullMoveCounter, HalfMoveCounter);
     }
     
 }

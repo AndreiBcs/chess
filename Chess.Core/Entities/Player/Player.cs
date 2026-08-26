@@ -6,6 +6,11 @@ namespace chess.Entities.Player;
 
 public abstract class Player
 {
-    public Color Color { get; init; }
+    protected Player(Color color)
+    {
+        Color = color;
+    }
+
+    public Color Color { get; }
     public abstract Task<Move> GetMoveAsync(GameSnapshot snapshot);
 }
