@@ -1,5 +1,4 @@
 ﻿using System.CommandLine;
-using Chess.Engine.Configs;
 using chess.Entities.Common;
 
 namespace Chess.Cli.CliArgs;
@@ -13,12 +12,12 @@ public sealed class CliArguments
         Description = "Render the board as plain text"
     };
     
-    private readonly Option<Difficulty> _difficulty = new(
+    private readonly Option<int> _elo = new(
         "--difficulty",
         aliases: ["-d"])
     {
-        Description = "Choose the difficulty: Easy | Normal | Hard",
-        DefaultValueFactory = _ => Difficulty.Normal
+        Description = "Choose the elo > 1320 & < 3190",
+        DefaultValueFactory = _ => 1320
     };
 
     private readonly Option<Color> _playerColor = new(
@@ -31,7 +30,7 @@ public sealed class CliArguments
 
     public sealed record ParsedOptions(
         bool UseTextRenderer,
-        Difficulty Difficulty, 
+        int Elo, 
         Color PlayerColor);
 
     public ParsedOptions Parse(string[] args)
@@ -39,14 +38,14 @@ public sealed class CliArguments
         var root = new RootCommand("Chess CLI")
         {
             _textRender, 
-            _difficulty, 
+            _elo, 
             _playerColor 
         };
         var parseResult = root.Parse(args);
         
         return new ParsedOptions(
             parseResult.GetValue(_textRender),
-            parseResult.GetValue(_difficulty),
+            parseResult.GetValue(_elo),
             parseResult.GetValue(_playerColor));
     }
 }

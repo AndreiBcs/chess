@@ -1,5 +1,4 @@
-﻿using Chess.Engine.Configs;
-using chess.Entities.Common;
+﻿using chess.Entities.Common;
 using chess.Game;
 
 namespace Chess.Cli.GameRunner;
@@ -13,7 +12,6 @@ public class GameRunner
     public GameRunner(
         IBoardRenderer renderer, 
         IUserInteraction userInteraction, 
-        Difficulty difficulty, 
         Color playerColor)
     {
         _renderer = renderer;

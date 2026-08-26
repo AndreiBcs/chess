@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Chess.Engine.Configs;
+namespace Chess.Engine;
 
 public class Engine : IDisposable
 {
@@ -8,6 +8,7 @@ public class Engine : IDisposable
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
     private bool _disposed;
+    private int _elo;
 
     public Engine()
     {
@@ -47,9 +48,9 @@ public class Engine : IDisposable
         SendCommand("isready");
         WaitForResponse("readyok");
         
-        elo = Math.Clamp(elo, 1320, 3190);
+        _elo = Math.Clamp(elo, 1320, 3190);
         SetOption("UCI_LimitStrength", "true");
-        SetOption("UCI_Elo", elo.ToString());
+        SetOption("UCI_Elo", _elo.ToString());
         SendCommand("isready");
         WaitForResponse("readyok");
     }
