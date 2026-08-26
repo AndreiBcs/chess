@@ -35,34 +35,34 @@ public class Stockfish : Uci
         _writer = _process.StandardInput;
     }
 
-    public void StartEngine()
+    public async Task StartEngine()
     {
-        SendCommand("uci");
-        WaitForResponse("uciok");
-        SendCommand("isready");
-        WaitForResponse("readyok");
+        await SendCommand("uci");
+        await WaitForResponse("uciok");
+        await SendCommand("isready");
+        await WaitForResponse("readyok");
     }
 
-    public void NewGame()
+    public async Task NewGame()
     {
-        SendCommand("ucinewgame");
-        SendCommand("isready");
-        WaitForResponse("readyok");
+        await SendCommand("ucinewgame");
+        await SendCommand("isready");
+        await WaitForResponse("readyok");
     }
 
-    public void SetOption(string name, string value)
+    public async Task SetOption(string name, string value)
     {
-        SendCommand($"setoption name {name} value {value}");
+        await SendCommand($"setoption name {name} value {value}");
     }
 
-    public string GetMove(string fen)
+    public async Task<string> GetMove(string fen)
     {
-        SendCommand($"position fen {fen}");
+        await SendCommand($"position fen {fen}");
         // spend at most 1000 ms to calculate the move
-        SendCommand("go movetime 1000");
+        await SendCommand("go movetime 1000");
         
         string? line;
-        while ((line = _reader.ReadLine()) is not null)
+        while ((line = await _reader.ReadLineAsync()) is not null)
         {
             if (line.StartsWith("bestmove"))
             {
@@ -76,38 +76,38 @@ public class Stockfish : Uci
         );
     }
 
-    public void StopEngine()
+    public async Task StopEngine()
     {
         if (!_process.HasExited)
         {
-            SendCommand("quit");
-            _process.WaitForExit();
+            await SendCommand("quit");
+            await _process.WaitForExitAsync();
         }
         _reader.Dispose();
-        _writer.Dispose();
+        await _writer.DisposeAsync();
         _process.Dispose();
     }
 
-    public void SetElo(int elo)
+    public async Task SetElo(int elo)
     {
         elo = Math.Clamp(elo, 1320, 3190);
-        SetOption("UCI_LimitStrength", "true");
-        SetOption("UCI_Elo", elo.ToString());
-        SendCommand("isready");
-        WaitForResponse("readyok");
+        await SetOption("UCI_LimitStrength", "true");
+        await SetOption("UCI_Elo", elo.ToString());
+        await SendCommand("isready");
+        await WaitForResponse("readyok");
     }
     
     
-    private void SendCommand(string command)
+    private async Task SendCommand(string command)
     {
-        _writer.WriteLine(command);
-        _writer.Flush();
+        await _writer.WriteLineAsync(command);
+        await _writer.FlushAsync();
     }
     
-    private void WaitForResponse(string expectedResponse)
+    private async Task WaitForResponse(string expectedResponse)
     {
         string? line;
-        while ((line = _reader.ReadLine()) is not null)
+        while ((line = await _reader.ReadLineAsync()) is not null)
         {
             if (string.Equals(line, expectedResponse, 
                     StringComparison.OrdinalIgnoreCase))

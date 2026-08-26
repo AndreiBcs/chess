@@ -15,40 +15,33 @@ public class EnginePlayer : Player
         Uci = uci;
     }
     
-    public override Task<Move> GetMoveAsync(GameSnapshot snapshot)
+    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot)
     {
         try
         {
-            try
+            var move = await Uci.GetMove(ToFen(snapshot));
+
+            var from = Position.ParsePosition(move[..2]);
+            var to = Position.ParsePosition(move[2..4]);
+
+            PieceType? promotion = move.Length switch
             {
-                var move = Uci.GetMove(ToFen(snapshot));
-
-                var from = Position.ParsePosition(move[..2]);
-                var to = Position.ParsePosition(move[2..4]);
-
-                PieceType? promotion = move.Length switch
+                5 => move[4] switch
                 {
-                    5 => move[4] switch
-                    {
-                        'q' => PieceType.Queen,
-                        'r' => PieceType.Rook,
-                        'b' => PieceType.Bishop,
-                        'n' => PieceType.Knight,
-                        _ => null
-                    },
+                    'q' => PieceType.Queen,
+                    'r' => PieceType.Rook,
+                    'b' => PieceType.Bishop,
+                    'n' => PieceType.Knight,
                     _ => null
-                };
-            
-                return Task.FromResult(new Move(from, to, promotion));
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message, e);
-            }
+                },
+                _ => null
+            };
+
+            return new Move(from, to, promotion);
         }
-        catch (Exception exception)
+        catch (Exception e)
         {
-            return Task.FromException<Move>(exception);
+            throw new Exception(e.Message, e);
         }
     }
     
