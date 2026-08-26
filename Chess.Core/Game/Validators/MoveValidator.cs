@@ -5,16 +5,23 @@ namespace chess.Game.Validators;
 
 public static class MoveValidator
 {
-    public static bool ValidateMove(GameSnapshot snapshot, Move move)
+    public static MoveResult ValidateMove(GameSnapshot snapshot, Move move)
     {
         var piece = snapshot.Board.GetPiece(move.From);
-        
-        if (piece is null) return false;
+
+        if (piece is null || piece.Color != snapshot.CurrentTurn)
+            return MoveResult.Invalid;
 
         var possibleMoves = piece
             .GetPossiblePositions(snapshot.Board, move.From);
 
-        return possibleMoves.Contains(move.To) &&
-               snapshot.Board.IsValidMove(move);
+        if (!possibleMoves.Contains(move.To))
+            return MoveResult.Invalid;
+        
+        // TODO validate special move
+        
+        // TODO validate king safety
+        
+        return MoveResult.Valid;
     }
 }

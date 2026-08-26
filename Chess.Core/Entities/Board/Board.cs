@@ -20,26 +20,23 @@ public class Board : IReadOnlyBoard
         return Squares[position.Row, position.Column].Piece;
     }
 
-    public bool IsValidMove(Move move)
+    public MoveResult ValidateKingSafety(Move move)
     {
         var piece = GetPiece(move.From);
-        
-        if(piece is null) return false;
+
+        if (piece is null)
+            return MoveResult.Invalid;
         
         var boardCopy = Copy();
         boardCopy.MovePiece(move.From, move.To);
         
-        return !IsKingInCheck(boardCopy, piece.Color);
-    }
+        return VerifyKing(boardCopy, piece.Color);
+    } 
 
     public void MovePiece(Position from, Position to)
     {
         var piece = Squares[from.Row, from.Column].Piece;
-
-        if (piece is null)
-            throw new InvalidOperationException(
-                "Cannot move a piece from an empty square.");
-
+        
         Squares[to.Row, to.Column].Piece = piece;
         Squares[from.Row, from.Column].Piece = null;
     }
@@ -115,35 +112,50 @@ public class Board : IReadOnlyBoard
         return board;
     }
     
-    private static bool IsKingInCheck(Board board, Color kingColor)
+    private static MoveResult VerifyKing(Board board, Color kingColor)
     {
         var kingPosition = board.GetKingPosition(kingColor);
 
         var enemyColor = kingColor == Color.White
             ? Color.Black
             : Color.White;
+        
+        var checkPositions = new List<Position>();
+        var friendlyPositions = new List<Position>();
 
         foreach (var square in board.Squares)
         {
             var piece = square.Piece;
 
-            if (piece?.Color != enemyColor)
-                continue;
-
-            if (piece.GetPossiblePositions(board, square.Position)
-                .Contains(kingPosition))
+            if (piece?.Color == enemyColor)
             {
-                return true;
+                friendlyPositions.AddRange(piece
+                    .GetPossiblePositions(board, square.Position));
+            }
+            else if (piece?.Color == enemyColor)
+            {
+                checkPositions.AddRange(piece
+                    .GetPossiblePositions(board, square.Position));
             }
         }
 
-        return false;
+        if (checkPositions.Contains(kingPosition))
+        {
+            if (friendlyPositions.Count == 0)
+            {
+                return MoveResult.Checkmate;
+            }
+        }
+        
+        // TODO complete the verification
+
+        return MoveResult.Valid;
     }
 }
 
 public interface IReadOnlyBoard
 {
     Piece? GetPiece(Position position);
-    bool IsValidMove(Move move);
+    MoveResult ValidateKingSafety(Move move);
 }
 
