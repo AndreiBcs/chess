@@ -11,7 +11,7 @@ public class EnginePlayer : Player
 {
     private readonly Configs.Engine _engine;
 
-    public EnginePlayer(ChessEngineDifficulty difficulty)
+    public EnginePlayer(StockfishElo difficulty)
     {
         _engine = new Configs.Engine();
         _engine.Elo = difficulty.GetDifficultyElo();

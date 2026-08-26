@@ -1,7 +1,6 @@
 ﻿using System.CommandLine;
 using Chess.Engine.Configs;
 using chess.Entities.Common;
-using chess.Game;
 
 namespace Chess.Cli.CliArgs;
 
