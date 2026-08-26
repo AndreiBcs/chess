@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Chess.Engine.Configs;
+namespace Chess.Engine;
 
 public class Engine : IDisposable
 {
@@ -8,19 +8,7 @@ public class Engine : IDisposable
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
     private bool _disposed;
-    public int Elo
-    {
-        get;
-        set
-        {
-            field = value;
-            SetOption("UCI_LimitStrength", "true");
-            SetOption("UCI_Elo", Elo.ToString());
-
-            SendCommand("isready");
-            WaitForResponse("readyok");
-        }
-    }
+    private int _elo;
 
     public Engine()
     {
@@ -53,18 +41,25 @@ public class Engine : IDisposable
         
         StartUci();
     }
-    
-    public void NewGame()
+
+    public void NewGame(int elo)
     {
         SendCommand("ucinewgame");
         SendCommand("isready");
         WaitForResponse("readyok");
+        
+        _elo = Math.Clamp(elo, 1320, 3190);
+        SetOption("UCI_LimitStrength", "true");
+        SetOption("UCI_Elo", _elo.ToString());
+        SendCommand("isready");
+        WaitForResponse("readyok");
     }
     
-    public string GetMove(string fen, int depth = 15)
+    public string GetMove(string fen)
     {
         SendCommand($"position fen {fen}");
-        SendCommand($"go depth {depth}");
+        // spend at most 1000 ms to calculate the move
+        SendCommand("go movetime 1000");
         
         string? line;
         while ((line = _reader.ReadLine()) is not null)

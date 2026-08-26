@@ -1,5 +1,4 @@
-﻿using Chess.Engine.Configs;
-using chess.Entities.Board;
+﻿using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Pieces;
 using chess.Entities.Player;
@@ -9,12 +8,22 @@ namespace Chess.Engine;
 
 public class EnginePlayer : Player
 {
-    private readonly Configs.Engine _engine;
+    private readonly Engine _engine;
+    public int Elo { get; set; }
 
-    public EnginePlayer(ChessEngineDifficulty difficulty)
+    public EnginePlayer()
     {
-        _engine = new Configs.Engine();
-        _engine.Elo = difficulty.GetDifficultyElo();
+        _engine = new Engine();
+    }
+
+    public void StartNewGame()
+    {
+        _engine.NewGame(Elo);
+    }
+
+    public void QuitEngine()
+    {
+        _engine.Dispose();
     }
     
     public override Task<Move> GetMoveAsync(GameSnapshot snapshot)

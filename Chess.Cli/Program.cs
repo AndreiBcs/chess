@@ -17,6 +17,6 @@ IUserInteraction userInteraction = options.UseTextRenderer
     ? new TextUserInteraction() 
     : new SpectreUserInteraction();
 
-var gameRunner = new GameRunner(renderer, userInteraction, options.Difficulty, options.PlayerColor);
+var gameRunner = new GameRunner(renderer, userInteraction, options.PlayerColor);
 gameRunner.Run();
 
