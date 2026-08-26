@@ -8,22 +8,11 @@ namespace Chess.Engine;
 
 public class EnginePlayer : Player
 {
-    private readonly Engine _engine;
-    public int Elo { get; set; }
+    public readonly Uci Uci;
 
-    public EnginePlayer()
+    public EnginePlayer(Uci uci)
     {
-        _engine = new Engine();
-    }
-
-    public void StartNewGame()
-    {
-        _engine.NewGame(Elo);
-    }
-
-    public void QuitEngine()
-    {
-        _engine.Dispose();
+        Uci = uci;
     }
     
     public override Task<Move> GetMoveAsync(GameSnapshot snapshot)
@@ -32,7 +21,7 @@ public class EnginePlayer : Player
         {
             try
             {
-                var move = _engine.GetMove(ToFen(snapshot));
+                var move = Uci.GetMove(ToFen(snapshot));
 
                 var from = Position.ParsePosition(move[..2]);
                 var to = Position.ParsePosition(move[2..4]);

@@ -1,22 +1,20 @@
 ﻿using System.Diagnostics;
 
-namespace Chess.Engine;
+namespace Chess.Engine.Stockfish;
 
-public class Engine : IDisposable
+public class Stockfish : Uci
 {
     private readonly Process _process;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
-    private bool _disposed;
-    private int _elo;
 
-    public Engine()
+    public Stockfish()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "Executable", "stockfish-windows-x86-64-avx2.exe");
+        var path = Path.Combine(AppContext.BaseDirectory, "Stockfish", "stockfish-windows-x86-64-avx2.exe");
 
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException("stockfish.exe not found", path);
+            throw new FileNotFoundException("stockfish not found", path);
         }
 
         _process = new Process
@@ -31,30 +29,32 @@ public class Engine : IDisposable
                 CreateNoWindow = true
             }
         };
-        Console.WriteLine($"Engine path: {path}");
-        Console.WriteLine($"Exists: {File.Exists(path)}");
-        var fileInfo = new FileInfo(path);
-        Console.WriteLine($"Size: {fileInfo.Length} bytes");
+        
         _process.Start();
         _reader = _process.StandardOutput;
         _writer = _process.StandardInput;
-        
-        StartUci();
     }
 
-    public void NewGame(int elo)
+    public void StartEngine()
+    {
+        SendCommand("uci");
+        WaitForResponse("uciok");
+        SendCommand("isready");
+        WaitForResponse("readyok");
+    }
+
+    public void NewGame()
     {
         SendCommand("ucinewgame");
         SendCommand("isready");
         WaitForResponse("readyok");
-        
-        _elo = Math.Clamp(elo, 1320, 3190);
-        SetOption("UCI_LimitStrength", "true");
-        SetOption("UCI_Elo", _elo.ToString());
-        SendCommand("isready");
-        WaitForResponse("readyok");
     }
-    
+
+    public void SetOption(string name, string value)
+    {
+        SendCommand($"setoption name {name} value {value}");
+    }
+
     public string GetMove(string fen)
     {
         SendCommand($"position fen {fen}");
@@ -75,16 +75,9 @@ public class Engine : IDisposable
             "Engine did not return a best move"
         );
     }
-    
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
 
-        _disposed = true;
-        
+    public void StopEngine()
+    {
         if (!_process.HasExited)
         {
             SendCommand("quit");
@@ -95,15 +88,22 @@ public class Engine : IDisposable
         _process.Dispose();
     }
 
-    private void StartUci()
+    public void SetElo(int elo)
     {
-        SendCommand("uci");
-        WaitForResponse("uciok");
-        
+        elo = Math.Clamp(elo, 1320, 3190);
+        SetOption("UCI_LimitStrength", "true");
+        SetOption("UCI_Elo", elo.ToString());
         SendCommand("isready");
         WaitForResponse("readyok");
     }
-
+    
+    
+    private void SendCommand(string command)
+    {
+        _writer.WriteLine(command);
+        _writer.Flush();
+    }
+    
     private void WaitForResponse(string expectedResponse)
     {
         string? line;
@@ -119,16 +119,5 @@ public class Engine : IDisposable
         throw new InvalidOperationException(
             $"Stockfish exited before sending '{expectedResponse}'"
         );
-    }
-    
-    private void SetOption(string name, string value)
-    {
-        SendCommand($"setoption name {name} value {value}");
-    }
-    
-    private void SendCommand(string command)
-    {
-        _writer.WriteLine(command);
-        _writer.Flush();
     }
 }
