@@ -1,5 +1,6 @@
-﻿using Spectre.Console;
-using Color = chess.Entities.Common.Color;
+﻿using chess.Entities.Board;
+using chess.Game.GameState;
+using Spectre.Console;
 
 namespace Chess.Cli.Visuals.Board;
 
@@ -7,7 +8,7 @@ public class BoardRender
 {
     private readonly Table _table = new Table().Border(TableBorder.None).HideHeaders();
 
-    public void Render(chess.Entities.Board.Board board)
+    public void Render(GameSnapshot snapshot)
     {
         _table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         for (var i = 0; i < 8; i++)
@@ -30,10 +31,10 @@ public class BoardRender
 
             for (var j = 0; j < 8; j++)
             {
-                var square = board.Squares[i, j];
+                var piece = snapshot.Board.GetPiece(new Position(i, j));
                 
-                var bgColor = square.Color == Color.White ? "#b89a74" : "#6b4f35";
-                var letterId = square.Piece?.LetterId;
+                var bgColor = (i + j) % 2 == 0 ? "#b89a74" : "#6b4f35";
+                var letterId = piece?.LetterId;
                 var symbol = GetPieceSymbol(letterId);
                 var fgColor = GetPieceTextColor(letterId);
 

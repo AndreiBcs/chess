@@ -38,12 +38,11 @@ public class GameRunner
         _game = new Game(player1, player2);
     }
 
-    public void Run()
+    public async Task Run()
     {
-        _game.StartGame();
-        while (!_game.IsOver)
+        await foreach (var snapshot in _game.GameLoop())
         {
-            _render.Render(_game.Board);
+            _render.Render(snapshot);
         }
     }
 }

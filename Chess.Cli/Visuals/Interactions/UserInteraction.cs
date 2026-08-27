@@ -1,12 +1,13 @@
 ﻿using System.Text.RegularExpressions;
 using chess.Entities.Board;
+using chess.Game.GameState;
 using Spectre.Console;
 
 namespace Chess.Cli.Visuals.Interactions;
 
 public partial class UserInteraction 
 {
-    public Move ReadMove()
+    public async Task<Move> ReadMove(GameSnapshot snapshot)
     {
         while (true)
         {
@@ -22,12 +23,7 @@ public partial class UserInteraction
                             return ValidationResult.Error(
                                 "[red]Invalid notation. Enter a valid square like 'e2' or 'G7'.[/]");
                         }
-
-                        // var (row, col) = ParseNotation(input);
-                        // return board.Squares[row, col].Piece == null 
-                        //     ? ValidationResult.Error("[red]There is no piece on that square. Try again.[/]") 
-                        //     : ValidationResult.Success();
-                        return null; // TODO: verificarea se face in Core
+                        return ValidationResult.Success();
                     }));
 
             var toSquare = AnsiConsole.Prompt(

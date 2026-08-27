@@ -2,6 +2,7 @@
 using chess.Entities.Common;
 using chess.Entities.Player;
 using chess.Game.GameState;
+using chess.Game.Validators;
 
 namespace chess.Game;
 
@@ -10,9 +11,10 @@ public class Game
     public Game(Player player1, Player player2)
     {
         Players = [player1, player2];
+        Board.InitializeBoard();
     }
 
-    public bool IsOver { get; set; } = false;
+    private bool IsOver { get; set; } = false;
     private Color CurrentTurn { get; set; } = Color.White;
     private void SwitchTurn()
     {
@@ -34,27 +36,27 @@ public class Game
     private Move PreviousMove { get; set; }
     // TODO add en-passant & castling info
 
-    public async Task StartGame()
+    public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
-        Board.InitializeBoard();
-        await GameLoop();
-    }
-
-    private async Task GameLoop()
-    {
-        var currentPlayer = GetPlayer(CurrentTurn);
-        
-        while (!IsOver)
+        while (true)
         {
             var snapshot = CreateSnapshot();
+            yield return snapshot;
+            
+            if(IsOver) yield break;
 
+            var currentPlayer = GetPlayer(CurrentTurn);
+            
             var move = await currentPlayer.GetMoveAsync(snapshot);
 
-            // TODO validate move + game state update
-            Board.MovePiece(move.From, move.To);
+            var result = MoveValidator.ValidateMove(snapshot, move);
+
+            if (result == MoveResult.Valid)
+            {
+                Board.MovePiece(move.From, move.To);
+            }
             
             SwitchTurn();
-            currentPlayer = GetPlayer(CurrentTurn);
         }
     }
 

@@ -11,7 +11,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <None Update="Executable\stockfish-windows-x86-64-avx2.exe">
+    <None Update="Stockfish\stockfish-windows-x86-64-avx2.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
