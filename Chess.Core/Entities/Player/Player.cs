@@ -12,5 +12,5 @@ public abstract class Player
     }
 
     public Color Color { get; }
-    public abstract Task<Move> GetMoveAsync(GameSnapshot snapshot);
+    public abstract Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult);
 }

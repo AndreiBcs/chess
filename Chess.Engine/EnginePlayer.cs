@@ -15,7 +15,7 @@ public class EnginePlayer : Player
         Uci = uci;
     }
     
-    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot)
+    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
         try
         {

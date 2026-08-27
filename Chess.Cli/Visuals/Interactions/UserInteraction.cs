@@ -67,4 +67,9 @@ public partial class UserInteraction
 
     [GeneratedRegex("^[a-hA-H][1-8]$")]
     private static partial Regex MyRegex();
+
+    public void ShowMoveError(MoveResult? previousResult)
+    {
+        throw new NotImplementedException();
+    }
 }

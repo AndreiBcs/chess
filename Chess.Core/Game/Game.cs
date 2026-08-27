@@ -44,16 +44,21 @@ public class Game
             yield return snapshot;
             
             if(IsOver) yield break;
-
-            var currentPlayer = GetPlayer(CurrentTurn);
             
-            var move = await currentPlayer.GetMoveAsync(snapshot);
+            MoveResult? result = null;
 
-            var result = MoveValidator.ValidateMove(snapshot, move);
-
-            if (result == MoveResult.Valid)
+            while (true)
             {
-                Board.MovePiece(move.From, move.To);
+                var currentPlayer = GetPlayer(CurrentTurn);
+                var move = await currentPlayer.GetMoveAsync(snapshot, result);
+                
+                result = MoveValidator.ValidateMove(snapshot, move);
+
+                if (result == MoveResult.Valid)
+                {
+                    Board.MovePiece(move.From, move.To);
+                    break;
+                }
             }
             
             SwitchTurn();

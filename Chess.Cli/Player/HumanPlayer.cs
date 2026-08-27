@@ -13,8 +13,11 @@ public class HumanPlayer : chess.Entities.Player.Player
         _interaction = new UserInteraction();
     }
 
-    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot)
+    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
+        if (previousResult is not null && previousResult != MoveResult.Valid)
+            _interaction.ShowMoveError(previousResult);
+            
         return await _interaction.ReadMove(snapshot);
     }
 }
