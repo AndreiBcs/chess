@@ -5,9 +5,13 @@ namespace chess.Entities.Pieces.Types;
 
 public class King : Piece, IMoveTracker
 {
-    public King(Color color, bool hasMoved) : base(color)
+    public King(Color color, bool hasMoved = false) : base(color)
     {
         HasMoved = hasMoved;
+    }
+
+    public King(Color color) : this(color, false)
+    {
     }
 
     public override PieceType Type => PieceType.King;

@@ -5,9 +5,13 @@ namespace chess.Entities.Pieces.Types;
 
 public class Pawn : Piece, IMoveTracker
 {
-    public Pawn(Color color, bool hasMoved) : base(color)
+    public Pawn(Color color, bool hasMoved = false) : base(color)
     {
         HasMoved = hasMoved;
+    }
+
+    public Pawn(Color color) : this(color, false)
+    {
     }
 
     public override PieceType Type => PieceType.Pawn;
