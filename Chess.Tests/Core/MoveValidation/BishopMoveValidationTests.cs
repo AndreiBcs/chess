@@ -24,7 +24,7 @@ public class BishopMoveValidationTests
     [InlineData(4, 4, 7, 1)]
     public void Bishop_CanMoveDiagonally(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Bishop,
             Color.White,
             fromRow,
@@ -48,7 +48,7 @@ public class BishopMoveValidationTests
     [InlineData(4, 4, 8, 0)]
     public void Bishop_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Bishop,
             Color.White,
             fromRow,

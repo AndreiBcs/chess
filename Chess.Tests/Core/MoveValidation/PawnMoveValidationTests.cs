@@ -14,7 +14,7 @@ public class PawnMoveValidationTests
     [InlineData(1, 2, 0, 2)]
     public void Pawn_White_CanMoveOneSquare(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -37,7 +37,7 @@ public class PawnMoveValidationTests
     [InlineData(1, 2, 2, 2)]
     public void Pawn_Black_CanMoveOneSquare(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.Black,
             fromRow,
@@ -59,7 +59,7 @@ public class PawnMoveValidationTests
     [InlineData(6, 0, 4, 0)]
     public void Pawn_CanMoveTwoSquares(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -80,7 +80,7 @@ public class PawnMoveValidationTests
     [InlineData(0, 1, -1, 0)]
     public void Pawn_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -106,7 +106,7 @@ public class PawnMoveValidationTests
         int toRow, 
         int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,

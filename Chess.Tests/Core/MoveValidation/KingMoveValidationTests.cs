@@ -19,7 +19,7 @@ public class KingMoveValidationTests
     [InlineData(4, 4, 4, 5)]
     public void King_CanMoveUpDownLeftRightDiagonally(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.King,
             Color.White,
             fromRow,
@@ -41,7 +41,7 @@ public class KingMoveValidationTests
     [InlineData(7, 7, 8, 8)]
     public void King_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.King,
             Color.White,
             fromRow,

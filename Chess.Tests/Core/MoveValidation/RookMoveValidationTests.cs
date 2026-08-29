@@ -25,7 +25,7 @@ public class RookMoveValidationTests
     [InlineData(4, 4, 4, 7)]
     public void Rook_CanMoveUpDownLeftRight(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Rook,
             Color.White,
             fromRow,
@@ -49,7 +49,7 @@ public class RookMoveValidationTests
     [InlineData(6, 6, 6, -1)]
     public void Rook_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helpers.GetSnapshotWithPiece(
+        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
             PieceType.Rook,
             Color.White,
             fromRow,
