@@ -19,7 +19,7 @@ public class KnightMoveValidationTests
     [InlineData(4, 4, 6, 5)]
     public void Knight_CanMoveInLShape(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helper.GetSnapshotWithPiece(
+        var snapshot = Helpers.GetSnapshotWithPiece(
             PieceType.Knight,
             Color.White,
             fromRow,
@@ -43,7 +43,7 @@ public class KnightMoveValidationTests
     [InlineData(6, 6, 8, 7)]
     public void Knight_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helper.GetSnapshotWithPiece(
+        var snapshot = Helpers.GetSnapshotWithPiece(
             PieceType.Knight,
             Color.White,
             fromRow,

@@ -38,7 +38,7 @@ public class QueenMoveValidationTests
     [InlineData(4, 4, 4, 7)]
     public void Queen_CanMoveUpDownLeftRightDiagonally(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helper.GetSnapshotWithPiece(
+        var snapshot = Helpers.GetSnapshotWithPiece(
             PieceType.Queen,
             Color.White,
             fromRow,
@@ -64,7 +64,7 @@ public class QueenMoveValidationTests
     [InlineData(6, 6, 8, 6)]
     public void Queen_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = Helper.GetSnapshotWithPiece(
+        var snapshot = Helpers.GetSnapshotWithPiece(
             PieceType.Queen,
             Color.White,
             fromRow,

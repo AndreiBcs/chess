@@ -11,7 +11,11 @@ public abstract class Piece
     }
 
     public Color Color { get; init; }
-    public bool IsCaptured { get; set; } = false;
+    public bool IsCaptured { get; private set; }
+    public void MarkAsCaptured()
+    {
+        IsCaptured = true;
+    }
     public abstract PieceType Type { get; }
     public char LetterId
     {

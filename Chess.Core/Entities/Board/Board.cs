@@ -42,6 +42,9 @@ public class Board : IReadOnlyBoard
         var piece = GetPiece(from);
 
         if (piece is null) return;
+
+        var capturedPiece = GetPiece(to);
+        capturedPiece?.MarkAsCaptured();
         
         Squares[to.Row, to.Column].Piece = piece;
         Squares[from.Row, from.Column].Piece = null;

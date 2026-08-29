@@ -1,6 +1,6 @@
 ﻿namespace Chess.Tests.Core.Board;
 
-public class BoardMovementTests
+public class BoardTests
 {
     /* TODO
      * identify piece

@@ -5,9 +5,9 @@ using chess.Entities.Pieces.Types;
 using chess.Game.GameState;
 using Chess.Tests.Core.Board;
 
-namespace Chess.Tests.Core.MoveValidation;
+namespace Chess.Tests.Core;
 
-public static class Helper
+public static class Helpers
 {
     public static GameSnapshot GetSnapshotWithPiece(
         PieceType type, 
