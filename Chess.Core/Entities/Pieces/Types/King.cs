@@ -36,6 +36,29 @@ public class King : Piece, IMoveTracker
             (0, -1), // left
             (0, 1) // right
         };
+        
+        var enemyColor = Color == Color.White ? Color.Black : Color.White;
+        var enemyKingPosition = board.GetKingPosition(enemyColor);
+        var enemyKingSpace = new List<Position>
+        {
+            enemyKingPosition,
+            new (Row: enemyKingPosition.Row - 1,
+                Column: enemyKingPosition.Column - 1),
+            new (Row: enemyKingPosition.Row - 1,
+                Column: enemyKingPosition.Column),
+            new (Row: enemyKingPosition.Row - 1,
+                Column: enemyKingPosition.Column + 1),
+            new (Row: enemyKingPosition.Row,
+                Column: enemyKingPosition.Column - 1),
+            new (Row: enemyKingPosition.Row,
+                Column: enemyKingPosition.Column + 1),
+            new (Row: enemyKingPosition.Row + 1,
+                Column: enemyKingPosition.Column),
+            new (Row: enemyKingPosition.Row + 1,
+                Column: enemyKingPosition.Column - 1),
+            new (Row: enemyKingPosition.Row + 1,
+                Column: enemyKingPosition.Column + 1)
+        };
 
         foreach (var (rowOffset, colOffset) in moves)
         {
@@ -49,6 +72,9 @@ public class King : Piece, IMoveTracker
             var piece = board.GetPiece(pos);
 
             if (piece?.Color == Color)
+                continue;
+            
+            if(enemyKingSpace.Contains(pos))
                 continue;
             
             possiblePositions.Add(pos);

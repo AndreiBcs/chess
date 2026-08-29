@@ -89,7 +89,7 @@ public class Board : IReadOnlyBoard
         }
     }
 
-    private Position GetKingPosition(Color color)
+    public Position GetKingPosition(Color color)
     {
         var pos = new Position();
         foreach (var sq in Squares)
@@ -171,5 +171,6 @@ public interface IReadOnlyBoard
 {
     Piece? GetPiece(Position position);
     MoveResult ValidateKingSafety(Move move);
+    Position GetKingPosition(Color color);
 }
 
