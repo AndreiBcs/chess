@@ -24,7 +24,7 @@ public class Stockfish : Uci
                 FileName = path,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 RedirectStandardInput = true,
                 CreateNoWindow = true
             }

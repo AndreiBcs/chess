@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chess.Core\Chess.Core.csproj" />
+    <ProjectReference Include="..\Chess.Engine\Chess.Engine.csproj" />
   </ItemGroup>
 
 </Project>

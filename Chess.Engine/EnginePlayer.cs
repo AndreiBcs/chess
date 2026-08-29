@@ -17,84 +17,75 @@ public class EnginePlayer : Player
     
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
-        try
+        var fen = ToFen(snapshot);
+        
+        var move = await Uci.GetMove(fen);
+
+        var from = Position.ParsePosition(move[..2]);
+        var to = Position.ParsePosition(move[2..4]);
+
+        PieceType? promotion = move.Length switch
         {
-            var move = await Uci.GetMove(ToFen(snapshot));
-
-            var from = Position.ParsePosition(move[..2]);
-            var to = Position.ParsePosition(move[2..4]);
-
-            PieceType? promotion = move.Length switch
+            5 => move[4] switch
             {
-                5 => move[4] switch
-                {
-                    'q' => PieceType.Queen,
-                    'r' => PieceType.Rook,
-                    'b' => PieceType.Bishop,
-                    'n' => PieceType.Knight,
-                    _ => null
-                },
+                'q' => PieceType.Queen,
+                'r' => PieceType.Rook,
+                'b' => PieceType.Bishop,
+                'n' => PieceType.Knight,
                 _ => null
-            };
+            },
+            _ => null
+        };
 
-            return new Move(from, to, promotion);
-        }
-        catch (Exception e)
-        {
-            throw new Exception(e.Message, e);
-        }
+        return new Move(from, to, promotion);
     }
     
     private static string ToFen(GameSnapshot snapshot)
     {
         var fen = "";
 
-        for (var i = 0; i < 8; i++)
+        for (var row = 0; row < 8; row++)
         {
             var empty = 0;
-            var col = 0;
 
-            while (col < 8)
+            for (var col = 0; col < 8; col++)
             {
-                if (snapshot.Board.GetPiece(new Position(i, col)) is not null)
-                {
-                    fen += snapshot.Board.GetPiece(new Position(i, col))!.LetterId;
-                    col++;
-                }
-                else
-                {
-                    while (snapshot.Board.GetPiece(new Position(i, col++)) is null)
-                    {
-                        empty++;
-                    }
+                var piece = snapshot.Board.GetPiece(new Position(row, col));
 
-                    fen += empty.ToString();
+                if (piece is null)
+                {
+                    empty++;
+                    continue;
                 }
+
+                if (empty > 0)
+                {
+                    fen += empty;
+                    empty = 0;
+                }
+
+                fen += piece.LetterId;
             }
 
-            switch (i)
-            {
-                case < 7:
-                    fen += "/";
-                    break;
-                case 7:
-                    fen += " ";
-                    break;
-            }
+            if (empty > 0)
+                fen += empty;
+
+            if (row < 7)
+                fen += "/";
         }
 
-        fen += snapshot.CurrentTurn == Color.White ? "w" : "b";
-        
-        // TODO castling rights
-        fen += "-";
-        
-        // TODO en-passant valid square
-        fen += "-";
-        
-        fen += snapshot.HalfMoveCounter.ToString();
+        fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
+
+        // TODO: castling rights
+        fen += "KQkq ";
+
+        // TODO: en-passant target square
+        fen += "- ";
+
+        fen += snapshot.HalfMoveCounter;
         fen += " ";
-        fen += snapshot.FullMoveCounter.ToString();
-        
+        fen += snapshot.FullMoveCounter;
+
         return fen;
     }
 }

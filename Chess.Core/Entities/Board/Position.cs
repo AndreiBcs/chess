@@ -7,11 +7,11 @@ public readonly record struct Position(int Row, int Column)
         return $"{(char)('a' + Column)}{8 - Row}";
     }
 
-    public static Position ParsePosition(string fen)
+    public static Position ParsePosition(string position)
     {
-         var col = fen[0] - 'a';
-         var row = 8 - fen[1];
+         var col = position[0] - 'a';
+         var row = 8 - int.Parse(position[1].ToString());
          
-         return new Position(col, row);
+         return new Position(row, col);
     }
 }
