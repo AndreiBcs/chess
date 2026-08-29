@@ -7,10 +7,6 @@ namespace Chess.Tests.Core.MoveValidation;
 
 public class RookMoveValidationTests
 {
-    /* TODO
-     * can capture
-     * cannot capture own piece
-     */
     
     [Theory]
     [InlineData(4, 4, 3, 4)]
@@ -44,5 +40,29 @@ public class RookMoveValidationTests
         var result = MoveValidator.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
+    }
+    
+    [Theory]
+    [InlineData(4, 4, -1, 4)]
+    [InlineData(4, 4, 8, 4)]
+    [InlineData(6, 6, 6, 8)]
+    [InlineData(6, 6, 6, -1)]
+    public void Rook_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        var snapshot = Helper.GetSnapshotWithPiece(
+            PieceType.Rook,
+            Color.White,
+            fromRow,
+            fromCol);
+
+        var move = new Move
+        {
+            From = new Position(fromRow, fromCol),
+            To = new Position(toRow, toCol)
+        };
+        
+        var result = MoveValidator.ValidateMove(snapshot, move);
+        
+        Assert.Equal(MoveResult.Invalid, result);
     }
 }

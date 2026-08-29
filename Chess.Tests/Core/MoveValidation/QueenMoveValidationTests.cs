@@ -7,10 +7,6 @@ namespace Chess.Tests.Core.MoveValidation;
 
 public class QueenMoveValidationTests
 {
-    /* TODO
-     * can capture
-     * cannot capture own piece
-     */
     
     [Theory]
     [InlineData(4, 4, 3, 3)]
@@ -57,5 +53,31 @@ public class QueenMoveValidationTests
         var result = MoveValidator.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
+    }
+    
+    [Theory]
+    [InlineData(1, 1, -1, 0)]
+    [InlineData(1, 1, 2, -1)]
+    [InlineData(6, 6, 5, 8)]
+    [InlineData(6, 6, 8, 7)]
+    [InlineData(4, 4, -1, 4)]
+    [InlineData(6, 6, 8, 6)]
+    public void Queen_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        var snapshot = Helper.GetSnapshotWithPiece(
+            PieceType.Queen,
+            Color.White,
+            fromRow,
+            fromCol);
+
+        var move = new Move
+        {
+            From = new Position(fromRow, fromCol),
+            To = new Position(toRow, toCol)
+        };
+        
+        var result = MoveValidator.ValidateMove(snapshot, move);
+        
+        Assert.Equal(MoveResult.Invalid, result);
     }
 }

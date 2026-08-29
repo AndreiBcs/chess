@@ -7,11 +7,7 @@ namespace Chess.Tests.Core.MoveValidation;
 
 public class KnightMoveValidationTests
 {
-    /* TODO
-     * can capture
-     * cannot capture own piece
-     */
-
+    
     [Theory]
     [InlineData(4, 4, 2, 3)]
     [InlineData(4, 4, 2, 5)]
@@ -38,5 +34,29 @@ public class KnightMoveValidationTests
         var result = MoveValidator.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
+    }
+    
+    [Theory]
+    [InlineData(1, 1, -1, 0)]
+    [InlineData(1, 1, 2, -1)]
+    [InlineData(6, 6, 5, 8)]
+    [InlineData(6, 6, 8, 7)]
+    public void Knight_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        var snapshot = Helper.GetSnapshotWithPiece(
+            PieceType.Knight,
+            Color.White,
+            fromRow,
+            fromCol);
+
+        var move = new Move
+        {
+            From = new Position(fromRow, fromCol),
+            To = new Position(toRow, toCol)
+        };
+        
+        var result = MoveValidator.ValidateMove(snapshot, move);
+        
+        Assert.Equal(MoveResult.Invalid, result);
     }
 }

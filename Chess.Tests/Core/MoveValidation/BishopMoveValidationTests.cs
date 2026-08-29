@@ -7,10 +7,6 @@ namespace Chess.Tests.Core.MoveValidation;
 
 public class BishopMoveValidationTests
 {
-    /* TODO
-     * can capture
-     * cannot capture own piece
-     */
     
     [Theory]
     [InlineData(4, 4, 3, 3)]
@@ -43,5 +39,29 @@ public class BishopMoveValidationTests
         var result = MoveValidator.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
+    }
+    
+    [Theory]
+    [InlineData(4, 4, -1, -1)]
+    [InlineData(4, 4, 8, 8)]
+    [InlineData(4, 4, 0, 8)]
+    [InlineData(4, 4, 8, 0)]
+    public void Bishop_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        var snapshot = Helper.GetSnapshotWithPiece(
+            PieceType.Bishop,
+            Color.White,
+            fromRow,
+            fromCol);
+
+        var move = new Move
+        {
+            From = new Position(fromRow, fromCol),
+            To = new Position(toRow, toCol)
+        };
+        
+        var result = MoveValidator.ValidateMove(snapshot, move);
+        
+        Assert.Equal(MoveResult.Invalid, result);
     }
 }

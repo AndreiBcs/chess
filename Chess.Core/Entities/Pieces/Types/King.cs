@@ -3,7 +3,7 @@ using chess.Entities.Common;
 
 namespace chess.Entities.Pieces.Types;
 
-public class King : Piece
+public class King : Piece, IMoveTracker
 {
     public King(Color color, bool hasMoved) : base(color)
     {
@@ -11,7 +11,11 @@ public class King : Piece
     }
 
     public override PieceType Type => PieceType.King;
-    public bool HasMoved { get; set; }
+    public bool HasMoved { get; private set; }
+    public void MarkAsMoved()
+    {
+        HasMoved = true;
+    }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -46,7 +50,7 @@ public class King : Piece
             possiblePositions.Add(pos);
         }
         
-        if (!HasMoved)
+        if (!HasMoved && from.Column == 4)
         {
             var pos = new Position(from.Row, from.Column);
             

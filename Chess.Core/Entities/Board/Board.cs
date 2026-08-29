@@ -17,6 +17,10 @@ public class Board : IReadOnlyBoard
     
     public Piece? GetPiece(Position position)
     {
+        if (position.Row is < 0 or >= 8 ||
+            position.Column is < 0 or >= 8)
+            return null;
+        
         return Squares[position.Row, position.Column].Piece;
     }
 
@@ -35,10 +39,17 @@ public class Board : IReadOnlyBoard
 
     public void MovePiece(Position from, Position to)
     {
-        var piece = Squares[from.Row, from.Column].Piece;
+        var piece = GetPiece(from);
+
+        if (piece is null) return;
         
         Squares[to.Row, to.Column].Piece = piece;
         Squares[from.Row, from.Column].Piece = null;
+
+        if (piece is IMoveTracker moveTracker)
+        {
+            moveTracker.MarkAsMoved();
+        }
     }
 
     private void InitializeSquares()

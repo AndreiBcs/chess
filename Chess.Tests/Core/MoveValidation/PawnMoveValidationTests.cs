@@ -7,12 +7,6 @@ namespace Chess.Tests.Core.MoveValidation;
 
 public class PawnMoveValidationTests
 {
-    /* TODO
-     * move 2 vertically if first move
-     * cannot move more then 2 squares
-     * can capture diagonally
-     * cannot move through own piece
-     */
     
     [Theory]
     [InlineData(4, 4, 3, 4)]
@@ -82,4 +76,25 @@ public class PawnMoveValidationTests
         Assert.Equal(MoveResult.Valid, result);
     }
     
+    [Theory]
+    [InlineData(0, 1, -1, 0)]
+    public void Pawn_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        var snapshot = Helper.GetSnapshotWithPiece(
+            PieceType.Pawn,
+            Color.White,
+            fromRow,
+            fromCol,
+            true);
+
+        var move = new Move
+        {
+            From = new Position(fromRow, fromCol),
+            To = new Position(toRow, toCol)
+        };
+        
+        var result = MoveValidator.ValidateMove(snapshot, move);
+        
+        Assert.Equal(MoveResult.Invalid, result);
+    }
 }
