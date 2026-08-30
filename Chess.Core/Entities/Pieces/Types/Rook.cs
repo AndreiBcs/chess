@@ -62,6 +62,11 @@ public class Rook : Piece, IMoveTracker
         return possiblePositions;
     }
 
+    public override IEnumerable<Position> GetAttackPositions(IReadOnlyBoard board, Position from)
+    {
+        return GetPossiblePositions(board, from);
+    }
+
     public override Piece Copy()
     {
         return new Rook(Color, HasMoved);

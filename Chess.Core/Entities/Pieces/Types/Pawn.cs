@@ -112,6 +112,35 @@ public class Pawn : Piece, IMoveTracker
         return possiblePositions;
     }
 
+    public override IEnumerable<Position> GetAttackPositions(IReadOnlyBoard board, Position from)
+    {
+        var attackPositions = new List<Position>();
+        
+        var direction = Color == Color.White ? -1 : 1;
+        
+        var leftCapture = new Position(
+            from.Row + direction,
+            from.Column - 1);
+
+        if (leftCapture.Row is >= 0 and < 8 &&
+            leftCapture.Column is >= 0 and < 8)
+        {
+            attackPositions.Add(leftCapture);
+        }
+
+        var rightCapture = new Position(
+            from.Row + direction,
+            from.Column + 1);
+
+        if (rightCapture.Row is >= 0 and < 8 &&
+            rightCapture.Column is >= 0 and < 8)
+        {
+            attackPositions.Add(rightCapture);
+        }
+
+        return attackPositions;
+    }
+
     public override Piece Copy()
     {
         return new Pawn(Color, HasMoved);

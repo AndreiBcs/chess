@@ -36,5 +36,6 @@ public abstract class Piece
         }
     }
     public abstract IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from);
+    public abstract IEnumerable<Position> GetAttackPositions(IReadOnlyBoard board, Position from);
     public abstract Piece Copy();
 }

@@ -28,8 +28,8 @@ public class Game
     {
         return Players.Single(p => p.Color == color);
     }
-    
-    public Board Board { get; } = new();
+
+    private Board Board { get; } = new();
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
     private Move CurrentMove { get; set; }
