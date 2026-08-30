@@ -1,4 +1,4 @@
-﻿namespace Chess.Tests.Core.SpecialMove;
+﻿namespace Chess.Tests.Core.Game;
 
 public class CastlingTests
 {
