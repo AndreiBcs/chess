@@ -9,6 +9,7 @@ public static class MoveValidator
 {
     public static MoveResult ValidateMove(GameSnapshot snapshot, Move move)
     {
+        // 1. test if the piece can be moved there
         var board = snapshot.Board;
         var piece = board.GetPiece(move.From);
 
@@ -22,10 +23,10 @@ public static class MoveValidator
             return MoveResult.Invalid;
         
         var target = board.GetPiece(move.To);
-        if (target?.Type == PieceType.King)
+        if (target?.Type == PieceType.King) // cannot capture the king
             return MoveResult.Invalid;
         
-        
+        // 2. test the move's side effects
         var testBoard = snapshot.Board.Copy();
         testBoard.MovePiece(move.From, move.To);
         
@@ -37,13 +38,13 @@ public static class MoveValidator
         if (IsKingInCheck(testBoard, opponentColor))
         {
             if (!HasLegalMove(testBoard, opponentColor))
-            {
                 return MoveResult.Checkmate;
-            }
         }
-
-        if (!HasLegalMove(testBoard, opponentColor))
-            return MoveResult.Stalemate;
+        else
+        {
+            if (!HasLegalMove(testBoard, opponentColor))
+                return MoveResult.Stalemate;
+        }
         
         return MoveResult.Valid;
     }
