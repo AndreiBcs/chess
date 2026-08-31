@@ -75,12 +75,11 @@ public class EnginePlayer : Player
         }
 
         fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
-
-        // TODO: castling rights
-        fen += "KQkq ";
+        
+        fen += snapshot.Castling.ToString();
 
         // TODO: en-passant target square
-        fen += "- ";
+        fen += " - ";
 
         fen += snapshot.HalfMoveCounter;
         fen += " ";

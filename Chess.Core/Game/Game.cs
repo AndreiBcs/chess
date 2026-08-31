@@ -47,8 +47,9 @@ public class Game
             if(IsOver) yield break;
             
             MoveResult? result = null;
+            HalfMoveCounter++;
 
-            while (true)
+            while (true) // wait for player move and validate
             {
                 var currentPlayer = GetPlayer(CurrentTurn);
                 var move = await currentPlayer.GetMoveAsync(snapshot, result);
@@ -61,6 +62,11 @@ public class Game
                     var capturedPiece = Board.GetPiece(move.To);
                     var isCastling = MoveValidator
                         .IsCastlingMove(snapshot, move, CurrentTurn, out var castling);
+
+                    if (movedPiece!.Type == PieceType.Pawn)
+                    {
+                        HalfMoveCounter = 0; // reset to 0 if pawn advance
+                    }
                     
                     if (isCastling)
                     {
@@ -73,6 +79,7 @@ public class Game
                     }
                     break;
                 }
+                
                 if (result is MoveResult.Checkmate or MoveResult.Stalemate)
                 {
                     IsOver = true;
@@ -106,13 +113,19 @@ public class Game
 
     private void UpdateCastlingRights(Piece? movedPiece, Piece? capturedPiece, Move move)
     {
-        if (movedPiece is King)
+        switch (movedPiece)
         {
-            RemoveCastlingRights(movedPiece.Color);
+            case King:
+                RemoveCastlingRights(movedPiece.Color);
+                break;
+            case Rook:
+                RemoveCastlingRights(movedPiece.Color, move.From);
+                break;
         }
-        else if (movedPiece is Rook)
+
+        if (capturedPiece is not null)
         {
-            RemoveCastlingRights(movedPiece.Color, move.From);
+            HalfMoveCounter = 0; // reset to 0 if capture occurs
         }
 
         if (capturedPiece is Rook)
