@@ -26,6 +26,8 @@ public static class MoveValidator
         if (target?.Type == PieceType.King) // cannot capture the king
             return MoveResult.Invalid;
         
+        // TODO check for castling
+        
         // 2. test the move's side effects
         var testBoard = snapshot.Board.Copy();
         testBoard.MovePiece(move.From, move.To);

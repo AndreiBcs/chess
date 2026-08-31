@@ -14,7 +14,7 @@ public class Game
         Board.InitializeBoard();
     }
 
-    private bool IsOver { get; set; } = false;
+    private bool IsOver { get; set; }
     private Color CurrentTurn { get; set; } = Color.White;
     private void SwitchTurn()
     {
@@ -33,6 +33,7 @@ public class Game
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
     private Move PreviousMove { get; set; }
+    private Castling Castling { get; set; } = new();
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
@@ -57,6 +58,11 @@ public class Game
                     Board.MovePiece(move.From, move.To);
                     break;
                 }
+                if (result is MoveResult.Checkmate or MoveResult.Stalemate)
+                {
+                    IsOver = true;
+                    break;
+                }
             }
             
             SwitchTurn();
@@ -65,7 +71,13 @@ public class Game
 
     private GameSnapshot CreateSnapshot()
     {
-        return new GameSnapshot(IsOver, CurrentTurn, Board, FullMoveCounter, HalfMoveCounter);
+        return new GameSnapshot(
+            IsOver, 
+            CurrentTurn,
+            Board, 
+            FullMoveCounter,
+            HalfMoveCounter, 
+            Castling);
     }
     
 }

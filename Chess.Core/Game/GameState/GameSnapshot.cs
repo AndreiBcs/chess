@@ -10,19 +10,21 @@ public sealed class GameSnapshot
     public IReadOnlyBoard Board { get; }
     public int FullMoveCounter { get; }
     public int HalfMoveCounter { get; }
-    // TODO add en-passant & castling info
+    public Castling Castling { get; }
 
     public GameSnapshot(
         bool over, 
         Color currentTurn, 
         Board board, 
         int fullMoveCounter, 
-        int halfMoveCounter)
+        int halfMoveCounter,
+        Castling castling)
     {
         IsOver = over;
         CurrentTurn = currentTurn;
         Board = board;
         FullMoveCounter = fullMoveCounter;
         HalfMoveCounter = halfMoveCounter;
+        Castling = castling;
     }
 }
