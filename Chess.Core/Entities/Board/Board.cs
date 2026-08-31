@@ -6,7 +6,7 @@ namespace chess.Entities.Board;
 
 public class Board : IReadOnlyBoard
 {
-    public Square[,] Squares { get; } = new Square[8, 8];
+    private Square[,] Squares { get; } = new Square[8, 8];
 
     public void InitializeBoard()
     {

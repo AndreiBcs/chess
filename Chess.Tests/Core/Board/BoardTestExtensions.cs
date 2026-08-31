@@ -9,11 +9,12 @@ public static class BoardTestExtensions
     public static chess.Entities.Board.Board CreateEmpty(
         this chess.Entities.Board.Board board)
     {
+        var squares = board.GetSquares();
         for (var row = 0; row < 8; row++)
         {
             for (var col = 0; col < 8; col++)
             {
-                board.Squares[row, col] = new Square
+                squares[row, col] = new Square
                 {
                     Color = (row + col) % 2 == 0
                         ? Color.White
@@ -30,7 +31,8 @@ public static class BoardTestExtensions
         Piece piece,
         Position position)
     {
-        board.Squares[position.Row, position.Column].Piece = piece;
+        var squares = board.GetSquares();
+        squares[position.Row, position.Column].Piece = piece;
         return board;
     }
 }

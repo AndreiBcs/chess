@@ -32,9 +32,7 @@ public class Game
     private Board Board { get; } = new();
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
-    private Move CurrentMove { get; set; }
     private Move PreviousMove { get; set; }
-    // TODO add en-passant & castling info
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
