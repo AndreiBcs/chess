@@ -1,5 +1,7 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
+using chess.Entities.Pieces;
+using chess.Entities.Pieces.Types;
 using chess.Entities.Player;
 using chess.Game.GameState;
 using chess.Game.Validators;
@@ -55,7 +57,20 @@ public class Game
 
                 if (result == MoveResult.Valid)
                 {
-                    Board.MovePiece(move.From, move.To);
+                    var movedPiece = Board.GetPiece(move.From);
+                    var capturedPiece = Board.GetPiece(move.To);
+                    var isCastling = MoveValidator
+                        .IsCastlingMove(snapshot, move, CurrentTurn, out var castling);
+                    
+                    if (isCastling)
+                    {
+                        HandleCastling(castling);
+                    }
+                    else
+                    {
+                        Board.MovePiece(move.From, move.To);
+                        UpdateCastlingRights(movedPiece, capturedPiece, move);
+                    }
                     break;
                 }
                 if (result is MoveResult.Checkmate or MoveResult.Stalemate)
@@ -66,6 +81,7 @@ public class Game
             }
             
             SwitchTurn();
+            FullMoveCounter++;
         }
     }
 
@@ -79,5 +95,42 @@ public class Game
             HalfMoveCounter, 
             Castling);
     }
-    
+
+    private void HandleCastling(CastlingInfo castling)
+    {
+        Board.MovePiece(castling.KingFrom, castling.KingTo);
+        Board.MovePiece(castling.RookFrom, castling.RookTo);
+
+        RemoveCastlingRights(castling.Color);
+    }
+
+    private void UpdateCastlingRights(Piece? movedPiece, Piece? capturedPiece, Move move)
+    {
+        if (movedPiece is King)
+        {
+            RemoveCastlingRights(movedPiece.Color);
+        }
+        else if (movedPiece is Rook)
+        {
+            RemoveCastlingRights(movedPiece.Color, move.From);
+        }
+
+        if (capturedPiece is Rook)
+        {
+            RemoveCastlingRights(capturedPiece.Color, move.To);
+        }
+    }
+
+    private void RemoveCastlingRights(Color color, Position? rookPosition = null)
+    {
+        if (rookPosition is null)
+        {
+            Castling.CastlingPositions.RemoveAll(c => c.Color == color);
+            return;
+        }
+
+        Castling.CastlingPositions.RemoveAll(c =>
+            c.Color == color &&
+            c.RookFrom == rookPosition);
+    }
 }

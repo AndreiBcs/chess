@@ -1,10 +1,118 @@
-﻿namespace Chess.Tests.Core.Game;
+using chess.Entities.Board;
+using chess.Entities.Common;
+using chess.Entities.Pieces;
+using chess.Entities.Pieces.Types;
+using chess.Game.GameState;
+using chess.Game.Validators;
+using Chess.Tests.Core.Board;
+
+namespace Chess.Tests.Core.Game;
 
 public class CastlingTests
 {
-    /* TODO
-     * is valid castle
-     * king moves through checks
-     * both for queen and king side
-     */
+    [Fact]
+    public void CanCastleKingside()
+    {
+        var snapshot = CreateSnapshot(
+            new King(Color.White),
+            new Rook(Color.White),
+            new King(Color.Black),
+            new Position(7, 4),
+            new Position(7, 7),
+            new Position(0, 0));
+
+        var result = MoveValidator.ValidateMove(
+            snapshot,
+            new Move(new Position(7, 4), new Position(7, 6)));
+
+        Assert.Equal(MoveResult.Valid, result);
+    }
+
+    [Fact]
+    public void CanCastleQueenside()
+    {
+        var snapshot = CreateSnapshot(
+            new King(Color.White),
+            new Rook(Color.White),
+            new King(Color.Black),
+            new Position(7, 4),
+            new Position(7, 0),
+            new Position(0, 0));
+
+        var result = MoveValidator.ValidateMove(
+            snapshot,
+            new Move(new Position(7, 4), new Position(7, 2)));
+
+        Assert.Equal(MoveResult.Valid, result);
+    }
+
+    [Fact]
+    public void CannotCastleThroughCheck()
+    {
+        var snapshot = CreateSnapshot(
+            new King(Color.White),
+            new Rook(Color.White),
+            new King(Color.Black),
+            new Position(7, 4),
+            new Position(7, 7),
+            new Position(0, 4),
+            new Rook(Color.Black),
+            new Position(0, 5));
+
+        var result = MoveValidator.ValidateMove(
+            snapshot,
+            new Move(new Position(7, 4), new Position(7, 6)));
+
+        Assert.Equal(MoveResult.Invalid, result);
+    }
+
+    [Fact]
+    public void CannotCastleWhileInCheck()
+    {
+        var snapshot = CreateSnapshot(
+            new King(Color.White),
+            new Rook(Color.White),
+            new King(Color.Black),
+            new Position(7, 4),
+            new Position(7, 7),
+            new Position(0, 0),
+            new Rook(Color.Black),
+            new Position(0, 4));
+
+        var result = MoveValidator.ValidateMove(
+            snapshot,
+            new Move(new Position(7, 4), new Position(7, 6)));
+
+        Assert.Equal(MoveResult.Invalid, result);
+    }
+
+    private static GameSnapshot CreateSnapshot(
+        Piece whiteKing,
+        Piece whiteRook,
+        Piece blackKing,
+        Position whiteKingPosition,
+        Position whiteRookPosition,
+        Position blackKingPosition,
+        Piece? extraBlackPiece = null,
+        Position? extraBlackPiecePosition = null)
+    {
+        var board = new chess.Entities.Board.Board();
+        board.CreateEmpty()
+            .PlacePiece(whiteKing, whiteKingPosition)
+            .PlacePiece(whiteRook, whiteRookPosition)
+            .PlacePiece(blackKing, blackKingPosition);
+
+        if (extraBlackPiece is not null && extraBlackPiecePosition is not null)
+        {
+            board.PlacePiece(extraBlackPiece, extraBlackPiecePosition.Value);
+        }
+
+        return new GameSnapshot(
+            false,
+            Color.White,
+            board,
+            1,
+            0,
+            new Castling());
+    }
 }

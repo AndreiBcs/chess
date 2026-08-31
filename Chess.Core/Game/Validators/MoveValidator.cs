@@ -9,7 +9,6 @@ public static class MoveValidator
 {
     public static MoveResult ValidateMove(GameSnapshot snapshot, Move move)
     {
-        // 1. test if the piece can be moved there
         var board = snapshot.Board;
         var piece = board.GetPiece(move.From);
 
@@ -23,32 +22,32 @@ public static class MoveValidator
             return MoveResult.Invalid;
         
         var target = board.GetPiece(move.To);
-        if (target?.Type == PieceType.King) // cannot capture the king
+        if (target?.Type == PieceType.King)
             return MoveResult.Invalid;
-        
-        // TODO check for castling
-        
-        // 2. test the move's side effects
-        var testBoard = snapshot.Board.Copy();
-        testBoard.MovePiece(move.From, move.To);
-        
-        if(IsKingInCheck(testBoard, piece.Color))
-            return MoveResult.Invalid;
-        
-        var opponentColor = piece.Color == Color.White ? Color.Black : Color.White;
 
-        if (IsKingInCheck(testBoard, opponentColor))
+        var isCastlingAttempt =
+            piece.Type == PieceType.King &&
+            move.From.Row == move.To.Row &&
+            move.To.Column - move.From.Column is 2 or -2;
+
+        if (isCastlingAttempt)
         {
-            if (!HasLegalMove(testBoard, opponentColor))
-                return MoveResult.Checkmate;
+            if (!IsCastlingMove(snapshot, move, piece.Color, out var castling))
+                return MoveResult.Invalid;
+            if (!CanCastle(snapshot, move))
+                return MoveResult.Invalid;
+
+            return ValidateBoardState(snapshot, piece.Color, testBoard =>
+            {
+                testBoard.MovePiece(castling.KingFrom, castling.KingTo);
+                testBoard.MovePiece(castling.RookFrom, castling.RookTo);
+            });
         }
-        else
+
+        return ValidateBoardState(snapshot, piece.Color, testBoard =>
         {
-            if (!HasLegalMove(testBoard, opponentColor))
-                return MoveResult.Stalemate;
-        }
-        
-        return MoveResult.Valid;
+            testBoard.MovePiece(move.From, move.To);
+        });
     }
 
     public static bool IsKingInCheck(Board board, Color kingColor)
@@ -103,5 +102,89 @@ public static class MoveValidator
         }
 
         return false;
+    }
+
+    private static bool CanCastle(GameSnapshot snapshot, Move move)
+    {
+        var piece = snapshot.Board.GetPiece(move.From);
+
+        if (piece is null ||
+            piece.Color != snapshot.CurrentTurn ||
+            piece.Type != PieceType.King)
+            return false;
+
+        foreach (var castlingPosition in snapshot.Castling.CastlingPositions)
+        {
+            if (castlingPosition.Color == piece.Color &&
+                castlingPosition.KingFrom == move.From &&
+                castlingPosition.KingTo == move.To)
+            {
+                foreach (var position in castlingPosition.KingSafePositions)
+                {
+                    var board = snapshot.Board.Copy();
+
+                    if (position != castlingPosition.KingFrom)
+                    {
+                        board.MovePiece(castlingPosition.KingFrom, position);
+                    }
+
+                    if (IsKingInCheck(board, piece.Color))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool IsCastlingMove(
+        GameSnapshot snapshot,
+        Move move,
+        Color pieceColor,
+        out CastlingInfo castling)
+    {
+        foreach (var castlingPosition in snapshot.Castling.CastlingPositions)
+        {
+            if (castlingPosition.Color == pieceColor &&
+                castlingPosition.KingFrom == move.From &&
+                castlingPosition.KingTo == move.To)
+            {
+                castling = castlingPosition;
+                return true;
+            }
+        }
+
+        castling = default;
+        return false;
+    }
+
+    private static MoveResult ValidateBoardState(
+        GameSnapshot snapshot,
+        Color movingColor,
+        Action<Board> applyMove)
+    {
+        var testBoard = snapshot.Board.Copy();
+        applyMove(testBoard);
+
+        if (IsKingInCheck(testBoard, movingColor))
+            return MoveResult.Invalid;
+
+        var opponentColor = movingColor == Color.White ? Color.Black : Color.White;
+
+        if (IsKingInCheck(testBoard, opponentColor))
+        {
+            if (!HasLegalMove(testBoard, opponentColor))
+                return MoveResult.Checkmate;
+        }
+        else if (!HasLegalMove(testBoard, opponentColor))
+        {
+            return MoveResult.Stalemate;
+        }
+
+        return MoveResult.Valid;
     }
 }
