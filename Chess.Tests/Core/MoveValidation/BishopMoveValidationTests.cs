@@ -1,7 +1,6 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Pieces;
-using chess.Game.Validators;
 
 namespace Chess.Tests.Core.MoveValidation;
 
@@ -24,7 +23,7 @@ public class BishopMoveValidationTests
     [InlineData(4, 4, 7, 1)]
     public void Bishop_CanMoveDiagonally(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Bishop,
             Color.White,
             fromRow,
@@ -36,7 +35,7 @@ public class BishopMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -48,7 +47,7 @@ public class BishopMoveValidationTests
     [InlineData(4, 4, 8, 0)]
     public void Bishop_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Bishop,
             Color.White,
             fromRow,
@@ -60,7 +59,7 @@ public class BishopMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }

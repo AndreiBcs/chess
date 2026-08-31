@@ -32,7 +32,8 @@ public class StockfishTests
             Color.White,
             board,
             1,
-            0);
+            0,
+            new Castling());
 
         var move = await enginePlayer.GetMoveAsync(snapshot, null);
         _testOutputHelper.WriteLine(move.ToString());

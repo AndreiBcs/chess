@@ -1,7 +1,6 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Pieces;
-using chess.Game.Validators;
 
 namespace Chess.Tests.Core.MoveValidation;
 
@@ -25,7 +24,7 @@ public class RookMoveValidationTests
     [InlineData(4, 4, 4, 7)]
     public void Rook_CanMoveUpDownLeftRight(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Rook,
             Color.White,
             fromRow,
@@ -37,7 +36,7 @@ public class RookMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -49,7 +48,7 @@ public class RookMoveValidationTests
     [InlineData(6, 6, 6, -1)]
     public void Rook_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Rook,
             Color.White,
             fromRow,
@@ -61,7 +60,7 @@ public class RookMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }

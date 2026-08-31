@@ -51,7 +51,7 @@ public static class MoveValidator
         return MoveResult.Valid;
     }
 
-    private static bool IsKingInCheck(Board board, Color kingColor)
+    public static bool IsKingInCheck(Board board, Color kingColor)
     {
         var kingPosition = board.GetKingPosition(kingColor);
 

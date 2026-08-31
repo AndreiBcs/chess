@@ -4,6 +4,7 @@ using chess.Entities.Pieces;
 using chess.Entities.Pieces.Types;
 using chess.Game.GameState;
 using chess.Game.Validators;
+using Chess.Tests.Core.MoveValidation;
 
 namespace Chess.Tests.Core.Board;
 
@@ -54,9 +55,10 @@ public class BoardTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -84,9 +86,10 @@ public class BoardTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
@@ -111,9 +114,10 @@ public class BoardTests
             Color.White, 
             board,
             1, 
-            0);
+            0, 
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }

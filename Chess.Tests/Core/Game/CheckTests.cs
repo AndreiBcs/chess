@@ -4,6 +4,7 @@ using chess.Entities.Pieces.Types;
 using chess.Game.GameState;
 using chess.Game.Validators;
 using Chess.Tests.Core.Board;
+using Chess.Tests.Core.MoveValidation;
 
 namespace Chess.Tests.Core.Game;
 
@@ -39,9 +40,10 @@ public class CheckTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
@@ -75,9 +77,10 @@ public class CheckTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
@@ -111,9 +114,10 @@ public class CheckTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -137,9 +141,10 @@ public class CheckTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
@@ -165,9 +170,10 @@ public class CheckTests
             Color.White, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
@@ -193,7 +199,8 @@ public class CheckTests
             Color.Black, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
@@ -219,7 +226,8 @@ public class CheckTests
             Color.Black, 
             board,
             1, 
-            0);
+            0,
+            new Castling());
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         

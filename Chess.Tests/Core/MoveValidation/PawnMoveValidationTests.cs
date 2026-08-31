@@ -1,7 +1,6 @@
 ﻿using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Entities.Pieces;
-using chess.Game.Validators;
 
 namespace Chess.Tests.Core.MoveValidation;
 
@@ -14,7 +13,7 @@ public class PawnMoveValidationTests
     [InlineData(1, 2, 0, 2)]
     public void Pawn_White_CanMoveOneSquare(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -26,7 +25,7 @@ public class PawnMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -37,7 +36,7 @@ public class PawnMoveValidationTests
     [InlineData(1, 2, 2, 2)]
     public void Pawn_Black_CanMoveOneSquare(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.Black,
             fromRow,
@@ -49,7 +48,7 @@ public class PawnMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -59,7 +58,7 @@ public class PawnMoveValidationTests
     [InlineData(6, 0, 4, 0)]
     public void Pawn_CanMoveTwoSquares(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -71,7 +70,7 @@ public class PawnMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Valid, result);
     }
@@ -80,7 +79,7 @@ public class PawnMoveValidationTests
     [InlineData(0, 1, -1, 0)]
     public void Pawn_CannotMoveOutsideTheBoard(int fromRow, int fromCol, int toRow, int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -93,7 +92,7 @@ public class PawnMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
@@ -106,7 +105,7 @@ public class PawnMoveValidationTests
         int toRow, 
         int toCol)
     {
-        var snapshot = MoveValidationExtensions.GetSnapshotWithPiece(
+        var snapshot = MoveValidationTestsExtensions.GetSnapshotWithPiece(
             PieceType.Pawn,
             Color.White,
             fromRow,
@@ -119,7 +118,7 @@ public class PawnMoveValidationTests
             To = new Position(toRow, toCol)
         };
         
-        var result = MoveValidator.ValidateMove(snapshot, move);
+        var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
         Assert.Equal(MoveResult.Invalid, result);
     }
