@@ -2,7 +2,6 @@
 using Chess.Cli.Player;
 using Chess.Cli.Visuals.Board;
 using Chess.Engine;
-using Chess.Engine.Stockfish;
 using chess.Entities.Common;
 using chess.Game;
 using UserInteraction = Chess.Cli.Visuals.Interactions.UserInteraction;
@@ -26,15 +25,10 @@ public class GameRunner
             Color.White;
 
         var engineType = options.Engine;
-        var engine = engineType switch
-        {
-            ChessEngine.Stockfish => new Stockfish(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
         
         var player1 = new HumanPlayer(userColor);
-        var player2 = new EnginePlayer(engine, engineColor);
-            
+        var player2 = new EnginePlayer(engineColor, engineType);
+        
         _game = new Game(player1, player2);
     }
 

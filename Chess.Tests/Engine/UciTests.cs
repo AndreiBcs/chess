@@ -1,5 +1,4 @@
 ﻿using Chess.Engine;
-using Chess.Engine.Stockfish;
 using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Game.GameState;
@@ -7,11 +6,11 @@ using Xunit.Abstractions;
 
 namespace Chess.Tests.Engine;
 
-public class StockfishTests
+public class UciTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
-    public StockfishTests(ITestOutputHelper testOutputHelper)
+    public UciTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
     }
@@ -19,8 +18,8 @@ public class StockfishTests
     [Fact]
     public async Task Stockfish_ReturnsValidMove()
     {
-        var engine = new Stockfish();
-        var enginePlayer = new EnginePlayer(engine, Color.White);
+        var enginePlayer = new EnginePlayer(Color.White, ChessEngine.Stockfish);
+        var engine = enginePlayer.Uci;
 
         var board = new Board();
         board.InitializeBoard();

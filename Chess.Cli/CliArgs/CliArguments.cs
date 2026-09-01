@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using Chess.Engine;
 using chess.Entities.Common;
 
 namespace Chess.Cli.CliArgs;
@@ -44,9 +45,4 @@ public sealed class CliArguments
             parseResult.GetValue(_chessEngine),
             parseResult.GetValue(_elo));
     }
-}
-
-public enum ChessEngine
-{
-    Stockfish
 }

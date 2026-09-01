@@ -8,11 +8,20 @@ namespace Chess.Engine;
 
 public class EnginePlayer : Player
 {
-    public readonly Uci Uci;
+    public readonly Uci Uci; // public because the consumer needs to interact with it
 
-    public EnginePlayer(Uci uci, Color color) : base(color)
+    public EnginePlayer(Color color, ChessEngine chessEngine) : base(color)
     {
-        Uci = uci;
+        var engineFilePath = chessEngine switch
+        {
+            ChessEngine.Stockfish => 
+                Path.Combine(AppContext.BaseDirectory, 
+                    "Stockfish", 
+                    "stockfish-windows-x86-64-avx2.exe"),
+            _ => ""
+        };
+        
+        Uci = new Uci(engineFilePath);
     }
     
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
@@ -87,4 +96,9 @@ public class EnginePlayer : Player
 
         return fen;
     }
+}
+
+public enum ChessEngine
+{
+    Stockfish
 }
