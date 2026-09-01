@@ -2,6 +2,7 @@
 using chess.Board;
 using Chess.Engine;
 using chess.Game;
+using chess.Moves;
 using Xunit.Abstractions;
 
 namespace Chess.Tests.Engine;
@@ -32,7 +33,10 @@ public class UciTests
             board,
             1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
 
         var move = await enginePlayer.GetMoveAsync(snapshot, null);
         _testOutputHelper.WriteLine(move.ToString());

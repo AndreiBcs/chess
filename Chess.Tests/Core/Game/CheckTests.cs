@@ -38,11 +38,14 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.White, 
+            Color.White,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -75,11 +78,14 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.White, 
+            Color.White,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -112,11 +118,14 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.White, 
+            Color.White,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -139,11 +148,14 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.White, 
+            Color.White,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -168,11 +180,14 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.White, 
+            Color.White,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -197,15 +212,18 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.Black, 
+            Color.Black,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);;
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
-        Assert.Equal(MoveResult.Checkmate, result);
+        Assert.Equal(MoveResult.Checkmate, result.Result);
     }
     
     [Fact]
@@ -224,14 +242,17 @@ public class CheckTests
 
         var snapshot = new GameSnapshot(
             false,
-            Color.Black, 
+            Color.Black,
             board,
-            1, 
+            1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
-        Assert.Equal(MoveResult.Stalemate, result);
+        Assert.Equal(MoveResult.Stalemate, result.Result);
     }
 }

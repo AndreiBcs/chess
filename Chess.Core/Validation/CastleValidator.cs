@@ -33,12 +33,9 @@ public static class CastleValidator
         return false;
     }
     
-    public static bool CanCastle(
-        GameSnapshot snapshot,
-        CastlingInfo castling)
+    public static bool CanCastle(GameSnapshot snapshot, CastlingInfo castling)
     {
-        var piece =
-            snapshot.Board.GetPiece(castling.KingFrom);
+        var piece = snapshot.Board.GetPiece(castling.KingFrom);
 
         if (piece is null ||
             piece.Type != PieceType.King ||
@@ -46,10 +43,18 @@ public static class CastleValidator
         {
             return false;
         }
-
+        
         foreach (var position in castling.KingSafePositions)
         {
             var board = snapshot.Board.Copy();
+            
+            if (castling.KingFrom == position) // check the initial king position
+            {
+                if (CheckValidator.IsKingInCheck(board, piece.Color))
+                {
+                    return false;
+                }
+            }
 
             board.MovePiece(castling.KingFrom, position);
 

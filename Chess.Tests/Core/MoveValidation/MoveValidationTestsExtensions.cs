@@ -36,9 +36,12 @@ public static class MoveValidationTestsExtensions
             false,
             color,
             board,
-            0,
             1,
-            new CastlingRights());
+            0,
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
     }
 
     public static MoveResult ValidateMove(GameSnapshot snapshot, Move move)

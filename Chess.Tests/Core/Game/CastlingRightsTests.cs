@@ -26,7 +26,7 @@ public class CastlingRightsTests
             snapshot,
             new Move(new Position(7, 4), new Position(7, 6)));
 
-        Assert.Equal(MoveResult.Valid, result);
+        Assert.Equal(MoveResult.Valid, result.Result);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class CastlingRightsTests
             snapshot,
             new Move(new Position(7, 4), new Position(7, 2)));
 
-        Assert.Equal(MoveResult.Valid, result);
+        Assert.Equal(MoveResult.Valid, result.Result);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class CastlingRightsTests
             snapshot,
             new Move(new Position(7, 4), new Position(7, 6)));
 
-        Assert.Equal(MoveResult.Invalid, result);
+        Assert.Equal(MoveResult.Invalid, result.Result);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class CastlingRightsTests
             snapshot,
             new Move(new Position(7, 4), new Position(7, 6)));
 
-        Assert.Equal(MoveResult.Invalid, result);
+        Assert.Equal(MoveResult.Invalid, result.Result);
     }
 
     private static GameSnapshot CreateSnapshot(
@@ -114,6 +114,9 @@ public class CastlingRightsTests
             board,
             1,
             0,
-            new CastlingRights());
+            new CastlingRights(),
+            new List<Move>(),
+            null,
+            false);
     }
 }
