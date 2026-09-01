@@ -1,6 +1,7 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
+﻿using chess;
+using chess.Board;
+using chess.Moves;
+using chess.Pieces;
 
 namespace Chess.Tests.Core.MoveValidation;
 

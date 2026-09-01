@@ -1,10 +1,11 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Pieces.Types;
-using chess.Game.GameState;
-using chess.Game.Validators;
+﻿using chess;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces;
+using chess.Pieces.Types;
 using Chess.Tests.Core.Board;
+using chess.Validation;
 
 namespace Chess.Tests.Core.MoveValidation;
 
@@ -17,7 +18,7 @@ public static class MoveValidationTestsExtensions
         int fromCol,
         bool hasMoved = false)
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         Piece piece = type switch
         {
             PieceType.Bishop => new Bishop(color),
@@ -37,7 +38,7 @@ public static class MoveValidationTestsExtensions
             board,
             0,
             1,
-            new Castling());
+            new CastlingRights());
     }
 
     public static MoveResult ValidateMove(GameSnapshot snapshot, Move move)

@@ -1,10 +1,11 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces.Types;
-using chess.Game.GameState;
-using chess.Game.Validators;
+﻿using chess;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces.Types;
 using Chess.Tests.Core.Board;
 using Chess.Tests.Core.MoveValidation;
+using chess.Validation;
 
 namespace Chess.Tests.Core.Game;
 
@@ -14,7 +15,7 @@ public class CheckTests
     [Fact]
     public void CannotMovePinnedPiece()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var knight = new Knight(Color.White);
         var enemyRook = new Rook(Color.Black);
@@ -41,7 +42,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -51,7 +52,7 @@ public class CheckTests
     [Fact]
     public void CannotMoveIfTheKingIsInCheck()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var knight = new Knight(Color.White);
         var enemyRook = new Rook(Color.Black);
@@ -78,7 +79,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -88,7 +89,7 @@ public class CheckTests
     [Fact]
     public void CanCoverKingInCheck()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var knight = new Knight(Color.White);
         var enemyRook = new Rook(Color.Black);
@@ -115,7 +116,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -125,7 +126,7 @@ public class CheckTests
     [Fact]
     public void KingCannotMoveIntoCheck()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var enemyRook = new Rook(Color.Black);
 
@@ -142,7 +143,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -152,7 +153,7 @@ public class CheckTests
     [Fact]
     public void KingCannotCaptureProtectedPiece()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var enemyKnight = new Knight(Color.Black);
         var enemyRook = new Rook(Color.Black);
@@ -171,7 +172,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -181,7 +182,7 @@ public class CheckTests
     [Fact]
     public void TestCheckmate()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var enemyQueen = new Queen(Color.Black);
         var enemyRook = new Rook(Color.Black);
@@ -200,7 +201,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
@@ -210,7 +211,7 @@ public class CheckTests
     [Fact]
     public void TestStalemate()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var king = new King(Color.White);
         var enemyQueen = new Queen(Color.Black);
 
@@ -227,7 +228,7 @@ public class CheckTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         

@@ -1,16 +1,14 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Pieces.Types;
-using chess.Entities.Player;
-using chess.Game.GameState;
-using chess.Game.Validators;
+﻿using chess.Board;
+using chess.Moves;
+using chess.Pieces;
+using chess.Pieces.Types;
+using chess.Validation;
 
 namespace chess.Game;
 
 public class Game
 {
-    public Game(Player player1, Player player2)
+    public Game(Player.Player player1, Player.Player player2)
     {
         Players = [player1, player2];
         Board.InitializeBoard();
@@ -25,17 +23,17 @@ public class Game
             Color.White;
     }
 
-    private IReadOnlyList<Player> Players { get; }
-    private Player GetPlayer(Color color)
+    private IReadOnlyList<Player.Player> Players { get; }
+    private Player.Player GetPlayer(Color color)
     {
         return Players.Single(p => p.Color == color);
     }
 
-    private Board Board { get; } = new();
+    private Board.Board Board { get; } = new();
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
     private Move PreviousMove { get; set; }
-    private Castling Castling { get; set; } = new();
+    private CastlingRights CastlingRights { get; set; } = new();
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
@@ -100,7 +98,7 @@ public class Game
             Board, 
             FullMoveCounter,
             HalfMoveCounter, 
-            Castling);
+            CastlingRights);
     }
 
     private void HandleCastling(CastlingInfo castling)
@@ -138,11 +136,11 @@ public class Game
     {
         if (rookPosition is null)
         {
-            Castling.CastlingPositions.RemoveAll(c => c.Color == color);
+            CastlingRights.CastlingPositions.RemoveAll(c => c.Color == color);
             return;
         }
 
-        Castling.CastlingPositions.RemoveAll(c =>
+        CastlingRights.CastlingPositions.RemoveAll(c =>
             c.Color == color &&
             c.RookFrom == rookPosition);
     }

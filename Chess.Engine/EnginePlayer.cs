@@ -1,18 +1,28 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Player;
-using chess.Game.GameState;
+﻿using chess;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces;
+using chess.Player;
 
 namespace Chess.Engine;
 
 public class EnginePlayer : Player
 {
-    public readonly Uci Uci;
+    public readonly Uci Uci; // public because the consumer needs to interact with it
 
-    public EnginePlayer(Uci uci, Color color) : base(color)
+    public EnginePlayer(Color color, ChessEngine chessEngine) : base(color)
     {
-        Uci = uci;
+        var engineFilePath = chessEngine switch
+        {
+            ChessEngine.Stockfish => 
+                Path.Combine(AppContext.BaseDirectory, 
+                    "Stockfish", 
+                    "stockfish-windows-x86-64-avx2.exe"),
+            _ => ""
+        };
+        
+        Uci = new Uci(engineFilePath);
     }
     
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
@@ -76,7 +86,7 @@ public class EnginePlayer : Player
 
         fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
         
-        fen += snapshot.Castling.ToString();
+        fen += snapshot.CastlingRights.ToString();
 
         // TODO: en-passant target square
         fen += " - ";
@@ -87,4 +97,9 @@ public class EnginePlayer : Player
 
         return fen;
     }
+}
+
+public enum ChessEngine
+{
+    Stockfish
 }
