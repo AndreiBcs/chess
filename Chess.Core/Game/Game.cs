@@ -32,7 +32,7 @@ public class Game
     private Board.Board Board { get; } = new();
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
-    private Move PreviousMove { get; set; }
+    private List<Move> MoveHistory { get; } = [];
     private CastlingRights CastlingRights { get; set; } = new();
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
@@ -52,30 +52,32 @@ public class Game
                 var currentPlayer = GetPlayer(CurrentTurn);
                 var move = await currentPlayer.GetMoveAsync(snapshot, result);
                 
-                result = MoveValidator.ValidateMove(snapshot, move);
+                var status = MoveValidator.ValidateMove(snapshot, move);
+                result = status.Result;
 
                 if (result == MoveResult.Valid)
                 {
-                    var movedPiece = Board.GetPiece(move.From);
-                    var capturedPiece = Board.GetPiece(move.To);
-                    var isCastling = MoveValidator
-                        .IsCastlingMove(snapshot, move, CurrentTurn, out var castling);
+                    switch (status.MoveType)
+                    {
+                        case MoveType.Castle:
+                            HandleCastling(snapshot, move);
+                            break;
 
-                    if (movedPiece!.Type == PieceType.Pawn)
-                    {
-                        HalfMoveCounter = 0; // reset to 0 if pawn advance
+                        case MoveType.Capture:
+                        case MoveType.PawnAdvance:
+                        case MoveType.Normal:
+                            UpdateCastlingRights(move);
+                            Board.MovePiece(move.From, move.To);
+                            break;
+
+                        case MoveType.EnPassant:
+                            HandleEnPassant(move);
+                            break;
+
+                        case MoveType.Promotion:
+                            HandlePromotion(move);
+                            break;
                     }
-                    
-                    if (isCastling)
-                    {
-                        HandleCastling(castling);
-                    }
-                    else
-                    {
-                        Board.MovePiece(move.From, move.To);
-                        UpdateCastlingRights(movedPiece, capturedPiece, move);
-                    }
-                    break;
                 }
                 
                 if (result is MoveResult.Checkmate or MoveResult.Stalemate)
@@ -85,8 +87,10 @@ public class Game
                 }
             }
             
+            if (CurrentTurn == Color.Black)
+                FullMoveCounter++;
+            
             SwitchTurn();
-            FullMoveCounter++;
         }
     }
 
@@ -101,16 +105,21 @@ public class Game
             CastlingRights);
     }
 
-    private void HandleCastling(CastlingInfo castling)
+    private void HandleCastling(GameSnapshot snapshot, Move move)
     {
+        CastleValidator.TryGetCastling(snapshot, move, out var castling);
+        
         Board.MovePiece(castling.KingFrom, castling.KingTo);
         Board.MovePiece(castling.RookFrom, castling.RookTo);
 
         RemoveCastlingRights(castling.Color);
     }
 
-    private void UpdateCastlingRights(Piece? movedPiece, Piece? capturedPiece, Move move)
+    private void UpdateCastlingRights(Move move)
     {
+        var movedPiece = Board.GetPiece(move.From);
+        var capturedPiece = Board.GetPiece(move.To);
+        
         switch (movedPiece)
         {
             case King:
@@ -121,9 +130,9 @@ public class Game
                 break;
         }
 
-        if (capturedPiece is not null)
+        if (capturedPiece is not null || movedPiece!.Type == PieceType.Pawn)
         {
-            HalfMoveCounter = 0; // reset to 0 if capture occurs
+            HalfMoveCounter = 0;
         }
 
         if (capturedPiece is Rook)
@@ -143,5 +152,15 @@ public class Game
         CastlingRights.CastlingPositions.RemoveAll(c =>
             c.Color == color &&
             c.RookFrom == rookPosition);
+    }
+
+    private void HandlePromotion(Move move)
+    {
+        
+    }
+
+    private void HandleEnPassant(Move move)
+    {
+        
     }
 }

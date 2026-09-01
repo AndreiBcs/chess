@@ -6,5 +6,6 @@ public enum MoveType
     Castle,
     EnPassant,
     Promotion,
-    Capture
+    Capture,
+    PawnAdvance
 }

@@ -65,7 +65,7 @@ public static class MoveValidationTestsExtensions
         var testBoard = snapshot.Board.Copy();
         testBoard.MovePiece(move.From, move.To);
         
-        if(MoveValidator.IsKingInCheck(testBoard, piece.Color))
+        if(CheckValidator.IsKingInCheck(testBoard, piece.Color))
             return MoveResult.Invalid;
 
         return MoveResult.Valid;
