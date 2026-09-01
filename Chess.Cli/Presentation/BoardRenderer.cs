@@ -2,9 +2,9 @@
 using chess.Game.GameState;
 using Spectre.Console;
 
-namespace Chess.Cli.Visuals.Board;
+namespace Chess.Cli.Presentation;
 
-public class BoardRender
+public class BoardRenderer
 {
     private readonly Table _table = new Table().Border(TableBorder.None).HideHeaders();
 

@@ -1,6 +1,6 @@
 ﻿using System.Text;
-using Chess.Cli.CliArgs;
-using Chess.Cli.GameRunner;
+using Chess.Cli.Arguments;
+using Chess.Cli.Game;
 
 Console.OutputEncoding = Encoding.UTF8;
 

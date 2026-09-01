@@ -2,7 +2,7 @@
 using Chess.Engine;
 using chess.Entities.Common;
 
-namespace Chess.Cli.CliArgs;
+namespace Chess.Cli.Arguments;
 
 public sealed class CliArguments
 {

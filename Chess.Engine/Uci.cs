@@ -48,7 +48,7 @@ public class Uci
         await WaitForResponse("readyok");
     }
 
-    public async Task SetOption(string name, string value)
+    private async Task SetOption(string name, string value)
     {
         await SendCommand($"setoption name {name} value {value}");
     }

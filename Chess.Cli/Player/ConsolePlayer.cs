@@ -1,16 +1,16 @@
-﻿using Chess.Cli.Visuals.Interactions;
+﻿using Chess.Cli.Presentation;
 using chess.Entities.Board;
 using chess.Entities.Common;
 using chess.Game.GameState;
 
 namespace Chess.Cli.Player;
 
-public class HumanPlayer : chess.Entities.Player.Player
+public class ConsolePlayer : chess.Entities.Player.Player
 {
-    private readonly UserInteraction _interaction;
-    public HumanPlayer(Color color) : base(color)
+    private readonly ConsoleInteraction _interaction;
+    public ConsolePlayer(Color color) : base(color)
     {
-        _interaction = new UserInteraction();
+        _interaction = new ConsoleInteraction();
     }
 
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
