@@ -71,60 +71,11 @@ public class CastlingRights
 
     public override string ToString()
     {
-        var kingSideBlack = new CastlingInfo(
-            'k',
-            Color.Black,
-            CastleSide.KingSide,
-            new Position(0, 4), new Position(0, 6),
-            new Position(0, 7), new Position(0, 5),
-            [new Position(0, 4), new Position(0, 5), new Position(0, 6)]
-        );
-
-        var queenSideBlack = new CastlingInfo(
-            'q',
-            Color.Black,
-            CastleSide.QueenSide,
-            new Position(0, 4), new Position(0, 2),
-            new Position(0, 0), new Position(0, 3),
-            [new Position(0, 4), new Position(0, 3), new Position(0, 2)]
-        );
-
-        var kingSideWhite = new CastlingInfo(
-            'K',
-            Color.White,
-            CastleSide.KingSide,
-            new Position(7, 4), new Position(7, 6),
-            new Position(7, 7), new Position(7, 5),
-            [new Position(7, 4), new Position(7, 5), new Position(7, 6)]
-        );
-
-        var queenSideWhite = new CastlingInfo(
-            'Q',
-            Color.White,
-            CastleSide.QueenSide,
-            new Position(7, 4), new Position(7, 2),
-            new Position(7, 0), new Position(7, 3),
-            [new Position(7, 4), new Position(7, 3), new Position(7, 2)]
-        );
         var text = "";
         
-        if (CastlingPositions.Contains(kingSideWhite))
-        {
-            text += "K";
-        }
-        if (CastlingPositions.Contains(queenSideWhite))
-        {
-            text += "Q";
-        }
-        if (CastlingPositions.Contains(kingSideBlack))
-        {
-            text += "k";
-        }
-        if (CastlingPositions.Contains(queenSideBlack))
-        {
-            text += "q";
-        }
+        foreach (var castling in CastlingPositions)
+            text += castling.LetterId;
         
-        return text;
+        return text.Length == 0 ? "-" : text;
     }
 }
