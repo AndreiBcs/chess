@@ -1,4 +1,5 @@
-﻿using chess.Board;
+﻿using System.Collections.Immutable;
+using chess.Board;
 using chess.Moves;
 
 namespace chess.Game;
@@ -11,7 +12,7 @@ public sealed class GameSnapshot
     public int FullMoveCounter { get; }
     public int HalfMoveCounter { get; }
     public CastlingRights CastlingRights { get; }
-    public List<Move> MoveHistory { get; }
+    public ImmutableList<Move> MoveHistory { get; }
 
     public GameSnapshot(
         bool over, 
@@ -28,6 +29,6 @@ public sealed class GameSnapshot
         FullMoveCounter = fullMoveCounter;
         HalfMoveCounter = halfMoveCounter;
         CastlingRights = castlingRights;
-        MoveHistory = moveHistory;
+        MoveHistory = moveHistory.ToImmutableList();
     }
 }

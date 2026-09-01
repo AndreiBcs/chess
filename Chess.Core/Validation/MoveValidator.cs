@@ -61,7 +61,7 @@ public static class MoveValidator
             
             return EvaluateBoard( 
                 enPassantTestBoard, 
-                piece.Color, 
+                piece.Color,
                 isPawnMove: true,
                 isCapture: true,
                 isEnPassant: true);
@@ -85,7 +85,7 @@ public static class MoveValidator
                 isPawnMove: true, 
                 isCapture: isCapture,
                 isPromotion: true); 
-        } 
+        }
         
         return EvaluateBoard( 
             testBoard, 
@@ -165,7 +165,31 @@ public static class MoveValidator
 
     private static bool IsEnPassant(GameSnapshot snapshot, Move move)
     {
-        // TODO access to move history
+        if(snapshot.MoveHistory.Count == 0)
+            return false;
+        
+        var previousMove = snapshot.MoveHistory[^1];
+        var lastMovedPiece = snapshot.Board.GetPiece(previousMove.To);
+        
+        if(lastMovedPiece?.Type != PieceType.Pawn)
+            return false;
+        
+        if (Math.Abs(previousMove.To.Row - previousMove.From.Row) != 2)
+            return false;
+
+        if (previousMove.To.Row != move.From.Row)
+            return false;
+
+        if (Math.Abs(previousMove.To.Column - move.From.Column) != 1)
+            return false;
+
+        if (move.To.Column != previousMove.To.Column)
+            return false;
+
+        if (move.To.Row != previousMove.To.Row +
+            (move.From.Row < previousMove.To.Row ? 1 : -1))
+            return false;
+
         return true;
     }
 

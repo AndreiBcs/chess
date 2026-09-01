@@ -1,6 +1,5 @@
 ﻿using chess.Board;
 using chess.Moves;
-using chess.Pieces;
 using chess.Pieces.Types;
 using chess.Validation;
 
@@ -12,6 +11,8 @@ public class Game
     {
         Players = [player1, player2];
         Board.InitializeBoard();
+        
+        PositionHistory.Add(CreatePositionKey());
     }
 
     private bool IsOver { get; set; }
@@ -31,9 +32,10 @@ public class Game
 
     private Board.Board Board { get; } = new();
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
-    private int HalfMoveCounter { get; set; } = 0; // back at 0 after a capture or pawn advance
+    private int HalfMoveCounter { get; set; } // back at 0 after a capture or pawn advance
+    private List<string> PositionHistory { get; } = [];
     private List<Move> MoveHistory { get; } = [];
-    private CastlingRights CastlingRights { get; set; } = new();
+    private CastlingRights CastlingRights { get; } = new();
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
@@ -71,19 +73,83 @@ public class Game
                     FullMoveCounter++;
             
                 SwitchTurn();
+                
+                // after switching turns because it contains the next to move
+                PositionHistory.Add(CreatePositionKey());
+
+                if (IsDraw())
+                {
+                    IsOver = true;
+                }
+                
                 break;
             }
         }
     }
 
+    private bool IsDraw()
+    {
+        return HalfMoveCounter >= 150 || IsThreefoldRepetition();
+    }
+
+    private bool IsThreefoldRepetition()
+    {
+        var currentPosition = PositionHistory[^1];
+
+        return PositionHistory.Count(
+            position => position == currentPosition) >= 3;
+    }
+    
+    private string CreatePositionKey()
+    {
+        var positionKey = "";
+
+        for (var row = 0; row < 8; row++)
+        {
+            var empty = 0;
+
+            for (var col = 0; col < 8; col++)
+            {
+                var piece = Board.GetPiece(new Position(row, col));
+
+                if (piece is null)
+                {
+                    empty++;
+                    continue;
+                }
+                if (empty > 0)
+                {
+                    positionKey += empty;
+                    empty = 0;
+                }
+                positionKey += piece.LetterId;
+            }
+
+            if (empty > 0)
+                positionKey += empty;
+
+            if (row < 7)
+                positionKey += "/";
+        }
+        positionKey += CurrentTurn == Color.White
+            ? " w "
+            : " b ";
+        positionKey += CastlingRights.ToString();
+
+        // TODO: en-passant target square
+        positionKey += " -";
+        
+        return positionKey;
+    }
+
     private GameSnapshot CreateSnapshot()
     {
         return new GameSnapshot(
-            IsOver, 
+            IsOver,
             CurrentTurn,
-            Board, 
+            Board,
             FullMoveCounter,
-            HalfMoveCounter, 
+            HalfMoveCounter,
             CastlingRights,
             MoveHistory);
     }
