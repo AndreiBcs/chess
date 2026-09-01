@@ -111,6 +111,25 @@ public class Board : IReadOnlyBoard
         return Squares;
     }
 
+    public bool BishopsAreSameColor()
+    {
+        var bishopSquares = 
+            (from Square square in Squares 
+                where square.Piece?.Type == PieceType.Bishop 
+                select square).ToList();
+        
+        if(bishopSquares.Count != 2)
+            return false;
+        
+        var first = bishopSquares[0].Position;
+        var second = bishopSquares[1].Position;
+
+        var firstColor = (first.Row + first.Column) % 2;
+        var secondColor = (second.Row + second.Column) % 2;
+
+        return firstColor == secondColor;
+    }
+
     private void InitializeSquares()
     {
         for (var row = 0; row < 8; row++)

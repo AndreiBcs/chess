@@ -1,5 +1,6 @@
 ﻿using chess.Board;
 using chess.Moves;
+using chess.Pieces;
 using chess.Pieces.Types;
 using chess.Validation;
 
@@ -99,8 +100,9 @@ public class Game
 
     private bool IsGameDraw()
     {
-        // TODO check for insufficient material
-        return HalfMoveCounter >= 150 || IsThreefoldRepetition();
+        return HalfMoveCounter >= 150
+               || IsThreefoldRepetition()
+               || IsInsufficientMaterial();
     }
 
     private bool IsThreefoldRepetition()
@@ -109,6 +111,56 @@ public class Game
 
         return PositionHistory.Count(
             position => position == currentPosition) >= 3;
+    }
+
+    private bool IsInsufficientMaterial()
+    {
+        var pieces = new List<Piece>();
+
+        foreach (var square in Board.GetSquares())
+        {
+            if (square.Piece is not null)
+            {
+                pieces.Add(square.Piece);
+            }
+        }
+
+        if (pieces.All(piece => piece.Type == PieceType.King))
+        {
+            return true;
+        }
+
+        if (pieces.Any(piece =>
+                piece.Type is PieceType.Pawn or PieceType.Rook or PieceType.Queen))
+        {
+            return false;
+        }
+        
+        // only bishops, knights and kings remain
+        var nonKings = pieces
+            .Where(piece => piece.Type != PieceType.King).ToList();
+
+        // king + knight vs king
+        if (nonKings.Count == 1 && nonKings[0].Type == PieceType.Knight)
+        {
+            return true;
+        }
+        
+        // king + bishop vs king
+        if (nonKings.Count == 1 && nonKings[0].Type == PieceType.Bishop)
+        {
+            return true;
+        }
+
+        // king + bishop vs king + bishop
+        if (nonKings.Count == 2 &&
+            nonKings.All(piece => piece.Type == PieceType.Bishop))
+        {
+            // if they are on the same color is a draw
+            return Board.BishopsAreSameColor();
+        }
+        
+        return false;
     }
     
     private string CreatePositionKey()
