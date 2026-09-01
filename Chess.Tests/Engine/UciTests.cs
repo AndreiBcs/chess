@@ -28,15 +28,14 @@ public class UciTests
         await engine.NewGame();
 
         var snapshot = new GameSnapshot(
-            false,
+            GameStatus.InProgress,
             Color.White,
-            board,
-            1,
-            0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            board, 
+            1, 
+            0, 
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
 
         var move = await enginePlayer.GetMoveAsync(snapshot, null);
         _testOutputHelper.WriteLine(move.ToString());

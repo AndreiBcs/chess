@@ -37,15 +37,14 @@ public class CheckTests
             new Position(4, 5));
 
         var snapshot = new GameSnapshot(
-            false,
+            GameStatus.InProgress, 
             Color.White,
-            board,
-            1,
+            board, 
+            1, 
             0,
-            new CastlingRights(),
+            new CastlingRights(), 
             new List<Move>(),
-            null,
-            false);
+            null);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -77,15 +76,14 @@ public class CheckTests
             new Position(4, 4));
 
         var snapshot = new GameSnapshot(
-            false,
+            GameStatus.InProgress, 
             Color.White,
-            board,
-            1,
-            0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            board, 
+            1, 
+            0, 
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -117,15 +115,14 @@ public class CheckTests
             new Position(5, 3));
 
         var snapshot = new GameSnapshot(
-            false,
+            GameStatus.InProgress, 
             Color.White,
-            board,
-            1,
+            board, 
+            1, 
             0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -147,15 +144,14 @@ public class CheckTests
             new Position(6, 3));
 
         var snapshot = new GameSnapshot(
-            false,
-            Color.White,
-            board,
-            1,
+            GameStatus.InProgress, 
+            Color.White, 
+            board, 
+            1, 
             0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -179,15 +175,14 @@ public class CheckTests
             new Position(5, 3));
 
         var snapshot = new GameSnapshot(
-            false,
-            Color.White,
-            board,
-            1,
-            0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            GameStatus.InProgress, 
+            Color.White, 
+            board, 
+            1, 
+            0, 
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -211,15 +206,14 @@ public class CheckTests
             new Position(7, 3));
 
         var snapshot = new GameSnapshot(
-            false,
+            GameStatus.InProgress, 
             Color.Black,
-            board,
-            1,
+            board, 
+            1, 
             0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);;
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);;
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
@@ -241,15 +235,13 @@ public class CheckTests
             new Position(6, 2));
 
         var snapshot = new GameSnapshot(
-            false,
-            Color.Black,
-            board,
-            1,
-            0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            GameStatus.InProgress, 
+            Color.Black, 
+            board, 1, 
+            0, 
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         

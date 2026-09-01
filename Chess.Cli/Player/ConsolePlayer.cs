@@ -1,5 +1,4 @@
 ﻿using chess;
-using chess.Board;
 using Chess.Cli.Presentation;
 using chess.Game;
 using chess.Moves;
@@ -16,7 +15,7 @@ public class ConsolePlayer : chess.Player.Player
 
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
-        if (previousResult is not null && previousResult != MoveResult.Valid)
+        if (previousResult == MoveResult.Invalid)
             _interaction.ShowMoveError(previousResult);
             
         return await _interaction.ReadMove(snapshot);

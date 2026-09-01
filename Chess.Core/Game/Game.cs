@@ -12,12 +12,13 @@ public class Game
     {
         Players = [player1, player2];
         Board.InitializeBoard();
-        
+
+        GameStatus = GameStatus.InProgress;
         PositionHistory.Add(CreatePositionKey());
     }
 
     private bool IsOver { get; set; }
-    private bool IsDraw { get; set; }
+    private GameStatus GameStatus { get; set; }
     private Color CurrentTurn { get; set; } = Color.White;
     private void SwitchTurn()
     {
@@ -62,23 +63,30 @@ public class Game
                     continue;
                 }
                 
-                if (result is MoveResult.Checkmate or MoveResult.Stalemate)
-                {
-                    IsOver = true;
-                    break;
-                }
-                
                 UpdateGameState(snapshot, move, status);
 
-                if (IsGameDraw())
+                switch (result)
                 {
-                    IsOver = true;
-                    IsDraw = true;
+                    case MoveResult.Checkmate:
+                        IsOver = true;
+                        GameStatus = CurrentTurn == Color.White
+                            ? GameStatus.WhiteWon
+                            : GameStatus.BlackWon;
+                        break;
+
+                    case MoveResult.Stalemate:
+
+                    case MoveResult.Valid when IsGameDraw():
+                        IsOver = true;
+                        GameStatus = GameStatus.Draw;
+                        break;
                 }
                 
                 break;
             }
         }
+
+        yield return CreateSnapshot(); // return the game end snapshot
     }
 
     private void UpdateGameState(GameSnapshot snapshot, Move move, MoveStatus status)
@@ -229,16 +237,7 @@ public class Game
     
     private GameSnapshot CreateSnapshot()
     {
-        return new GameSnapshot(
-            IsOver,
-            CurrentTurn,
-            Board,
-            FullMoveCounter,
-            HalfMoveCounter,
-            CastlingRights,
-            MoveHistory,
-            EnPassantTargetSquare,
-            IsDraw);
+        return new GameSnapshot(GameStatus, CurrentTurn, Board, FullMoveCounter, HalfMoveCounter, CastlingRights, MoveHistory, EnPassantTargetSquare);
     }
     
     private void ApplyMove(GameSnapshot snapshot, Move move, MoveStatus status) 

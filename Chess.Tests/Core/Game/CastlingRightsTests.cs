@@ -109,14 +109,13 @@ public class CastlingRightsTests
         }
 
         return new GameSnapshot(
-            false,
-            Color.White,
-            board,
-            1,
+            GameStatus.InProgress, 
+            Color.White, 
+            board, 
+            1, 
             0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+            new CastlingRights(), 
+            new List<Move>(), 
+            null);
     }
 }

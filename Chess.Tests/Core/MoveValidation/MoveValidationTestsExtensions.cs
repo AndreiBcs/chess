@@ -32,16 +32,7 @@ public static class MoveValidationTestsExtensions
         
         board.CreateEmpty().PlacePiece(piece, new Position(fromRow, fromCol));
         
-        return new GameSnapshot(
-            false,
-            color,
-            board,
-            1,
-            0,
-            new CastlingRights(),
-            new List<Move>(),
-            null,
-            false);
+        return new GameSnapshot(GameStatus.InProgress, color, board, 1, 0, new CastlingRights(), new List<Move>(), null);
     }
 
     public static MoveResult ValidateMove(GameSnapshot snapshot, Move move)
