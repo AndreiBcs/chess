@@ -2,4 +2,8 @@
 
 public record MoveStatus(
     MoveResult Result, 
-    MoveType MoveType = MoveType.Normal);
+    bool IsCapture = false,
+    bool IsPawnMove = false,
+    bool IsCastling = false,
+    bool IsEnPassant = false,
+    bool IsPromotion = false);

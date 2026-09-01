@@ -38,6 +38,36 @@ public class Board : IReadOnlyBoard
             moveTracker.MarkAsMoved();
         }
     }
+
+    public void RemovePiece(Position position)
+    {
+        var piece = GetPiece(position);
+
+        piece?.MarkAsCaptured();
+
+        Squares[position.Row, position.Column].Piece = null;
+    }
+
+    public void ReplacePromotion(
+        Position position, 
+        PieceType? promotion,
+        Color promotionColor)
+    {
+        if (promotion is null) return;
+        
+        RemovePiece(position);
+        
+        Squares[position.Row, position.Column].Piece = promotion switch
+        {
+            PieceType.Bishop => new Bishop(promotionColor),
+            PieceType.Knight => new Knight(promotionColor),
+            PieceType.Rook => new Rook(promotionColor),
+            PieceType.Queen => new Queen(promotionColor),
+            _ => throw new ArgumentException(
+                "Invalid promotion piece",
+                nameof(promotion))
+        };
+    }
     
     public Board Copy()
     {

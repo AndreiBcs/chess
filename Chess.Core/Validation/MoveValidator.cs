@@ -1,4 +1,5 @@
-﻿using chess.Game;
+﻿using chess.Board;
+using chess.Game;
 using chess.Moves;
 using chess.Pieces;
 
@@ -16,67 +17,118 @@ public static class MoveValidator
         var piece = board.GetPiece(move.From);
         var target = board.GetPiece(move.To);
         
+        if (piece is null) 
+            return new MoveStatus(MoveResult.Invalid);
+        
         if (target?.Type == PieceType.King) // cannot capture the king
             return new MoveStatus(MoveResult.Invalid);
         
-        // 2. check for special move - castling
-        if (CastleValidator.IsCastlingAttempt(piece!, move))
+        var isPawnMove = piece.Type == PieceType.Pawn;
+        var isCapture = target is not null;
+        
+        // 2. check for castling
+        if (CastleValidator.IsCastlingAttempt(piece, move))
         {
+            // validate
             if (!CastleValidator.TryGetCastling(snapshot, move, out var castling)
                 || !CastleValidator.CanCastle(snapshot, castling))
             {
                 return new MoveStatus(MoveResult.Invalid);
             }
 
+            // simulate
             var castleTestBoard = snapshot.Board.Copy();
 
             castleTestBoard.MovePiece(castling.KingFrom, castling.KingTo);
             castleTestBoard.MovePiece(castling.RookFrom, castling.RookTo);
 
-            return EvaluateBoard(castleTestBoard, piece!.Color, MoveType.Castle);
+            return EvaluateBoard(
+                castleTestBoard, 
+                piece.Color,
+                isCastling: true);
         }
 
-        // 3. normal move
+        // 3. check for en passant
+        if (piece.Type == PieceType.Pawn && IsEnPassant(snapshot, move))
+        {
+            // simulate
+            var enPassantTestBoard = snapshot.Board.Copy();
+            
+            enPassantTestBoard.MovePiece(move.From, move.To);
+            
+            var capturedPawnPosition = new Position(move.From.Row, move.To.Column);
+            enPassantTestBoard.RemovePiece(capturedPawnPosition);
+            
+            return EvaluateBoard( 
+                enPassantTestBoard, 
+                piece.Color, 
+                isPawnMove: true,
+                isCapture: true,
+                isEnPassant: true);
+        }
+        
+        // 4. simulate move
         var testBoard = snapshot.Board.Copy();
 
         testBoard.MovePiece(move.From, move.To);
 
-        var moveType = snapshot.Board.GetPiece(move.To) is null
-            ? MoveType.Normal
-            : MoveType.Capture;
+        // 5. promotion
+        if (piece.Type == PieceType.Pawn 
+            && move.To.Row is 0 or 7 
+            && move.Promotion is not null)
+        {
+            testBoard.ReplacePromotion(move.To, move.Promotion, piece.Color);
+            
+            return EvaluateBoard( 
+                testBoard, 
+                piece.Color,
+                isPawnMove: true, 
+                isCapture: isCapture,
+                isPromotion: true); 
+        } 
         
-        moveType = snapshot.Board.GetPiece(move.From)!.Type == PieceType.Pawn
-            ? MoveType.PawnAdvance
-            : moveType;
-
-        return EvaluateBoard(testBoard, piece!.Color, moveType);
+        return EvaluateBoard( 
+            testBoard, 
+            piece.Color,
+            isPawnMove: isPawnMove,
+            isCapture: isCapture);
     }
 
     private static MoveStatus EvaluateBoard(
         Board.Board board,
         Color movingColor,
-        MoveType moveType)
+        bool isCapture = false,
+        bool isPawnMove = false,
+        bool isCastling = false, 
+        bool isEnPassant = false,
+        bool isPromotion = false)
     {
         // the player cannot make a move that leaves
         // their own king in check.
         if (CheckValidator.IsKingInCheck(board, movingColor))
-            return new MoveStatus(MoveResult.Invalid, moveType);
+            return new MoveStatus(MoveResult.Invalid);
 
         var opponentColor = GetOpponent(movingColor);
 
         var opponentInCheck = CheckValidator.IsKingInCheck(board, opponentColor);
         var opponentHasLegalMove = HasLegalMove(board, opponentColor);
 
-        return opponentInCheck switch
+        var result =  opponentInCheck switch
         {
-            true when !opponentHasLegalMove => 
-                new MoveStatus(MoveResult.Checkmate, moveType),
+            true when !opponentHasLegalMove => MoveResult.Checkmate,
             
-            false when !opponentHasLegalMove => 
-                new MoveStatus(MoveResult.Stalemate, moveType),
+            false when !opponentHasLegalMove => MoveResult.Stalemate,
             
-            _ => new MoveStatus(MoveResult.Valid, moveType)
+            _ => MoveResult.Valid
         };
+
+        return new MoveStatus(
+            result,
+            isCapture,
+            isPawnMove,
+            isCastling,
+            isEnPassant,
+            isPromotion);
     }
 
     private static bool HasLegalMove(Board.Board board, Color color)
@@ -109,6 +161,12 @@ public static class MoveValidator
         }
 
         return false;
+    }
+
+    private static bool IsEnPassant(GameSnapshot snapshot, Move move)
+    {
+        // TODO access to move history
+        return true;
     }
 
     private static Color GetOpponent(Color color)

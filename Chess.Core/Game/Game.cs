@@ -37,15 +37,12 @@ public class Game
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
-        while (true)
+        while (!IsOver)
         {
             var snapshot = CreateSnapshot();
             yield return snapshot;
             
-            if(IsOver) yield break;
-            
             MoveResult? result = null;
-            HalfMoveCounter++;
 
             while (true) // wait for player move and validate
             {
@@ -55,29 +52,9 @@ public class Game
                 var status = MoveValidator.ValidateMove(snapshot, move);
                 result = status.Result;
 
-                if (result == MoveResult.Valid)
+                if (result is MoveResult.Invalid)
                 {
-                    switch (status.MoveType)
-                    {
-                        case MoveType.Castle:
-                            HandleCastling(snapshot, move);
-                            break;
-
-                        case MoveType.Capture:
-                        case MoveType.PawnAdvance:
-                        case MoveType.Normal:
-                            UpdateCastlingRights(move);
-                            Board.MovePiece(move.From, move.To);
-                            break;
-
-                        case MoveType.EnPassant:
-                            HandleEnPassant(move);
-                            break;
-
-                        case MoveType.Promotion:
-                            HandlePromotion(move);
-                            break;
-                    }
+                    continue;
                 }
                 
                 if (result is MoveResult.Checkmate or MoveResult.Stalemate)
@@ -85,12 +62,17 @@ public class Game
                     IsOver = true;
                     break;
                 }
+                
+                ApplyMove(snapshot, move, status);
+                
+                MoveHistory.Add(move);
+                
+                if (CurrentTurn == Color.Black)
+                    FullMoveCounter++;
+            
+                SwitchTurn();
+                break;
             }
-            
-            if (CurrentTurn == Color.Black)
-                FullMoveCounter++;
-            
-            SwitchTurn();
         }
     }
 
@@ -102,7 +84,31 @@ public class Game
             Board, 
             FullMoveCounter,
             HalfMoveCounter, 
-            CastlingRights);
+            CastlingRights,
+            MoveHistory);
+    }
+    
+    private void ApplyMove( GameSnapshot snapshot, Move move, MoveStatus status) 
+    {
+        if (status.IsCastling)
+        {
+            HandleCastling(snapshot, move); 
+        } 
+        else if (status.IsEnPassant)
+        {
+            HandleEnPassant(move); 
+        } 
+        else if (status.IsPromotion)
+        {
+            HandlePromotion(move);
+        } 
+        else 
+        { 
+            UpdateCastlingRights(move);
+            Board.MovePiece(move.From, move.To);
+        } 
+        
+        UpdateHalfMoveClock(status); 
     }
 
     private void HandleCastling(GameSnapshot snapshot, Move move)
@@ -130,11 +136,6 @@ public class Game
                 break;
         }
 
-        if (capturedPiece is not null || movedPiece!.Type == PieceType.Pawn)
-        {
-            HalfMoveCounter = 0;
-        }
-
         if (capturedPiece is Rook)
         {
             RemoveCastlingRights(capturedPiece.Color, move.To);
@@ -152,6 +153,14 @@ public class Game
         CastlingRights.CastlingPositions.RemoveAll(c =>
             c.Color == color &&
             c.RookFrom == rookPosition);
+    }
+    
+    private void UpdateHalfMoveClock(MoveStatus status)
+    {
+        if (status.IsCapture || status.IsPawnMove)
+            HalfMoveCounter = 0;
+        else
+            HalfMoveCounter++;
     }
 
     private void HandlePromotion(Move move)
