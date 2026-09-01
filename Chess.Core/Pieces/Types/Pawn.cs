@@ -1,7 +1,6 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
+﻿using chess.Board;
 
-namespace chess.Entities.Pieces.Types;
+namespace chess.Pieces.Types;
 
 public class Pawn : Piece, IMoveTracker
 {

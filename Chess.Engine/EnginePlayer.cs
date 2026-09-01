@@ -1,8 +1,9 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Player;
-using chess.Game.GameState;
+﻿using chess;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces;
+using chess.Player;
 
 namespace Chess.Engine;
 
@@ -85,7 +86,7 @@ public class EnginePlayer : Player
 
         fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
         
-        fen += snapshot.Castling.ToString();
+        fen += snapshot.CastlingRights.ToString();
 
         // TODO: en-passant target square
         fen += " - ";

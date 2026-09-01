@@ -1,15 +1,24 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
+﻿using chess.Board;
 
-namespace chess.Entities.Pieces.Types;
+namespace chess.Pieces.Types;
 
-public class Queen : Piece
+public class Rook : Piece, IMoveTracker
 {
-    public Queen(Color color) : base(color)
+    public Rook(Color color, bool hasMoved = false) : base(color)
+    {
+        HasMoved = hasMoved;
+    }
+
+    public Rook(Color color) : this(color, false)
     {
     }
 
-    public override PieceType Type => PieceType.Queen;
+    public override PieceType Type => PieceType.Rook;
+    public bool HasMoved { get; private set; }
+    public void MarkAsMoved()
+    {
+        HasMoved = true;
+    }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -17,10 +26,6 @@ public class Queen : Piece
         
         var directions = new (int row, int column)[]
         {
-            (-1, -1), // up left
-            (-1, 1), // up right
-            (1, -1), // down left
-            (1, 1), // down right
             (-1, 0), // up
             (1, 0), // down
             (0, -1), // left
@@ -63,6 +68,6 @@ public class Queen : Piece
 
     public override Piece Copy()
     {
-        return new Queen(Color);
+        return new Rook(Color, HasMoved);
     }
 }

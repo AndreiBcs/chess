@@ -1,14 +1,15 @@
-using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Pieces.Types;
-using chess.Game.GameState;
-using chess.Game.Validators;
+using chess;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces;
+using chess.Pieces.Types;
 using Chess.Tests.Core.Board;
+using chess.Validation;
 
 namespace Chess.Tests.Core.Game;
 
-public class CastlingTests
+public class CastlingRightsTests
 {
     [Fact]
     public void CanCastleKingside()
@@ -96,7 +97,7 @@ public class CastlingTests
         Piece? extraBlackPiece = null,
         Position? extraBlackPiecePosition = null)
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         board.CreateEmpty()
             .PlacePiece(whiteKing, whiteKingPosition)
             .PlacePiece(whiteRook, whiteRookPosition)
@@ -113,6 +114,6 @@ public class CastlingTests
             board,
             1,
             0,
-            new Castling());
+            new CastlingRights());
     }
 }

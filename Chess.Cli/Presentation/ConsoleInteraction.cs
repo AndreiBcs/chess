@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
-using chess.Entities.Board;
-using chess.Game.GameState;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
 using Spectre.Console;
 
 namespace Chess.Cli.Presentation;

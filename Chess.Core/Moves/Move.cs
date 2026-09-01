@@ -1,6 +1,7 @@
-﻿using chess.Entities.Pieces;
+﻿using chess.Board;
+using chess.Pieces;
 
-namespace chess.Entities.Board;
+namespace chess.Moves;
 
 public readonly record struct Move(
     Position From,
@@ -17,12 +18,4 @@ public readonly record struct Move(
         return $"col: {From.Column} row: {From.Row} " +
                $"-> col: {To.Column} row: {To.Row}";
     }
-}
-
-public enum MoveResult
-{
-    Valid,
-    Invalid,
-    Stalemate,
-    Checkmate
 }

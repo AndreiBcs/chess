@@ -1,11 +1,12 @@
-﻿using Chess.Cli.Presentation;
-using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Game.GameState;
+﻿using chess;
+using chess.Board;
+using Chess.Cli.Presentation;
+using chess.Game;
+using chess.Moves;
 
 namespace Chess.Cli.Player;
 
-public class ConsolePlayer : chess.Entities.Player.Player
+public class ConsolePlayer : chess.Player.Player
 {
     private readonly ConsoleInteraction _interaction;
     public ConsolePlayer(Color color) : base(color)

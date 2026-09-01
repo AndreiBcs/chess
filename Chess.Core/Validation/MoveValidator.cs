@@ -1,9 +1,9 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Game.GameState;
+﻿using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces;
 
-namespace chess.Game.Validators;
+namespace chess.Validation;
 
 public static class MoveValidator
 {
@@ -50,7 +50,7 @@ public static class MoveValidator
         });
     }
 
-    public static bool IsKingInCheck(Board board, Color kingColor)
+    public static bool IsKingInCheck(Board.Board board, Color kingColor)
     {
         var kingPosition = board.GetKingPosition(kingColor);
 
@@ -74,7 +74,7 @@ public static class MoveValidator
         return false;
     }
     
-    private static bool HasLegalMove(Board board, Color color)
+    private static bool HasLegalMove(Board.Board board, Color color)
     {
         foreach (var square in board.GetSquares())
         {
@@ -113,7 +113,7 @@ public static class MoveValidator
             piece.Type != PieceType.King)
             return false;
 
-        foreach (var castlingPosition in snapshot.Castling.CastlingPositions)
+        foreach (var castlingPosition in snapshot.CastlingRights.CastlingPositions)
         {
             if (castlingPosition.Color == piece.Color &&
                 castlingPosition.KingFrom == move.From &&
@@ -147,7 +147,7 @@ public static class MoveValidator
         Color pieceColor,
         out CastlingInfo castling)
     {
-        foreach (var castlingPosition in snapshot.Castling.CastlingPositions)
+        foreach (var castlingPosition in snapshot.CastlingRights.CastlingPositions)
         {
             if (castlingPosition.Color == pieceColor &&
                 castlingPosition.KingFrom == move.From &&
@@ -165,7 +165,7 @@ public static class MoveValidator
     private static MoveResult ValidateBoardState(
         GameSnapshot snapshot,
         Color movingColor,
-        Action<Board> applyMove)
+        Action<Board.Board> applyMove)
     {
         var testBoard = snapshot.Board.Copy();
         applyMove(testBoard);

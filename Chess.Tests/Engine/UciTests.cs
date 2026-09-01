@@ -1,7 +1,7 @@
-﻿using Chess.Engine;
-using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Game.GameState;
+﻿using chess;
+using chess.Board;
+using Chess.Engine;
+using chess.Game;
 using Xunit.Abstractions;
 
 namespace Chess.Tests.Engine;
@@ -32,7 +32,7 @@ public class UciTests
             board,
             1,
             0,
-            new Castling());
+            new CastlingRights());
 
         var move = await enginePlayer.GetMoveAsync(snapshot, null);
         _testOutputHelper.WriteLine(move.ToString());

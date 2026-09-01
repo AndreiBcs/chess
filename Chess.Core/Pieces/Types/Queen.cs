@@ -1,15 +1,14 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
+﻿using chess.Board;
 
-namespace chess.Entities.Pieces.Types;
+namespace chess.Pieces.Types;
 
-public class Bishop : Piece
+public class Queen : Piece
 {
-    public Bishop(Color color) : base(color)
+    public Queen(Color color) : base(color)
     {
     }
 
-    public override PieceType Type => PieceType.Bishop;
+    public override PieceType Type => PieceType.Queen;
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -20,7 +19,11 @@ public class Bishop : Piece
             (-1, -1), // up left
             (-1, 1), // up right
             (1, -1), // down left
-            (1, 1) // down right
+            (1, 1), // down right
+            (-1, 0), // up
+            (1, 0), // down
+            (0, -1), // left
+            (0, 1) // right
         };
 
         foreach (var (rowDir, colDir) in directions)
@@ -59,6 +62,6 @@ public class Bishop : Piece
 
     public override Piece Copy()
     {
-        return new Bishop(Color);
+        return new Queen(Color);
     }
 }

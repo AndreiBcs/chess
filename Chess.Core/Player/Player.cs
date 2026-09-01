@@ -1,8 +1,7 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Game.GameState;
+﻿using chess.Game;
+using chess.Moves;
 
-namespace chess.Entities.Player;
+namespace chess.Player;
 
 public abstract class Player
 {

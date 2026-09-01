@@ -1,13 +1,13 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
+﻿using chess;
+using chess.Board;
+using chess.Pieces;
 
 namespace Chess.Tests.Core.Board;
 
 public static class BoardTestExtensions
 {
-    public static chess.Entities.Board.Board CreateEmpty(
-        this chess.Entities.Board.Board board)
+    public static chess.Board.Board CreateEmpty(
+        this chess.Board.Board board)
     {
         var squares = board.GetSquares();
         for (var row = 0; row < 8; row++)
@@ -26,8 +26,8 @@ public static class BoardTestExtensions
         return board;
     }
     
-    public static chess.Entities.Board.Board PlacePiece(
-        this chess.Entities.Board.Board board,
+    public static chess.Board.Board PlacePiece(
+        this chess.Board.Board board,
         Piece piece,
         Position position)
     {

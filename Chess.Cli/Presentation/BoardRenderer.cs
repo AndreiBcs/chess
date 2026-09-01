@@ -1,5 +1,5 @@
-﻿using chess.Entities.Board;
-using chess.Game.GameState;
+﻿using chess.Board;
+using chess.Game;
 using Spectre.Console;
 
 namespace Chess.Cli.Presentation;

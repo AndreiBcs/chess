@@ -1,9 +1,9 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Pieces.Types;
-using chess.Game.GameState;
-using chess.Game.Validators;
+﻿using chess;
+using chess.Board;
+using chess.Game;
+using chess.Moves;
+using chess.Pieces;
+using chess.Pieces.Types;
 using Chess.Tests.Core.MoveValidation;
 
 namespace Chess.Tests.Core.Board;
@@ -24,7 +24,7 @@ public class BoardTests
     [MemberData(nameof(PieceTypes))]
     public void PieceIdentification(Type pieceType)
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var pos = new Position(2, 2);
         var piece = (Piece)Activator.CreateInstance(pieceType, Color.White)!;
         
@@ -38,7 +38,7 @@ public class BoardTests
     [Fact]
     public void PieceCanCaptureEnemyPiece()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var pos1 = new Position(7, 0);
         var pos2 = new Position(2, 0);
         var friendlyRook = new Rook(Color.White);
@@ -56,7 +56,7 @@ public class BoardTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -69,7 +69,7 @@ public class BoardTests
     [InlineData(0, 0)]
     public void PieceCannotGoThoughFriendlyPiece(int toRow, int toCol)
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var pos1 = new Position(7, 0);
         var pos2 = new Position(2, 0);
         var friendlyRook = new Rook(Color.White);
@@ -87,7 +87,7 @@ public class BoardTests
             board,
             1, 
             0,
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         
@@ -97,7 +97,7 @@ public class BoardTests
     [Fact]
     public void KingCannotBeNextToEnemyKing()
     {
-        var board = new chess.Entities.Board.Board();
+        var board = new chess.Board.Board();
         var pos1 = new Position(4, 4);
         var pos2 = new Position(2, 4);
         var friendlyKing = new King(Color.White);
@@ -115,7 +115,7 @@ public class BoardTests
             board,
             1, 
             0, 
-            new Castling());
+            new CastlingRights());
         
         var result = MoveValidationTestsExtensions.ValidateMove(snapshot, move);
         

@@ -1,4 +1,4 @@
-﻿namespace chess.Entities.Board;
+﻿namespace chess.Board;
 
 public readonly record struct Position(int Row, int Column)
 {

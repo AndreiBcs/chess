@@ -1,7 +1,6 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
+﻿using chess.Board;
 
-namespace chess.Game.GameState;
+namespace chess.Game;
 
 public sealed class GameSnapshot
 {
@@ -10,21 +9,21 @@ public sealed class GameSnapshot
     public IReadOnlyBoard Board { get; }
     public int FullMoveCounter { get; }
     public int HalfMoveCounter { get; }
-    public Castling Castling { get; }
+    public CastlingRights CastlingRights { get; }
 
     public GameSnapshot(
         bool over, 
         Color currentTurn, 
-        Board board, 
+        Board.Board board, 
         int fullMoveCounter, 
         int halfMoveCounter,
-        Castling castling)
+        CastlingRights castlingRights)
     {
         IsOver = over;
         CurrentTurn = currentTurn;
         Board = board;
         FullMoveCounter = fullMoveCounter;
         HalfMoveCounter = halfMoveCounter;
-        Castling = castling;
+        CastlingRights = castlingRights;
     }
 }

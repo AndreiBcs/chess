@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
+using chess;
 using Chess.Engine;
-using chess.Entities.Common;
 
 namespace Chess.Cli.Arguments;
 

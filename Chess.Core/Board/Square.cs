@@ -1,7 +1,6 @@
-﻿using chess.Entities.Common;
-using chess.Entities.Pieces;
+﻿using chess.Pieces;
 
-namespace chess.Entities.Board;
+namespace chess.Board;
 
 public record struct Square
 {

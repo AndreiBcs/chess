@@ -1,8 +1,8 @@
-﻿using Chess.Cli.Arguments;
+﻿using chess;
+using Chess.Cli.Arguments;
 using Chess.Cli.Player;
 using Chess.Cli.Presentation;
 using Chess.Engine;
-using chess.Entities.Common;
 
 namespace Chess.Cli.Game;
 

@@ -1,8 +1,7 @@
-﻿using chess.Entities.Common;
-using chess.Entities.Pieces;
-using chess.Entities.Pieces.Types;
+﻿using chess.Pieces;
+using chess.Pieces.Types;
 
-namespace chess.Entities.Board;
+namespace chess.Board;
 
 public class Board : IReadOnlyBoard
 {
@@ -116,12 +115,3 @@ public class Board : IReadOnlyBoard
         }
     }
 }
-
-public interface IReadOnlyBoard
-{
-    Piece? GetPiece(Position position);
-    Board Copy();
-    Position GetKingPosition(Color color);
-    Square[,] GetSquares();
-}
-

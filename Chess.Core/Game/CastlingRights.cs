@@ -1,7 +1,6 @@
-﻿using chess.Entities.Board;
-using chess.Entities.Common;
+﻿using chess.Board;
 
-namespace chess.Game.GameState;
+namespace chess.Game;
 
 public enum CastleSide
 {
@@ -20,9 +19,9 @@ public readonly record struct CastlingInfo(
     IEnumerable<Position> KingSafePositions);
 
 
-public class Castling
+public class CastlingRights
 {
-    public Castling()
+    public CastlingRights()
     {
         CastlingPositions = new List<CastlingInfo>();
 

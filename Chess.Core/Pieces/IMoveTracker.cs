@@ -1,4 +1,4 @@
-﻿namespace chess.Entities.Pieces;
+﻿namespace chess.Pieces;
 
 public interface IMoveTracker
 {
