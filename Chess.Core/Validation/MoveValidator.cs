@@ -49,7 +49,8 @@ public static class MoveValidator
         }
 
         // 3. check for en passant
-        if (piece.Type == PieceType.Pawn && IsEnPassant(snapshot, move))
+        if (piece.Type == PieceType.Pawn && 
+            EnPassantValidator.IsEnPassant(snapshot, move))
         {
             // simulate
             var enPassantTestBoard = snapshot.Board.Copy();
@@ -108,7 +109,7 @@ public static class MoveValidator
         if (CheckValidator.IsKingInCheck(board, movingColor))
             return new MoveStatus(MoveResult.Invalid);
 
-        var opponentColor = GetOpponent(movingColor);
+        var opponentColor = movingColor == Color.White ?  Color.Black : Color.White;
 
         var opponentInCheck = CheckValidator.IsKingInCheck(board, opponentColor);
         var opponentHasLegalMove = HasLegalMove(board, opponentColor);
@@ -161,42 +162,5 @@ public static class MoveValidator
         }
 
         return false;
-    }
-
-    private static bool IsEnPassant(GameSnapshot snapshot, Move move)
-    {
-        if(snapshot.MoveHistory.Count == 0)
-            return false;
-        
-        var previousMove = snapshot.MoveHistory[^1];
-        var lastMovedPiece = snapshot.Board.GetPiece(previousMove.To);
-        
-        if(lastMovedPiece?.Type != PieceType.Pawn)
-            return false;
-        
-        if (Math.Abs(previousMove.To.Row - previousMove.From.Row) != 2)
-            return false;
-
-        if (previousMove.To.Row != move.From.Row)
-            return false;
-
-        if (Math.Abs(previousMove.To.Column - move.From.Column) != 1)
-            return false;
-
-        if (move.To.Column != previousMove.To.Column)
-            return false;
-
-        if (move.To.Row != previousMove.To.Row +
-            (move.From.Row < previousMove.To.Row ? 1 : -1))
-            return false;
-
-        return true;
-    }
-
-    private static Color GetOpponent(Color color)
-    {
-        return color == Color.White
-            ? Color.Black
-            : Color.White;
     }
 }

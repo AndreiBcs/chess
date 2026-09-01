@@ -16,6 +16,7 @@ public class Game
     }
 
     private bool IsOver { get; set; }
+    private bool IsDraw { get; set; }
     private Color CurrentTurn { get; set; } = Color.White;
     private void SwitchTurn()
     {
@@ -36,6 +37,7 @@ public class Game
     private List<string> PositionHistory { get; } = [];
     private List<Move> MoveHistory { get; } = [];
     private CastlingRights CastlingRights { get; } = new();
+    private Position? EnPassantTargetSquare { get; set; }
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop()
     {
@@ -65,21 +67,12 @@ public class Game
                     break;
                 }
                 
-                ApplyMove(snapshot, move, status);
-                
-                MoveHistory.Add(move);
-                
-                if (CurrentTurn == Color.Black)
-                    FullMoveCounter++;
-            
-                SwitchTurn();
-                
-                // after switching turns because it contains the next to move
-                PositionHistory.Add(CreatePositionKey());
+                UpdateGameState(snapshot, move, status);
 
-                if (IsDraw())
+                if (IsGameDraw())
                 {
                     IsOver = true;
+                    IsDraw = true;
                 }
                 
                 break;
@@ -87,8 +80,26 @@ public class Game
         }
     }
 
-    private bool IsDraw()
+    private void UpdateGameState(GameSnapshot snapshot, Move move, MoveStatus status)
     {
+        ApplyMove(snapshot, move, status);
+                
+        MoveHistory.Add(move);
+                
+        if (CurrentTurn == Color.Black)
+            FullMoveCounter++;
+            
+        UpdateEnPassantTarget(snapshot, move);
+        
+        SwitchTurn();
+                
+        // after every action because it needs to have context for next iteration
+        PositionHistory.Add(CreatePositionKey());
+    }
+
+    private bool IsGameDraw()
+    {
+        // TODO check for insufficient material
         return HalfMoveCounter >= 150 || IsThreefoldRepetition();
     }
 
@@ -136,12 +147,34 @@ public class Game
             : " b ";
         positionKey += CastlingRights.ToString();
 
-        // TODO: en-passant target square
-        positionKey += " -";
+        if (EnPassantTargetSquare is not null)
+        {
+            positionKey += $" {EnPassantTargetSquare.ToString()}";
+        }
+        else
+        {
+            positionKey += " -";
+        }
         
         return positionKey;
     }
 
+    private void UpdateEnPassantTarget(GameSnapshot snapshot, Move move)
+    {
+        var piece = Board.GetPiece(move.To);
+
+        if (piece is Pawn && Math.Abs(move.To.Row - move.From.Row) == 2)
+        {
+            EnPassantTargetSquare = new Position(
+                (move.From.Row + move.To.Row) / 2,
+                move.From.Column);
+
+            return;
+        }
+        
+        EnPassantTargetSquare = null;
+    }
+    
     private GameSnapshot CreateSnapshot()
     {
         return new GameSnapshot(
@@ -151,10 +184,12 @@ public class Game
             FullMoveCounter,
             HalfMoveCounter,
             CastlingRights,
-            MoveHistory);
+            MoveHistory,
+            EnPassantTargetSquare,
+            IsDraw);
     }
     
-    private void ApplyMove( GameSnapshot snapshot, Move move, MoveStatus status) 
+    private void ApplyMove(GameSnapshot snapshot, Move move, MoveStatus status) 
     {
         if (status.IsCastling)
         {
@@ -163,15 +198,16 @@ public class Game
         else if (status.IsEnPassant)
         {
             HandleEnPassant(move); 
-        } 
-        else if (status.IsPromotion)
-        {
-            HandlePromotion(move);
-        } 
+        }
         else 
         { 
             UpdateCastlingRights(move);
             Board.MovePiece(move.From, move.To);
+
+            if (status.IsPromotion)
+            {
+                HandlePromotion(move);
+            }
         } 
         
         UpdateHalfMoveClock(status); 
@@ -231,11 +267,15 @@ public class Game
 
     private void HandlePromotion(Move move)
     {
-        
+        Board.ReplacePromotion(move.To, move.Promotion, CurrentTurn);
     }
 
     private void HandleEnPassant(Move move)
     {
-        
+        Board.MovePiece(move.From, move.To);
+
+        var capturedPawnPosition = new Position(move.From.Row, move.To.Column);
+
+        Board.RemovePiece(capturedPawnPosition);
     }
 }

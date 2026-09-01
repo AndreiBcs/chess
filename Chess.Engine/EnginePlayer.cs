@@ -88,8 +88,14 @@ public class EnginePlayer : Player
         
         fen += snapshot.CastlingRights.ToString();
 
-        // TODO: en-passant target square
-        fen += " - ";
+        if (snapshot.EnPassantTargetSquare is not null)
+        {
+            fen += $" {snapshot.EnPassantTargetSquare.ToString()} ";
+        }
+        else
+        {
+            fen += " - ";
+        }
 
         fen += snapshot.HalfMoveCounter;
         fen += " ";
