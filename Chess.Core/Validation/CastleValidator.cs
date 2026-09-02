@@ -58,6 +58,11 @@ public static class CastleValidator
 
             board.MovePiece(castling.KingFrom, position);
 
+            if (position == castling.KingTo)
+            {
+                board.MovePiece(castling.RookFrom, castling.RookTo);
+            }
+
             if (CheckValidator.IsKingInCheck(board, piece.Color))
             {
                 return false;

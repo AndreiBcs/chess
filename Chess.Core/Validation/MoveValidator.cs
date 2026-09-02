@@ -45,6 +45,7 @@ public static class MoveValidator
             return EvaluateBoard(
                 castleTestBoard, 
                 piece.Color,
+                snapshot,
                 isCastling: true);
         }
 
@@ -63,8 +64,9 @@ public static class MoveValidator
             return EvaluateBoard( 
                 enPassantTestBoard, 
                 piece.Color,
-                isPawnMove: true,
+                snapshot,
                 isCapture: true,
+                isPawnMove: true, 
                 isEnPassant: true);
         }
         
@@ -82,25 +84,28 @@ public static class MoveValidator
             
             return EvaluateBoard( 
                 testBoard, 
-                piece.Color,
-                isPawnMove: true, 
+                piece.Color, 
+                snapshot,
                 isCapture: isCapture,
+                isPawnMove: true, 
                 isPromotion: true); 
         }
         
         return EvaluateBoard( 
             testBoard, 
             piece.Color,
-            isPawnMove: isPawnMove,
-            isCapture: isCapture);
+            snapshot,
+            isCapture: isCapture, 
+            isPawnMove: isPawnMove);
     }
 
     private static MoveStatus EvaluateBoard(
         Board.Board board,
         Color movingColor,
+        GameSnapshot snapshot,
         bool isCapture = false,
         bool isPawnMove = false,
-        bool isCastling = false, 
+        bool isCastling = false,
         bool isEnPassant = false,
         bool isPromotion = false)
     {
@@ -112,7 +117,7 @@ public static class MoveValidator
         var opponentColor = movingColor == Color.White ?  Color.Black : Color.White;
 
         var opponentInCheck = CheckValidator.IsKingInCheck(board, opponentColor);
-        var opponentHasLegalMove = HasLegalMove(board, opponentColor);
+        var opponentHasLegalMove = HasLegalMove(board, opponentColor, snapshot);
 
         var result =  opponentInCheck switch
         {
@@ -132,7 +137,10 @@ public static class MoveValidator
             isPromotion);
     }
 
-    private static bool HasLegalMove(Board.Board board, Color color)
+    private static bool HasLegalMove(
+        Board.Board board, 
+        Color color,
+        GameSnapshot snapshot)
     {
         foreach (var square in board.GetSquares())
         {
@@ -149,10 +157,52 @@ public static class MoveValidator
                 // never consider capturing the king a legal move.
                 if (board.GetPiece(destination)?.Type == PieceType.King)
                     continue;
-                // TODO en-passant and castle are not considered here
+                
                 var testBoard = board.Copy();
 
-                testBoard.MovePiece(square.Position, destination);
+                // check for castling possible move
+                if (piece.Type == PieceType.King && 
+                    snapshot.CastlingRights.CastlingPositions.Count > 0)
+                {
+                    // validate
+                    if (!CastleValidator.TryGetCastling(
+                            snapshot, 
+                            new Move(square.Position, destination), 
+                            out var castling)
+                        || !CastleValidator.CanCastle(snapshot, castling))
+                    {
+                        continue;
+                    }
+
+                    return true;
+                }
+                
+                // check for en passant possible move
+                if (piece.Type == PieceType.Pawn && 
+                    snapshot.EnPassantTargetSquare is not null &&
+                    EnPassantValidator.IsEnPassant(
+                        snapshot, 
+                        new Move(square.Position, destination)))
+                {
+                    // simulate
+                    testBoard.MovePiece(square.Position, destination);
+
+                    var capturedPawnPosition = new Position(
+                        square.Position.Row,
+                        destination.Column);
+
+                    testBoard.RemovePiece(capturedPawnPosition);
+
+                    if (CheckValidator.IsKingInCheck(testBoard, color))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    // any other piece with no special move
+                    testBoard.MovePiece(square.Position, destination);
+                }
 
                 if (!CheckValidator.IsKingInCheck(testBoard, color))
                 {
