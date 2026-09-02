@@ -149,7 +149,7 @@ public static class MoveValidator
                 // never consider capturing the king a legal move.
                 if (board.GetPiece(destination)?.Type == PieceType.King)
                     continue;
-
+                // TODO en-passant and castle are not considered here
                 var testBoard = board.Copy();
 
                 testBoard.MovePiece(square.Position, destination);

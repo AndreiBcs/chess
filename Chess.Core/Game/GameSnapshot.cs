@@ -34,4 +34,66 @@ public sealed class GameSnapshot
         GameStatus = gameStatus;
         MoveHistory = moveHistory.ToImmutableList();
     }
+    
+    public string ToFen(bool justPositionKey = false)
+    {
+        var fen = "";
+
+        for (var row = 0; row < 8; row++)
+        {
+            var empty = 0;
+
+            for (var col = 0; col < 8; col++)
+            {
+                var piece = Board.GetPiece(new Position(row, col));
+
+                if (piece is null)
+                {
+                    empty++;
+                    continue;
+                }
+
+                if (empty > 0)
+                {
+                    fen += empty;
+                    empty = 0;
+                }
+
+                fen += piece.LetterId;
+            }
+
+            if (empty > 0)
+                fen += empty;
+
+            if (row < 7)
+                fen += "/";
+        }
+
+        fen += CurrentTurn == Color.White ? " w " : " b ";
+        
+        fen += CastlingRights.ToString();
+
+        if (EnPassantTargetSquare is not null)
+        {
+            fen += $" {EnPassantTargetSquare.ToString()} ";
+        }
+        else
+        {
+            fen += " - ";
+        }
+
+        if (!justPositionKey) 
+        {
+            // because position history doesn't need the move counter
+            // so it can match identical positions when check for draw
+            fen += AddMoveCounter();
+        }
+
+        return fen;
+    }
+
+    private string AddMoveCounter()
+    {
+        return $"{HalfMoveCounter} {FullMoveCounter}";
+    }
 }

@@ -7,7 +7,7 @@ using chess.Player;
 
 namespace Chess.Engine;
 
-public class EnginePlayer : Player
+public class EnginePlayer : Player, IDisposable
 {
     public readonly Uci Uci; // public because the consumer needs to interact with it
 
@@ -27,7 +27,7 @@ public class EnginePlayer : Player
     
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
-        var fen = ToFen(snapshot);
+        var fen = snapshot.ToFen();
         
         var move = await Uci.GetMove(fen);
 
@@ -49,59 +49,10 @@ public class EnginePlayer : Player
 
         return new Move(from, to, promotion);
     }
-    
-    private static string ToFen(GameSnapshot snapshot)
+
+    public void Dispose()
     {
-        var fen = "";
-
-        for (var row = 0; row < 8; row++)
-        {
-            var empty = 0;
-
-            for (var col = 0; col < 8; col++)
-            {
-                var piece = snapshot.Board.GetPiece(new Position(row, col));
-
-                if (piece is null)
-                {
-                    empty++;
-                    continue;
-                }
-
-                if (empty > 0)
-                {
-                    fen += empty;
-                    empty = 0;
-                }
-
-                fen += piece.LetterId;
-            }
-
-            if (empty > 0)
-                fen += empty;
-
-            if (row < 7)
-                fen += "/";
-        }
-
-        fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
-        
-        fen += snapshot.CastlingRights.ToString();
-
-        if (snapshot.EnPassantTargetSquare is not null)
-        {
-            fen += $" {snapshot.EnPassantTargetSquare.ToString()} ";
-        }
-        else
-        {
-            fen += " - ";
-        }
-
-        fen += snapshot.HalfMoveCounter;
-        fen += " ";
-        fen += snapshot.FullMoveCounter;
-
-        return fen;
+        _ = Uci.StopEngine();
     }
 }
 

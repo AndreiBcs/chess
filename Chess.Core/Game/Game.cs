@@ -14,11 +14,13 @@ public class Game
         Board.InitializeBoard();
 
         GameStatus = GameStatus.InProgress;
-        PositionHistory.Add(CreatePositionKey());
+        PositionHistory.Add(CreateSnapshot().ToFen(true));
     }
 
     private bool IsOver { get; set; }
+    public bool IsFinished => IsOver;
     private GameStatus GameStatus { get; set; }
+    public GameStatus Status => GameStatus;
     private Color CurrentTurn { get; set; } = Color.White;
     private void SwitchTurn()
     {
@@ -103,7 +105,7 @@ public class Game
         SwitchTurn();
                 
         // after every action because it needs to have context for next iteration
-        PositionHistory.Add(CreatePositionKey());
+        PositionHistory.Add(snapshot.ToFen(true));
     }
 
     private bool IsGameDraw()
@@ -169,54 +171,6 @@ public class Game
         }
         
         return false;
-    }
-    
-    private string CreatePositionKey()
-    {
-        var positionKey = "";
-
-        for (var row = 0; row < 8; row++)
-        {
-            var empty = 0;
-
-            for (var col = 0; col < 8; col++)
-            {
-                var piece = Board.GetPiece(new Position(row, col));
-
-                if (piece is null)
-                {
-                    empty++;
-                    continue;
-                }
-                if (empty > 0)
-                {
-                    positionKey += empty;
-                    empty = 0;
-                }
-                positionKey += piece.LetterId;
-            }
-
-            if (empty > 0)
-                positionKey += empty;
-
-            if (row < 7)
-                positionKey += "/";
-        }
-        positionKey += CurrentTurn == Color.White
-            ? " w "
-            : " b ";
-        positionKey += CastlingRights.ToString();
-
-        if (EnPassantTargetSquare is not null)
-        {
-            positionKey += $" {EnPassantTargetSquare.ToString()}";
-        }
-        else
-        {
-            positionKey += " -";
-        }
-        
-        return positionKey;
     }
 
     private void UpdateEnPassantTarget(GameSnapshot snapshot, Move move)

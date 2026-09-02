@@ -64,8 +64,8 @@ public class Uci
         {
             if (line.StartsWith("bestmove"))
             {
-                var parts = line.Split(' ');
-                return  parts[1];
+                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                return parts[1];
             }
         }
 
