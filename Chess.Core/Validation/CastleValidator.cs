@@ -16,7 +16,7 @@ public static class CastleValidator
     public static bool TryGetCastling(
         GameSnapshot snapshot,
         Move move,
-        out CastlingInfo castling)
+        out CastlingRights castling)
     {
         foreach (var castlingPosition in snapshot.CastlingRights.CastlingPositions)
         {
@@ -33,7 +33,7 @@ public static class CastleValidator
         return false;
     }
     
-    public static bool CanCastle(GameSnapshot snapshot, CastlingInfo castling)
+    public static bool CanCastle(GameSnapshot snapshot, CastlingRights castling)
     {
         var piece = snapshot.Board.GetPiece(castling.KingFrom);
 

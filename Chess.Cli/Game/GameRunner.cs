@@ -10,7 +10,7 @@ public class GameRunner
 {
     private readonly BoardRenderer _renderer;
     private readonly ConsoleInteraction _interaction;
-    private readonly chess.Game.Game _game;
+    private readonly chess.Game.OldGame _oldGame;
 
     public GameRunner(CliArguments.ParsedOptions options)
     {
@@ -31,12 +31,12 @@ public class GameRunner
         _ = player2.Uci.SetElo(elo);
         _ = player2.Uci.NewGame();
         
-        _game = new chess.Game.Game(player1, player2);
+        _oldGame = new chess.Game.OldGame(player1, player2);
     }
 
     public async Task Run()
     {
-        await foreach (var snapshot in _game.GameLoop())
+        await foreach (var snapshot in _oldGame.GameLoop())
         {
             _renderer.Render(snapshot);
         }

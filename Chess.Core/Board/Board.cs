@@ -1,166 +1,116 @@
-﻿using chess.Pieces;
+﻿using System.Collections.Immutable;
+using chess.Pieces;
 using chess.Pieces.Types;
 
 namespace chess.Board;
 
-public class Board : IReadOnlyBoard
+public sealed record Board
 {
-    private Square[,] Squares { get; } = new Square[8, 8];
-
-    public void InitializeBoard()
-    {
-        InitializeSquares();
-        SetupPlayerSide(Color.White, 7, 6);
-        SetupPlayerSide(Color.Black, 0, 1);
-    }
+    private readonly ImmutableArray<Square> _squares;
+    private Board(ImmutableArray<Square> squares) => _squares = squares;
+    private static int Index(Position p) => p.Row * 8 + p.Column;
+    private static bool IsOnBoard(Position p) 
+        => p.Row is >= 0 and < 8 && p.Column is >= 0 and < 8;
+    private Board WithSquares(Func<ImmutableArray<Square>, ImmutableArray<Square>> transform)
+        => new(transform(_squares));
     
+    public IEnumerable<Square> Squares => _squares;
+
     public Piece? GetPiece(Position position)
     {
-        if (position.Row is < 0 or >= 8 ||
-            position.Column is < 0 or >= 8)
-            return null;
-        
-        return Squares[position.Row, position.Column].Piece;
+        return IsOnBoard(position) ? _squares[Index(position)].Piece : null;
     }
 
-    public void MovePiece(Position from, Position to)
+    public Board WithMove(Position from, Position to)
     {
         var piece = GetPiece(from);
+        var moved = piece is not null ? piece with { HasMoved = true } : null;
 
-        var capturedPiece = GetPiece(to);
-        capturedPiece?.MarkAsCaptured();
-        
-        Squares[to.Row, to.Column].Piece = piece;
-        Squares[from.Row, from.Column].Piece = null;
-
-        if (piece is IMoveTracker moveTracker)
-        {
-            moveTracker.MarkAsMoved();
-        }
+        return WithSquares(squares => squares
+            .SetItem(Index(to), squares[Index(to)] with { Piece = moved })
+            .SetItem(Index(from), squares[Index(from)] with { Piece = null }));
     }
 
-    public void RemovePiece(Position position)
+    public Board WithoutPiece(Position position) =>
+        WithSquares(squares =>
+            squares.SetItem(Index(position), squares[Index(position)] with { Piece = null }));
+
+    public Board WithPromotion(Position position, PieceType type, Color color)
     {
-        var piece = GetPiece(position);
-
-        piece?.MarkAsCaptured();
-
-        Squares[position.Row, position.Column].Piece = null;
-    }
-
-    public void ReplacePromotion(
-        Position position, 
-        PieceType? promotion,
-        Color promotionColor)
-    {
-        if (promotion is null) return;
-        
-        RemovePiece(position);
-        
-        Squares[position.Row, position.Column].Piece = promotion switch
+        Piece promoted = type switch
         {
-            PieceType.Bishop => new Bishop(promotionColor),
-            PieceType.Knight => new Knight(promotionColor),
-            PieceType.Rook => new Rook(promotionColor),
-            PieceType.Queen => new Queen(promotionColor),
-            _ => throw new ArgumentException(
-                "Invalid promotion piece",
-                nameof(promotion))
+            PieceType.Queen => new Queen(color),
+            PieceType.Rook => new Rook(color),
+            PieceType.Bishop => new Bishop(color),
+            PieceType.Knight => new Knight(color),
+            _ => throw new ArgumentException("Invalid promotion piece", nameof(type))
         };
+
+        return WithSquares(squares =>
+            squares.SetItem(Index(position), squares[Index(position)] with { Piece = promoted }));
     }
     
-    public Board Copy()
+    public bool BishopsAreSameColor()
     {
-        var board = new Board();
+        var bishops = _squares.Where(sq =>
+            sq.Piece?.Type == PieceType.Bishop).ToList();
+        
+        if (bishops.Count != 2) return false;
 
-        for (var row = 0; row < 8; row++)
-        {
-            for (var column = 0; column < 8; column++)
-            {
-                var originalSquare = Squares[row, column];
-
-                board.Squares[row, column] = new Square
-                {
-                    Color = originalSquare.Color,
-                    Position = new Position(row, column),
-                    Piece = originalSquare.Piece?.Copy()
-                };
-            }
-        }
-
-        return board;
+        var a = bishops[0].Position;
+        var b = bishops[1].Position;
+        return (a.Row + a.Column) % 2 == (b.Row + b.Column) % 2;
     }
     
     public Position GetKingPosition(Color color)
     {
-        var pos = new Position();
-        foreach (var sq in Squares)
-        {
-            if (sq.Piece?.Color == color &&
-                sq.Piece.Type == PieceType.King)
-            {
-                pos = sq.Position;
-            }
-        }
+        foreach (var square in _squares)
+            if (square.Piece is King && square.Piece.Color == color)
+                return square.Position;
 
-        return pos;
+        throw new InvalidOperationException($"No {color} king on the board");
     }
-
-    public Square[,] GetSquares()
+    
+    public static Board CreateInitial()
     {
-        return Squares;
-    }
-
-    public bool BishopsAreSameColor()
-    {
-        var bishopSquares = 
-            (from Square square in Squares 
-                where square.Piece?.Type == PieceType.Bishop 
-                select square).ToList();
+        var squares = ImmutableArray.CreateBuilder<Square>(64);
         
-        if(bishopSquares.Count != 2)
-            return false;
-        
-        var first = bishopSquares[0].Position;
-        var second = bishopSquares[1].Position;
-
-        var firstColor = (first.Row + first.Column) % 2;
-        var secondColor = (second.Row + second.Column) % 2;
-
-        return firstColor == secondColor;
-    }
-
-    private void InitializeSquares()
-    {
         for (var row = 0; row < 8; row++)
         {
             for (var col = 0; col < 8; col++)
             {
-                Squares[row, col] = new Square
+                var position = new Position(row, col);
+                squares.Add(new Square
                 {
-                    Color = (row + col) % 2 == 0
-                        ? Color.White
-                        : Color.Black,
-                    Position = new Position(row, col)
-                };
+                    Color = (row + col) % 2 == 0 ? Color.White : Color.Black,
+                    Position = position,
+                    Piece = StartingPiece(position)
+                });
             }
         }
+        return new Board(squares.ToImmutableArray());
     }
-    
-    private void SetupPlayerSide(Color color, int majorRow, int pawnRow)
-    {
-        Squares[majorRow, 0].Piece = new Rook(color, false);
-        Squares[majorRow, 1].Piece = new Knight(color);
-        Squares[majorRow, 2].Piece = new Bishop(color);
-        Squares[majorRow, 3].Piece = new Queen(color);
-        Squares[majorRow, 4].Piece = new King(color, false);
-        Squares[majorRow, 5].Piece = new Bishop(color);
-        Squares[majorRow, 6].Piece = new Knight(color);
-        Squares[majorRow, 7].Piece = new Rook(color, false);
 
-        for (var i = 0; i < 8; i++)
+    private static Piece? StartingPiece(Position position)
+    {
+        Color? color = position.Row switch
         {
-            Squares[pawnRow, i].Piece = new Pawn(color, false);
-        }
+            0 or 1 => Color.Black,
+            6 or 7 => Color.White,
+            _ => null
+        };
+        if (color is null) return null;
+        
+        if (position.Row is 1 or 6) return new Pawn(color.Value);
+
+        return position.Column switch
+        {
+            0 or 7 => new Rook(color.Value),
+            1 or 6 => new Knight(color.Value),
+            2 or 5 => new Bishop(color.Value),
+            3 => new Queen(color.Value),
+            4 => new King(color.Value),
+            _ => null
+        };
     }
 }

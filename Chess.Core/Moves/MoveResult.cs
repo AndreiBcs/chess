@@ -4,6 +4,6 @@ public enum MoveResult
 {
     Valid,
     Invalid,
-    Stalemate,
-    Checkmate
+    // Stalemate,
+    // Checkmate
 }

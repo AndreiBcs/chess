@@ -152,7 +152,7 @@ public static class MoveValidator
             var possiblePositions =
                 piece.GetPossiblePositions(board, square.Position);
 
-            foreach (var destination in possiblePositions)
+            foreach (var destination in possiblePositions)// TODO aici pot recursiv sa apelez ValidateMove
             {
                 // never consider capturing the king a legal move.
                 if (board.GetPiece(destination)?.Type == PieceType.King)

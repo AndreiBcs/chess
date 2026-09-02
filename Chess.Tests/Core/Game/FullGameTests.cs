@@ -40,7 +40,7 @@ public class FullGameTests
             Console.WriteLine("Starting black new game...");
             await black.Uci.NewGame();
             
-            var game = new chess.Game.Game(white, black);
+            var game = new chess.Game.OldGame(white, black);
             var moveNumber = 0;
 
             try
