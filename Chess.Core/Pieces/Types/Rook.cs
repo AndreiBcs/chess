@@ -66,6 +66,22 @@ public class Rook : Piece, IMoveTracker
         return GetPossiblePositions(board, from);
     }
 
+    public override (int Row, int Column)[] GetMoveDirections()
+    {
+        return 
+        [
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1)
+        ];
+    }
+
+    public override (int Rox, int Column)[] GetAttackDirections()
+    {
+        return GetMoveDirections();
+    }
+
     public override Piece Copy()
     {
         return new Rook(Color, HasMoved);

@@ -11,6 +11,7 @@ public abstract class Piece
 
     public Color Color { get; init; }
     public bool IsCaptured { get; private set; }
+    public bool HasMoved { get; init; }
     public void MarkAsCaptured()
     {
         IsCaptured = true;
@@ -36,5 +37,7 @@ public abstract class Piece
     }
     public abstract IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from);
     public abstract IEnumerable<Position> GetAttackPositions(IReadOnlyBoard board, Position from);
+    public abstract (int Row, int Column)[] GetMoveDirections();
+    public abstract (int Rox, int Column)[] GetAttackDirections();
     public abstract Piece Copy();
 }

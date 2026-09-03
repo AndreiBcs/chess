@@ -51,6 +51,26 @@ public class Knight : Piece
         return GetPossiblePositions(board, from);
     }
 
+    public override (int Row, int Column)[] GetMoveDirections()
+    {
+        return 
+        [
+            (-2, -1),
+            (-2, 1),
+            (-1, -2),
+            (-1, 2),
+            (1, -2),
+            (1, 2),
+            (2, -1),
+            (2, 1)
+        ];
+    }
+
+    public override (int Rox, int Column)[] GetAttackDirections()
+    {
+        return GetMoveDirections();
+    }
+
     public override Piece Copy()
     {
         return new Knight(Color);
