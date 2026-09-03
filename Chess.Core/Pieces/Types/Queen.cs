@@ -2,12 +2,8 @@
 
 namespace chess.Pieces.Types;
 
-public class Queen : Piece
+public sealed record Queen(Color Color) : Piece(Color)
 {
-    public Queen(Color color) : base(color)
-    {
-    }
-
     public override PieceType Type => PieceType.Queen;
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
@@ -78,10 +74,5 @@ public class Queen : Piece
     public override (int Rox, int Column)[] GetAttackDirections()
     {
         return GetMoveDirections();
-    }
-
-    public override Piece Copy()
-    {
-        return new Queen(Color);
     }
 }

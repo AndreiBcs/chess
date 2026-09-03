@@ -84,8 +84,7 @@ public class PawnMoveValidationTests
             PieceType.Pawn,
             Color.White,
             fromRow,
-            fromCol,
-            true);
+            fromCol);
 
         var move = new Move
         {
@@ -110,8 +109,7 @@ public class PawnMoveValidationTests
             PieceType.Pawn,
             Color.White,
             fromRow,
-            fromCol,
-            true);
+            fromCol);
 
         var move = new Move
         {

@@ -2,23 +2,9 @@
 
 namespace chess.Pieces.Types;
 
-public class Rook : Piece, IMoveTracker
+public sealed record Rook(Color Color) : Piece(Color)
 {
-    public Rook(Color color, bool hasMoved = false) : base(color)
-    {
-        HasMoved = hasMoved;
-    }
-
-    public Rook(Color color) : this(color, false)
-    {
-    }
-
     public override PieceType Type => PieceType.Rook;
-    public bool HasMoved { get; private set; }
-    public void MarkAsMoved()
-    {
-        HasMoved = true;
-    }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -80,10 +66,5 @@ public class Rook : Piece, IMoveTracker
     public override (int Rox, int Column)[] GetAttackDirections()
     {
         return GetMoveDirections();
-    }
-
-    public override Piece Copy()
-    {
-        return new Rook(Color, HasMoved);
     }
 }

@@ -45,8 +45,7 @@ public class KingMoveValidationTests
             PieceType.King,
             Color.White,
             fromRow,
-            fromCol,
-            true);
+            fromCol);
 
         var move = new Move
         {

@@ -2,23 +2,9 @@
 
 namespace chess.Pieces.Types;
 
-public class Pawn : Piece//, IMoveTracker
+public sealed record Pawn(Color Color) : Piece(Color)
 {
-    public Pawn(Color color, bool hasMoved = false) : base(color)
-    {
-        HasMoved = hasMoved;
-    }
-
-    public Pawn(Color color) : this(color, false)
-    {
-    }
-
     public override PieceType Type => PieceType.Pawn;
-    // public bool HasMoved { get; private set; }
-    //  public void MarkAsMoved()
-    //  {
-    //      HasMoved = true;
-    //  }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -165,10 +151,5 @@ public class Pawn : Piece//, IMoveTracker
             (direction, 1),
             (direction, -1)
         ];
-    }
-
-    public override Piece Copy()
-    {
-        return new Pawn(Color, HasMoved);
     }
 }

@@ -26,24 +26,14 @@ public class Board : IReadOnlyBoard
     public void MovePiece(Position from, Position to)
     {
         var piece = GetPiece(from);
-
-        var capturedPiece = GetPiece(to);
-        capturedPiece?.MarkAsCaptured();
         
         Squares[to.Row, to.Column].Piece = piece;
         Squares[from.Row, from.Column].Piece = null;
-
-        if (piece is IMoveTracker moveTracker)
-        {
-            moveTracker.MarkAsMoved();
-        }
     }
 
     public void RemovePiece(Position position)
     {
         var piece = GetPiece(position);
-
-        piece?.MarkAsCaptured();
 
         Squares[position.Row, position.Column].Piece = null;
     }
@@ -79,12 +69,8 @@ public class Board : IReadOnlyBoard
             {
                 var originalSquare = Squares[row, column];
 
-                board.Squares[row, column] = new Square
-                {
-                    Color = originalSquare.Color,
-                    Position = new Position(row, column),
-                    Piece = originalSquare.Piece?.Copy()
-                };
+                board.Squares[row, column] = 
+                    originalSquare with { Position = new Position(row, column) };
             }
         }
 
@@ -149,18 +135,18 @@ public class Board : IReadOnlyBoard
     
     private void SetupPlayerSide(Color color, int majorRow, int pawnRow)
     {
-        Squares[majorRow, 0].Piece = new Rook(color, false);
+        Squares[majorRow, 0].Piece = new Rook(color);
         Squares[majorRow, 1].Piece = new Knight(color);
         Squares[majorRow, 2].Piece = new Bishop(color);
         Squares[majorRow, 3].Piece = new Queen(color);
-        Squares[majorRow, 4].Piece = new King(color, false);
+        Squares[majorRow, 4].Piece = new King(color);
         Squares[majorRow, 5].Piece = new Bishop(color);
         Squares[majorRow, 6].Piece = new Knight(color);
-        Squares[majorRow, 7].Piece = new Rook(color, false);
+        Squares[majorRow, 7].Piece = new Rook(color);
 
         for (var i = 0; i < 8; i++)
         {
-            Squares[pawnRow, i].Piece = new Pawn(color, false);
+            Squares[pawnRow, i].Piece = new Pawn(color);
         }
     }
 }

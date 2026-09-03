@@ -2,23 +2,9 @@
 
 namespace chess.Pieces.Types;
 
-public class King : Piece, IMoveTracker
+public sealed record King(Color Color) : Piece(Color)
 {
-    public King(Color color, bool hasMoved = false) : base(color)
-    {
-        HasMoved = hasMoved;
-    }
-
-    public King(Color color) : this(color, false)
-    {
-    }
-
     public override PieceType Type => PieceType.King;
-    public bool HasMoved { get; private set; }
-    public void MarkAsMoved()
-    {
-        HasMoved = true;
-    }
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
     {
@@ -135,10 +121,5 @@ public class King : Piece, IMoveTracker
     public override (int Rox, int Column)[] GetAttackDirections()
     {
         return GetMoveDirections();
-    }
-
-    public override Piece Copy()
-    {
-        return new King(Color, HasMoved);
     }
 }

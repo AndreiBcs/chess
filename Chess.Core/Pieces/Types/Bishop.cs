@@ -2,12 +2,8 @@
 
 namespace chess.Pieces.Types;
 
-public class Bishop : Piece
+public sealed record Bishop(Color Color) : Piece(Color)
 {
-    public Bishop(Color color) : base(color)
-    {
-    }
-
     public override PieceType Type => PieceType.Bishop;
 
     public override IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from)
@@ -70,10 +66,5 @@ public class Bishop : Piece
     public override (int Rox, int Column)[] GetAttackDirections()
     {
         return GetMoveDirections();
-    }
-
-    public override Piece Copy()
-    {
-        return new Bishop(Color);
     }
 }

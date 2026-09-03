@@ -15,18 +15,17 @@ public static class MoveValidationTestsExtensions
         PieceType type, 
         Color color,
         int fromRow, 
-        int fromCol,
-        bool hasMoved = false)
+        int fromCol)
     {
         var board = new chess.Board.Board();
         Piece piece = type switch
         {
             PieceType.Bishop => new Bishop(color),
-            PieceType.King => new King(color, hasMoved),
+            PieceType.King => new King(color),
             PieceType.Knight => new Knight(color),
-            PieceType.Pawn => new Pawn(color, hasMoved),
+            PieceType.Pawn => new Pawn(color),
             PieceType.Queen => new Queen(color),
-            PieceType.Rook => new Rook(color, hasMoved),
+            PieceType.Rook => new Rook(color),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
         
