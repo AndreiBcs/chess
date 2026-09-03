@@ -1,6 +1,6 @@
 ﻿namespace chess.Moves;
 
-public record MoveStatus(
+public readonly record struct MoveStatus(
     MoveResult Result, 
     bool IsCapture = false,
     bool IsPawnMove = false,

@@ -11,7 +11,7 @@ public class Game
     public Game(Player.Player player1, Player.Player player2)
     {
         Players = [player1, player2];
-        Board.InitializeBoard();
+        Board = chess.Board.Board.CreateInitial();
 
         GameStatus = GameStatus.InProgress;
         PositionHistory.Add(CreateSnapshot().ToFen(true));
@@ -35,7 +35,7 @@ public class Game
         return Players.Single(p => p.Color == color);
     }
 
-    private Board.Board Board { get; } = new();
+    private Board.Board Board { get; }
     private int FullMoveCounter { get; set; } = 1; // increase after black's turn
     private int HalfMoveCounter { get; set; } // back at 0 after a capture or pawn advance
     private List<string> PositionHistory { get; } = [];

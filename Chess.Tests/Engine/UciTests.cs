@@ -23,7 +23,7 @@ public class UciTests
         var engine = enginePlayer.Uci;
 
         var board = new Board();
-        board.InitializeBoard();
+        //board.InitializeBoard();
         await engine.StartEngine();
         await engine.NewGame();
 

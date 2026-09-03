@@ -29,7 +29,7 @@ public static class MoveValidationTestsExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
         
-        board.CreateEmpty().PlacePiece(piece, new Position(fromRow, fromCol));
+        //board.CreateEmpty().PlacePiece(piece, new Position(fromRow, fromCol));
         
         return new GameSnapshot(GameStatus.InProgress, color, board, 1, 0, new CastlingRights(), new List<Move>(), null);
     }

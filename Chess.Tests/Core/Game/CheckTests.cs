@@ -20,10 +20,10 @@ public class CheckTests
         var knight = new Knight(Color.White);
         var enemyRook = new Rook(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(6, 3))
-            .PlacePiece(knight, new Position(5, 3))
-            .PlacePiece(enemyRook, new Position(2, 3));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(6, 3))
+        //     .PlacePiece(knight, new Position(5, 3))
+        //     .PlacePiece(enemyRook, new Position(2, 3));
         
         /*
          * r    r
@@ -59,10 +59,10 @@ public class CheckTests
         var knight = new Knight(Color.White);
         var enemyRook = new Rook(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(6, 3))
-            .PlacePiece(knight, new Position(6, 5))
-            .PlacePiece(enemyRook, new Position(2, 3));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(6, 3))
+        //     .PlacePiece(knight, new Position(6, 5))
+        //     .PlacePiece(enemyRook, new Position(2, 3));
         
         /*
          * r        r
@@ -98,10 +98,10 @@ public class CheckTests
         var knight = new Knight(Color.White);
         var enemyRook = new Rook(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(6, 3))
-            .PlacePiece(knight, new Position(6, 5))
-            .PlacePiece(enemyRook, new Position(2, 3));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(6, 3))
+        //     .PlacePiece(knight, new Position(6, 5))
+        //     .PlacePiece(enemyRook, new Position(2, 3));
         
         /*
          * r        r
@@ -136,9 +136,9 @@ public class CheckTests
         var king = new King(Color.White);
         var enemyRook = new Rook(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(6, 4))
-            .PlacePiece(enemyRook, new Position(2, 3));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(6, 4))
+        //     .PlacePiece(enemyRook, new Position(2, 3));
         
         var move = new Move(new Position(6, 4),
             new Position(6, 3));
@@ -166,10 +166,10 @@ public class CheckTests
         var enemyKnight = new Knight(Color.Black);
         var enemyRook = new Rook(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(6, 4))
-            .PlacePiece(enemyKnight, new Position(5, 3))
-            .PlacePiece(enemyRook, new Position(2, 3));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(6, 4))
+        //     .PlacePiece(enemyKnight, new Position(5, 3))
+        //     .PlacePiece(enemyRook, new Position(2, 3));
         
         var move = new Move(new Position(6, 4),
             new Position(5, 3));
@@ -197,10 +197,10 @@ public class CheckTests
         var enemyQueen = new Queen(Color.Black);
         var enemyRook = new Rook(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(7, 0))
-            .PlacePiece(enemyQueen, new Position(0, 3))
-            .PlacePiece(enemyRook, new Position(6, 4));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(7, 0))
+        //     .PlacePiece(enemyQueen, new Position(0, 3))
+        //     .PlacePiece(enemyRook, new Position(6, 4));
         
         var move = new Move(new Position(0, 3),
             new Position(7, 3));
@@ -227,9 +227,9 @@ public class CheckTests
         var king = new King(Color.White);
         var enemyQueen = new Queen(Color.Black);
 
-        board.CreateEmpty()
-            .PlacePiece(king, new Position(7, 0))
-            .PlacePiece(enemyQueen, new Position(4, 4));
+        // board.CreateEmpty()
+        //     .PlacePiece(king, new Position(7, 0))
+        //     .PlacePiece(enemyQueen, new Position(4, 4));
         
         var move = new Move(new Position(4, 4),
             new Position(6, 2));

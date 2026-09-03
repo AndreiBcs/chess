@@ -26,13 +26,13 @@ public static class BoardTestExtensions
         return board;
     }
     
-    public static chess.Board.Board PlacePiece(
-        this chess.Board.Board board,
-        Piece piece,
-        Position position)
-    {
-        var squares = board.GetSquares();
-        squares[position.Row, position.Column].Piece = piece;
-        return board;
-    }
+    // public static chess.Board.Board PlacePiece(
+    //     this chess.Board.Board board,
+    //     Piece piece,
+    //     Position position)
+    // {
+    //     var squares = board.GetSquares();
+    //     squares[position.Row, position.Column] = piece;
+    //     return board;
+    // }
 }

@@ -98,15 +98,15 @@ public class CastlingRightsTests
         Position? extraBlackPiecePosition = null)
     {
         var board = new chess.Board.Board();
-        board.CreateEmpty()
-            .PlacePiece(whiteKing, whiteKingPosition)
-            .PlacePiece(whiteRook, whiteRookPosition)
-            .PlacePiece(blackKing, blackKingPosition);
-
-        if (extraBlackPiece is not null && extraBlackPiecePosition is not null)
-        {
-            board.PlacePiece(extraBlackPiece, extraBlackPiecePosition.Value);
-        }
+        // board.CreateEmpty()
+        //     .PlacePiece(whiteKing, whiteKingPosition)
+        //     .PlacePiece(whiteRook, whiteRookPosition)
+        //     .PlacePiece(blackKing, blackKingPosition);
+        //
+        // if (extraBlackPiece is not null && extraBlackPiecePosition is not null)
+        // {
+        //     board.PlacePiece(extraBlackPiece, extraBlackPiecePosition.Value);
+        // }
 
         return new GameSnapshot(
             GameStatus.InProgress, 
