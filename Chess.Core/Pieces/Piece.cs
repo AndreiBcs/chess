@@ -1,6 +1,4 @@
-﻿using chess.Board;
-
-namespace chess.Pieces;
+﻿namespace chess.Pieces;
 
 public abstract record Piece(Color Color)
 {
@@ -24,8 +22,6 @@ public abstract record Piece(Color Color)
             return Color == Color.White ? letter : char.ToLower(letter);
         }
     }
-    public abstract IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from);
-    public abstract IEnumerable<Position> GetAttackPositions(IReadOnlyBoard board, Position from);
     public abstract (int Row, int Column)[] GetMoveDirections();
     public abstract (int Rox, int Column)[] GetAttackDirections();
 }

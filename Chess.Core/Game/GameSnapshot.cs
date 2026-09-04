@@ -8,7 +8,7 @@ public sealed class GameSnapshot
 {
     public GameStatus GameStatus { get; }
     public Color CurrentTurn { get; }
-    public IReadOnlyBoard Board { get; }
+    public Board.Board Board { get; }
     public int FullMoveCounter { get; }
     public int HalfMoveCounter { get; }
     public CastlingRights CastlingRights { get; }

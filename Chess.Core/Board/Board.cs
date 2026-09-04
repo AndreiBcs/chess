@@ -34,6 +34,18 @@ public sealed record Board
         
         return _squares[position.Row, position.Column].Piece;
     }
+    
+    public Position? GetPiecePosition(Piece piece)
+    {
+        foreach (var square in _squares)
+        {
+            if (square.Piece == piece)
+            {
+                return square.Position;
+            }
+        }
+        return null;
+    }
 
     public Board WithMove(Position from, Position to)
     {
