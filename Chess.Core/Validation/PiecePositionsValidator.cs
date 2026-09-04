@@ -4,7 +4,7 @@ using chess.Pieces;
 
 namespace chess.Validation;
 
-public static class GetPositions
+public static class PiecePositionsValidator
 {
     public static IEnumerable<Position> GetPiecePositions(
         this Piece piece, 

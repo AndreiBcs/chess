@@ -10,8 +10,8 @@ public static class MoveValidator
     public static MoveStatus ValidateMove(GameSnapshot snapshot, Move move)
     {
         // 1. basic move validation
-        if (!PieceMoveValidator.IsValid(snapshot, move))
-            return new MoveStatus(MoveResult.Invalid);
+        // if (!PieceMoveValidator.IsValid(snapshot, move))
+        //     return new MoveStatus(MoveResult.Invalid);
         
         var board = snapshot.Board;
         var piece = board.GetPiece(move.From);

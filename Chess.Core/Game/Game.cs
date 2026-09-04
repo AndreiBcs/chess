@@ -58,7 +58,7 @@ public class Game
                 var move = await currentPlayer.GetMoveAsync(snapshot, result);
                 
                 var status = MoveValidator.ValidateMove(snapshot, move);
-                result = status.Result;
+                result = status.MoveResult;
 
                 if (result is MoveResult.Invalid)
                 {

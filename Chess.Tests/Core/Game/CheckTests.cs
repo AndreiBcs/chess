@@ -217,7 +217,7 @@ public class CheckTests
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
-        Assert.Equal(MoveResult.Checkmate, result.Result);
+        Assert.Equal(MoveResult.Checkmate, result.MoveResult);
     }
     
     [Fact]
@@ -245,6 +245,6 @@ public class CheckTests
         
         var result = MoveValidator.ValidateMove(snapshot, move);
         
-        Assert.Equal(MoveResult.Stalemate, result.Result);
+        Assert.Equal(MoveResult.Stalemate, result.MoveResult);
     }
 }
