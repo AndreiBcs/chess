@@ -5,7 +5,7 @@ using chess.Moves;
 using chess.Pieces.Types;
 using Chess.Tests.Core.Board;
 using Chess.Tests.Core.MoveValidation;
-using chess.Validation;
+using chess.Validation.MoveValidation;
 
 namespace Chess.Tests.Core.Game;
 

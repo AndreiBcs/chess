@@ -2,7 +2,7 @@
 using chess.Moves;
 using chess.Pieces;
 using chess.Pieces.Types;
-using chess.Validation;
+using chess.Validation.MoveValidation;
 
 namespace chess.Game;
 

@@ -2,7 +2,7 @@
 using chess.Moves;
 using chess.Pieces;
 
-namespace chess.Validation;
+namespace chess.Validation.MoveValidation;
 
 public static class EnPassantValidator
 {

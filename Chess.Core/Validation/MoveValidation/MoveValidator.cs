@@ -3,7 +3,7 @@ using chess.Game;
 using chess.Moves;
 using chess.Pieces;
 
-namespace chess.Validation;
+namespace chess.Validation.MoveValidation;
 
 public static class MoveValidator
 {

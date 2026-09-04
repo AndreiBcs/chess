@@ -1,4 +1,4 @@
-﻿namespace chess.Validation;
+﻿namespace chess.Validation.MoveValidation;
 
 public static class CheckValidator
 {

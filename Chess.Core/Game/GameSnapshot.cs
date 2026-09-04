@@ -10,7 +10,7 @@ public sealed record GameSnapshot
     public readonly GameStatus Status;
     public readonly Board.Board Board;
     public readonly Color CurrentTurn;
-    public readonly List<CastlingRights> CastlingRights;
+    public readonly ImmutableList<CastlingRights> CastlingRights;
     public readonly Position? EnPassantTarget;
     public readonly int HalfMoveClock;
     public readonly int FullMoveCounter;
@@ -21,7 +21,7 @@ public sealed record GameSnapshot
         GameStatus status,
         Board.Board board,
         Color currentTurn,
-        List<CastlingRights> castlingRights,
+        ImmutableList<CastlingRights> castlingRights,
         Position? enPassantTarget,
         int halfMoveClock,
         int fullMoveCounter,
@@ -74,7 +74,7 @@ public sealed record GameSnapshot
                 new Position(0, 0), new Position(0, 3),
                 [new Position(0, 4), new Position(0, 3), new Position(0, 2)]
             )
-        };
+        }.ToImmutableList();
         const int halfMoveClock = 0;
         const int fullMoveCounter = 1;
         Position? enPassantTarget = null;
@@ -157,31 +157,6 @@ public sealed record GameSnapshot
         }
         else
         {
-            // castling rights
-            var movedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
-            var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
-
-            var castlingRights = movedPiece!.Type switch
-            {
-                PieceType.King => previousSnapshot.CastlingRights
-                    .Where(c => c.Color == previousSnapshot.CurrentTurn)
-                    .ToImmutableList(),
-                
-                PieceType.Rook => previousSnapshot.CastlingRights
-                    .Where(c => 
-                        c.Color == previousSnapshot.CurrentTurn &&
-                        c.RookFrom == currentMove.From)
-                    .ToImmutableList()
-            };
-
-            if (capturedPiece?.Type == PieceType.Rook)
-            {
-                castlingRights.Where(c =>
-                        c.Color != previousSnapshot.CurrentTurn &&
-                        c.RookFrom == currentMove.To)
-                    .ToImmutableList();
-            }
-            
             // move piece
             var normalBoard = previousSnapshot.Board.WithMove(currentMove.From, currentMove.To);
             
@@ -190,6 +165,31 @@ public sealed record GameSnapshot
                 var promotionBoard = previousSnapshot.Board
                     .WithPromotion(currentMove.To, currentMove.Promotion.Value, CurrentTurn);
             }
+        }
+        
+        // castling rights
+        var movedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
+        var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
+
+        var castlingRights = movedPiece!.Type switch
+        {
+            PieceType.King => previousSnapshot.CastlingRights
+                .Where(c => c.Color == previousSnapshot.CurrentTurn)
+                .ToImmutableList(),
+                
+            PieceType.Rook => previousSnapshot.CastlingRights
+                .Where(c => 
+                    c.Color == previousSnapshot.CurrentTurn &&
+                    c.RookFrom == currentMove.From)
+                .ToImmutableList()
+        };
+
+        if (capturedPiece?.Type == PieceType.Rook)
+        {
+            castlingRights.Where(c =>
+                    c.Color != previousSnapshot.CurrentTurn &&
+                    c.RookFrom == currentMove.To)
+                .ToImmutableList();
         }
         
         var halfMoveClock = moveStatus.IsCapture || moveStatus.IsPawnMove 
