@@ -5,5 +5,8 @@ public enum GameStatus
     InProgress,
     WhiteWon,
     BlackWon,
-    Draw
+    DrawByStalemate,
+    DrawByInsufficientMaterial,
+    DrawByThreefoldRepetition,
+    DrawBy75MoveRule
 }
