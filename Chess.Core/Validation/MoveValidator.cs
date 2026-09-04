@@ -59,7 +59,7 @@ public static class MoveValidator
             enPassantTestBoard.MovePiece(move.From, move.To);
             
             var capturedPawnPosition = new Position(move.From.Row, move.To.Column);
-            enPassantTestBoard.RemovePiece(capturedPawnPosition);
+            enPassantTestBoard.WithoutPiece(capturedPawnPosition);
             
             return EvaluateBoard( 
                 enPassantTestBoard, 
@@ -80,7 +80,7 @@ public static class MoveValidator
             && move.To.Row is 0 or 7 
             && move.Promotion is not null)
         {
-            testBoard.ReplacePromotion(move.To, move.Promotion, piece.Color);
+            testBoard.WithPromotion(move.To, move.Promotion.Value, piece.Color);
             
             return EvaluateBoard( 
                 testBoard, 

@@ -272,7 +272,7 @@ public class Game
 
     private void HandlePromotion(Move move)
     {
-        Board.ReplacePromotion(move.To, move.Promotion, CurrentTurn);
+        Board.WithPromotion(move.To, move.Promotion, CurrentTurn);
     }
 
     private void HandleEnPassant(Move move)
@@ -281,6 +281,6 @@ public class Game
 
         var capturedPawnPosition = new Position(move.From.Row, move.To.Column);
 
-        Board.RemovePiece(capturedPawnPosition);
+        Board.WithoutPiece(capturedPawnPosition);
     }
 }

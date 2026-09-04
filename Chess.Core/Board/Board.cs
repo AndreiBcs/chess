@@ -3,12 +3,27 @@ using chess.Pieces.Types;
 
 namespace chess.Board;
 
-public sealed record Board : IReadOnlyBoard
+public sealed record Board
 {
     private readonly Square[,] _squares;
     private Board(Square[,] squares)
     {
         _squares = squares;
+    }
+
+    private Square[,] CopySquares()
+    {
+        var squares = new Square[8, 8];
+        
+        for (var row = 0; row < 8; row++)
+        {
+            for (var column = 0; column < 8; column++)
+            {
+                squares[row, column] = _squares[row, column];
+            }
+        }
+
+        return squares;
     }
     
     public Piece? GetPiece(Position position)
@@ -20,58 +35,62 @@ public sealed record Board : IReadOnlyBoard
         return _squares[position.Row, position.Column].Piece;
     }
 
-    public void MovePiece(Position from, Position to)
+    public Board WithMove(Position from, Position to)
     {
         var piece = GetPiece(from);
+        var squares = CopySquares();
         
-        _squares[to.Row, to.Column].Piece = piece;
-        _squares[from.Row, from.Column].Piece = null;
-    }
+        squares[from.Row, from.Column] =
+            squares[from.Row, from.Column] with
+            {
+                Piece = null
+            };
 
-    public void RemovePiece(Position position)
+        squares[to.Row, to.Column] =
+            squares[to.Row, to.Column] with
+            {
+                Piece = piece! with { HasMoved = true }
+            };
+
+        return new Board(squares);
+    }
+    
+        
+    public Board WithoutPiece(Position position)
     {
-        var piece = GetPiece(position);
+        var squares = CopySquares();
+        
+        squares[position.Row, position.Column] =
+            squares[position.Row, position.Column] with
+            {
+                Piece = null
+            };
 
-        _squares[position.Row, position.Column].Piece = null;
+        return new Board(squares);
     }
 
-    public void ReplacePromotion(
-        Position position, 
-        PieceType? promotion,
+    public Board WithPromotion(
+        Position position,
+        PieceType promotion,
         Color promotionColor)
     {
-        if (promotion is null) return;
+        var squares = CopySquares();
         
-        RemovePiece(position);
-        
-        _squares[position.Row, position.Column].Piece = promotion switch
+        Piece promotionPiece = promotion switch
         {
             PieceType.Bishop => new Bishop(promotionColor),
             PieceType.Knight => new Knight(promotionColor),
             PieceType.Rook => new Rook(promotionColor),
-            PieceType.Queen => new Queen(promotionColor),
-            _ => throw new ArgumentException(
-                "Invalid promotion piece",
-                nameof(promotion))
+            _ => new Queen(promotionColor)
         };
-    }
-    
-    public Board Copy()
-    {
-        var board = new Board( );
 
-        for (var row = 0; row < 8; row++)
-        {
-            for (var column = 0; column < 8; column++)
+        squares[position.Row, position.Column] =
+            squares[position.Row, position.Column] with
             {
-                var originalSquare = _squares[row, column];
+                Piece = promotionPiece
+            };
 
-                board._squares[row, column] = 
-                    originalSquare with { Position = new Position(row, column) };
-            }
-        }
-
-        return board;
+        return new Board(squares);
     }
     
     public Position GetKingPosition(Color color)
@@ -87,11 +106,6 @@ public sealed record Board : IReadOnlyBoard
         }
 
         return pos;
-    }
-
-    public Square[,] GetSquares()
-    {
-        return _squares;
     }
 
     public bool BishopsAreSameColor()
