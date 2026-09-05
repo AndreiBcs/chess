@@ -11,7 +11,7 @@ public sealed record Board
         _squares = squares;
     }
 
-    private Square[,] CopySquares()
+    public Square[,] CopySquares()
     {
         var squares = new Square[8, 8];
         
@@ -24,6 +24,12 @@ public sealed record Board
         }
 
         return squares;
+    }
+
+    public Board CopyBoard()
+    {
+        var squares = CopySquares();
+        return new Board(squares);
     }
     
     public Piece? GetPiece(Position position)

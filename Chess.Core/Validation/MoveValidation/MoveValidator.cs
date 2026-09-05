@@ -14,8 +14,8 @@ public static class MoveValidator
         //     return new MoveStatus(MoveResult.Invalid);
         
         var board = snapshot.Board;
-        var piece = board.GetPiece(move.From);
         var target = board.GetPiece(move.To);
+        var piece = board.GetPiece(move.From);
         
         if (piece is null) 
             return new MoveStatus(MoveResult.Invalid);
