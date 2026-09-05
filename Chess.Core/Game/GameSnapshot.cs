@@ -52,28 +52,32 @@ public sealed record GameSnapshot
                 Color.White,
                 new Position(7, 4), new Position(7, 6),
                 new Position(7, 7), new Position(7, 5),
-                [new Position(7, 4), new Position(7, 5), new Position(7, 6)]
+                [new Position(7, 4), new Position(7, 5), new Position(7, 6)],
+                [new Position(7, 5), new Position(7, 6)]
             ),
             new(
                 'Q',
                 Color.White,
                 new Position(7, 4), new Position(7, 2),
                 new Position(7, 0), new Position(7, 3),
-                [new Position(7, 4), new Position(7, 3), new Position(7, 2)]
+                [new Position(7, 4), new Position(7, 3), new Position(7, 2)],
+                [new Position(7, 1), new Position(7, 3), new Position(7, 2)]
             ),
             new(
                 'k',
                 Color.Black,
                 new Position(0, 4), new Position(0, 6),
                 new Position(0, 7), new Position(0, 5),
-                [new Position(0, 4), new Position(0, 5), new Position(0, 6)]
+                [new Position(0, 4), new Position(0, 5), new Position(0, 6)],
+                [new Position(0, 5), new Position(0, 6)]
             ),
             new(
                 'q',
                 Color.Black,
                 new Position(0, 4), new Position(0, 2),
                 new Position(0, 0), new Position(0, 3),
-                [new Position(0, 4), new Position(0, 3), new Position(0, 2)]
+                [new Position(0, 4), new Position(0, 3), new Position(0, 2)],
+                [new Position(0, 1), new Position(0, 3), new Position(0, 2)]
             )
         }.ToImmutableList();
         const int halfMoveClock = 0;
@@ -135,13 +139,16 @@ public sealed record GameSnapshot
         Move currentMove,
         MoveStatus moveStatus)
     {
+        // update previous move
         var previousMove = currentMove;
+        // update current turn
         var currentTurn = previousSnapshot.CurrentTurn == Color.White 
             ? Color.Black 
             : Color.White;
 
         var board = previousSnapshot.Board.CopyBoard();
         
+        // update board after move
         if (moveStatus.IsCastling)
         {
             var kingFrom = moveStatus.CastlingRights!.Value.KingFrom;
@@ -162,7 +169,6 @@ public sealed record GameSnapshot
         }
         else
         {
-            // move piece
             board = board.WithMove(currentMove.From, currentMove.To);
             
             if (moveStatus.IsPromotion && currentMove.Promotion != null)
@@ -174,7 +180,7 @@ public sealed record GameSnapshot
             }
         }
         
-        // castling rights
+        // update castling rights
         var movedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
         var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
 
@@ -201,37 +207,43 @@ public sealed record GameSnapshot
                 .ToImmutableList();
         }
         
+        // update half move clock
         var halfMoveClock = moveStatus.IsCapture || moveStatus.IsPawnMove 
             ? 0 
             : previousSnapshot.HalfMoveClock + 1;
 
+        // update full move counter
         var fullMoveCounter = previousSnapshot.CurrentTurn == Color.Black 
             ? previousSnapshot.FullMoveCounter + 1 
             : previousSnapshot.FullMoveCounter;
         
-        var pieceMoved = previousSnapshot.Board.GetPiece(currentMove.From);
+        // update en passant target square
+        var lastMovedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
         
-        Position? enPassantTarget = pieceMoved is { Type: PieceType.Pawn, HasMoved: false }
+        Position? enPassantTarget = lastMovedPiece is { Type: PieceType.Pawn, HasMoved: false }
                                     && Math.Abs(currentMove.To.Row - currentMove.From.Row) == 2
             ? currentMove.From with { Row = (currentMove.From.Row + currentMove.To.Row) / 2 }
             : null;
 
+        // update position history
         var positionHistory = previousSnapshot.PositionHistory.Add(ToFen(previousSnapshot));
 
-        var gameStatus = StateValidator
-            .ValidateState(
-                previousMove,
+        // update game status
+        var gameStatus = StateValidator.ValidateState(
+            new GameSnapshot(
+                GameStatus.InProgress,
+                board,
                 currentTurn,
-                previousSnapshot.Board,
+                castlingRights,
+                enPassantTarget,
                 halfMoveClock,
                 fullMoveCounter,
-                enPassantTarget,
-                castlingRights,
-                positionHistory);
+                previousMove,
+                positionHistory));
 
         return new GameSnapshot(
             gameStatus,
-            previousSnapshot.Board,
+            board,
             currentTurn,
             castlingRights,
             enPassantTarget,

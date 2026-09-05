@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-using chess.Board;
-using chess.Game;
+﻿using chess.Game;
 using chess.Moves;
 using chess.Pieces;
 using chess.Validation.MoveValidation;
@@ -9,27 +7,19 @@ namespace chess.Validation.StateValidation;
 
 public static class StateValidator
 {
-    public static GameStatus ValidateState(
-        Move previousMove,
-        Color currentTurn,
-        Board.Board board,
-        int halfMoveClock,
-        int fullMoveCounter,
-        Position? enPassantTarget,
-        ImmutableList<CastlingRights> castlingRights,
-        ImmutableList<string> positionHistory)
+    public static GameStatus ValidateState(GameSnapshot snapshot)
     {
         // 1. check for DrawBy75MoveRule
-        if (halfMoveClock >= 150)
+        if (snapshot.HalfMoveClock >= 150)
         {
             return GameStatus.DrawBy75MoveRule;
         }
 
         // 2. check for DrawByThreefoldRepetition
-        var parts = positionHistory[^1].Split(' ');
+        var parts = snapshot.PositionHistory[^1].Split(' ');
         var currentPosition = string.Join(" ", parts, 0, parts.Length - 2);
         
-        if (positionHistory.Count(p =>
+        if (snapshot.PositionHistory.Count(p =>
             {
                 var part = p.Split(' ');
                 var pos = string.Join(" ", part, 0, part.Length - 2);
@@ -42,7 +32,7 @@ public static class StateValidator
         // 3. check for DrawByInsufficientMaterial
         var pieces = new List<Piece>();
 
-        foreach (var square in board.CopySquares())
+        foreach (var square in snapshot.Board.CopySquares())
         {
             if (square.Piece is not null)
             {
@@ -75,7 +65,7 @@ public static class StateValidator
             if (nonKings.Count == 2 && nonKings.All(p => p.Type == PieceType.Bishop))
             {
                 // if bishops are on the same color its a draw
-                if (board.BishopsAreSameColor())
+                if (snapshot.Board.BishopsAreSameColor())
                 {
                     return GameStatus.DrawByInsufficientMaterial;
                 }
@@ -83,36 +73,39 @@ public static class StateValidator
         }
         
         // 4. start evaluating for checkmate or stalemate
-        var isInCheck = CheckValidator.IsKingInCheck(board, currentTurn);
+        var isInCheck = CheckValidator.IsKingInCheck(snapshot.Board, snapshot.CurrentTurn);
         var hasLegalMoves = false;
-        GameSnapshot snapshot; //TODO
 
-        foreach (var square in board.CopySquares())
+        foreach (var square in snapshot.Board.CopySquares())
         {
             var piece = square.Piece;
-            if (piece is null || piece.Color != currentTurn)
+            if (piece is null || piece.Color != snapshot.CurrentTurn)
             { 
                 continue;
             }
 
-            var possiblePositions = piece.GetPiecePositions(board);
+            var possiblePositions = piece.GetPiecePositions(snapshot.Board);
 
             foreach (var pos in possiblePositions)
             {
                 if (MoveValidator.ValidateMove(snapshot, new Move(square.Position, pos))
-                        .MoveResult ==  MoveResult.Valid)
+                        .MoveResult == MoveResult.Valid)
                 {
+                    // at least one move has to be valid
                     hasLegalMoves = true;
+                    break;
                 }
             }
         }
 
         return isInCheck switch
         {
-            true when !hasLegalMoves => currentTurn == Color.White 
+            // in check and no legal moves => checkmate
+            true when !hasLegalMoves => snapshot.CurrentTurn == Color.White 
                 ? GameStatus.BlackWon 
                 : GameStatus.WhiteWon,
             
+            // not in check and no legal moves => stalemate 
             false when !hasLegalMoves => GameStatus.DrawByStalemate,
             
             _ => GameStatus.InProgress

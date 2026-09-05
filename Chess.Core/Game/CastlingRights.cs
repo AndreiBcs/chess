@@ -9,7 +9,8 @@ public readonly record struct CastlingRights(
     Position KingTo,
     Position RookFrom,
     Position RookTo,
-    IEnumerable<Position> KingSafePositions)
+    IEnumerable<Position> KingSafePositions,
+    IEnumerable<Position> BetweenPositions)
 {
     public override string ToString()
     {

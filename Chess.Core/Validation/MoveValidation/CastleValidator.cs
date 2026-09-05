@@ -33,8 +33,16 @@ public static class CastleValidator
         // get the rook
         var rook = snapshot.Board.GetPiece(castling.Value.KingFrom);
         
-        if(rook is not { Type: PieceType.Rook, HasMoved: false } ||
+        if (rook is not { Type: PieceType.Rook, HasMoved: false } ||
            rook.Color != king.Color)
+        {
+            return false;
+        }
+        
+        // check if the squares are empty between the king and rook
+        if (!castling.Value.BetweenPositions
+                .ToList()
+                .TrueForAll(p => snapshot.Board.GetPiece(p) is null))
         {
             return false;
         }
@@ -42,6 +50,7 @@ public static class CastleValidator
         // test if the king can castle without being in check
         foreach (var safePosition in castling.Value.KingSafePositions)
         {
+            // simulate
             var testBoard = safePosition == castling.Value.KingTo
                 ? snapshot.Board
                     .WithMove(move.From, safePosition)
