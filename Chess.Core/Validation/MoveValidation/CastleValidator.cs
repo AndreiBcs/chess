@@ -6,69 +6,54 @@ namespace chess.Validation.MoveValidation;
 
 public static class CastleValidator
 {
-    public static bool IsCastlingAttempt(Piece piece, Move move)
-    {
-        return piece.Type == PieceType.King &&
-               move.From.Row == move.To.Row &&
-               move.To.Column - move.From.Column is 2 or -2;
-    }
-    
-    public static bool TryGetCastling(
+    public static bool IsValidCastling(
         GameSnapshot snapshot,
         Move move,
-        out CastlingRights castling)
+        out CastlingRights? castling)
     {
-        foreach (var castlingPosition in snapshot.CastlingRights.CastlingPositions)
+        var king = snapshot.Board.GetPiece(move.From);
+
+        // check if the move matches a king castling move
+        if (king is not { Type: PieceType.King, HasMoved: false } ||
+            king.Color != snapshot.CurrentTurn ||
+            move.From.Row != move.To.Row ||
+            Math.Abs(move.To.Column - move.From.Column) != 2)
         {
-            if (castlingPosition.Color == snapshot.CurrentTurn &&
-                castlingPosition.KingFrom == move.From &&
-                castlingPosition.KingTo == move.To)
-            {
-                castling = castlingPosition;
-                return true;
-            }
+            castling = null;
+            return false;
         }
 
-        castling = default;
-        return false;
-    }
-    
-    public static bool CanCastle(GameSnapshot snapshot, CastlingRights castling)
-    {
-        var piece = snapshot.Board.GetPiece(castling.KingFrom);
-
-        if (piece is null ||
-            piece.Type != PieceType.King ||
-            piece.Color != snapshot.CurrentTurn)
+        // get the right castling move
+        castling = snapshot.CastlingRights
+            .SingleOrDefault(c => 
+                c.Color == snapshot.CurrentTurn &&
+                c.KingFrom == move.From &&
+                c.KingTo == move.To);
+        
+        // get the rook
+        var rook = snapshot.Board.GetPiece(castling.Value.KingFrom);
+        
+        if(rook is not { Type: PieceType.Rook, HasMoved: false } ||
+           rook.Color != king.Color)
         {
             return false;
         }
-        
-        foreach (var position in castling.KingSafePositions)
+
+        // test if the king can castle without being in check
+        foreach (var safePosition in castling.Value.KingSafePositions)
         {
-            var board = snapshot.Board.Copy();
-            
-            if (castling.KingFrom == position) // check the initial king position
-            {
-                if (CheckValidator.IsKingInCheck(board, piece.Color))
-                {
-                    return false;
-                }
-            }
+            var testBoard = safePosition == castling.Value.KingTo
+                ? snapshot.Board
+                    .WithMove(move.From, safePosition)
+                    .WithMove(castling.Value.RookFrom, castling.Value.RookTo)
+                : snapshot.Board.WithMove(move.From, safePosition);
 
-            board.MovePiece(castling.KingFrom, position);
-
-            if (position == castling.KingTo)
-            {
-                board.MovePiece(castling.RookFrom, castling.RookTo);
-            }
-
-            if (CheckValidator.IsKingInCheck(board, piece.Color))
+            if (CheckValidator.IsKingInCheck(testBoard, king.Color))
             {
                 return false;
             }
         }
-
+        
         return true;
     }
 }

@@ -84,6 +84,8 @@ public static class StateValidator
         
         // 4. start evaluating for checkmate or stalemate
         var isInCheck = CheckValidator.IsKingInCheck(board, currentTurn);
+        var hasLegalMoves = false;
+        GameSnapshot snapshot; //TODO
 
         foreach (var square in board.CopySquares())
         {
@@ -97,30 +99,23 @@ public static class StateValidator
 
             foreach (var pos in possiblePositions)
             {
-                if (board.GetPiece(pos)?.Type == PieceType.King)
+                if (MoveValidator.ValidateMove(snapshot, new Move(square.Position, pos))
+                        .MoveResult ==  MoveResult.Valid)
                 {
-                    continue; // cannot capture a piece
-                }
-
-                var testBoard = board.CopyBoard();
-                if (true)
-                {
-                    // check for valid castling moves
-                }
-                else if (true)
-                {
-                    // check for valid en passant
-                }
-                else
-                {
-                     testBoard.WithMove(square.Position, pos);
-                }
-
-                if (!CheckValidator.IsKingInCheck(testBoard, currentTurn))
-                {
-                    
+                    hasLegalMoves = true;
                 }
             }
         }
+
+        return isInCheck switch
+        {
+            true when !hasLegalMoves => currentTurn == Color.White 
+                ? GameStatus.BlackWon 
+                : GameStatus.WhiteWon,
+            
+            false when !hasLegalMoves => GameStatus.DrawByStalemate,
+            
+            _ => GameStatus.InProgress
+        };
     }
 }

@@ -6,39 +6,24 @@ namespace chess.Validation.MoveValidation;
 
 public static class EnPassantValidator
 {
-    public static bool IsEnPassant(GameSnapshot snapshot, Move move)
+    public static bool IsValidEnPassant(GameSnapshot snapshot, Move move)
     {
         var currentPiece = snapshot.Board.GetPiece(move.From);
-
-        if (currentPiece?.Type != PieceType.Pawn)
-            return false;
-
-        if (currentPiece.Color == snapshot.CurrentTurn)
-            return false;
-        
-        if(snapshot.MoveHistory.Count == 0)
-            return false;
-        
-        var previousMove = snapshot.MoveHistory[^1];
+        var previousMove = snapshot.PreviousMove;
         var lastMovedPiece = snapshot.Board.GetPiece(previousMove.To);
+
+        if (currentPiece?.Type != PieceType.Pawn ||
+            currentPiece.Color != snapshot.CurrentTurn ||
+            lastMovedPiece?.Type != PieceType.Pawn ||
+            move.To != snapshot.EnPassantTarget)
+            return false;
         
-        if(lastMovedPiece?.Type != PieceType.Pawn)
-            return false;
-        
-        if (Math.Abs(previousMove.To.Row - previousMove.From.Row) != 2)
+        if (Math.Abs(previousMove.To.Row - previousMove.From.Row) != 2 ||
+            previousMove.To.Row != move.From.Row)
             return false;
 
-        if (previousMove.To.Row != move.From.Row)
-            return false;
-
-        if (Math.Abs(previousMove.To.Column - move.From.Column) != 1)
-            return false;
-
-        if (move.To.Column != previousMove.To.Column)
-            return false;
-
-        if (move.To.Row != previousMove.To.Row +
-            (move.From.Row < previousMove.To.Row ? 1 : -1))
+        if (Math.Abs(previousMove.To.Column - move.From.Column) != 1 ||
+            move.To.Column != previousMove.To.Column)
             return false;
 
         return true;

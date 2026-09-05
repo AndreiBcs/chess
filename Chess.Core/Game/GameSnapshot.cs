@@ -2,6 +2,7 @@
 using chess.Board;
 using chess.Moves;
 using chess.Pieces;
+using chess.Validation.StateValidation;
 
 namespace chess.Game;
 
@@ -39,7 +40,7 @@ public sealed record GameSnapshot
         PositionHistory = positionHistory;
     }
     
-    public GameSnapshot GetInitialGameSnapshot()
+    public static GameSnapshot GetInitialGameSnapshot()
     {
         const GameStatus status = GameStatus.InProgress;
         var board = chess.Board.Board.CreateInitial();
@@ -93,7 +94,7 @@ public sealed record GameSnapshot
             positionHistory);
     }
     
-    public string ToFen()
+    public static string ToFen(GameSnapshot snapshot)
     {
         var fen = "";
         for (var row = 0; row < 8; row++)
@@ -101,7 +102,7 @@ public sealed record GameSnapshot
             var empty = 0;
             for (var col = 0; col < 8; col++)
             {
-                var piece = Board.GetPiece(new Position(row, col));
+                var piece = snapshot.Board.GetPiece(new Position(row, col));
 
                 if (piece is null)
                 {
@@ -120,14 +121,16 @@ public sealed record GameSnapshot
             
             if (row < 7) fen += "/";
         }
-        fen += CurrentTurn == Color.White ? " w " : " b ";
-        fen += CastlingRights.ToString();
-        fen += EnPassantTarget is not null ? $" {EnPassantTarget.ToString()} " : " - ";
+        fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
+        fen += snapshot.CastlingRights.ToString();
+        fen += snapshot.EnPassantTarget is not null 
+            ? $" {snapshot.EnPassantTarget.ToString()} " 
+            : " - ";
         
-        return fen + $"{HalfMoveClock} {FullMoveCounter}";
+        return fen + $"{snapshot.HalfMoveClock} {snapshot.FullMoveCounter}";
     }
 
-    public GameSnapshot GetUpdatedGameSnapshot(
+    public static GameSnapshot GetUpdatedGameSnapshot(
         GameSnapshot previousSnapshot,
         Move currentMove,
         MoveStatus moveStatus)
@@ -136,6 +139,8 @@ public sealed record GameSnapshot
         var currentTurn = previousSnapshot.CurrentTurn == Color.White 
             ? Color.Black 
             : Color.White;
+
+        var board = previousSnapshot.Board.CopyBoard();
         
         if (moveStatus.IsCastling)
         {
@@ -143,7 +148,7 @@ public sealed record GameSnapshot
             var kingTo = moveStatus.CastlingRights.Value.KingTo;
             var rookFrom = moveStatus.CastlingRights.Value.RookFrom;
             var rookTo = moveStatus.CastlingRights.Value.RookTo;
-            var castlingBoard = previousSnapshot.Board
+            board = board
                 .WithMove(kingFrom, kingTo)
                 .WithMove(rookFrom, rookTo);
             
@@ -151,19 +156,21 @@ public sealed record GameSnapshot
         else if (moveStatus.IsEnPassant)
         {
             var capturedPawnPos = new Position(currentMove.From.Row, currentMove.To.Column);
-            var enPassantBoard = previousSnapshot.Board
+            board = board
                 .WithMove(currentMove.From, currentMove.To)
                 .WithoutPiece(capturedPawnPos);
         }
         else
         {
             // move piece
-            var normalBoard = previousSnapshot.Board.WithMove(currentMove.From, currentMove.To);
+            board = board.WithMove(currentMove.From, currentMove.To);
             
             if (moveStatus.IsPromotion && currentMove.Promotion != null)
             {
-                var promotionBoard = previousSnapshot.Board
-                    .WithPromotion(currentMove.To, currentMove.Promotion.Value, CurrentTurn);
+                board = board.WithPromotion(
+                    currentMove.To,
+                    currentMove.Promotion.Value,
+                    previousSnapshot.CurrentTurn);
             }
         }
         
@@ -181,10 +188,12 @@ public sealed record GameSnapshot
                 .Where(c => 
                     c.Color == previousSnapshot.CurrentTurn &&
                     c.RookFrom == currentMove.From)
-                .ToImmutableList()
+                .ToImmutableList(),
+            
+            _ => previousSnapshot.CastlingRights
         };
 
-        if (capturedPiece?.Type == PieceType.Rook)
+        if (capturedPiece?.Type == PieceType.Rook) 
         {
             castlingRights.Where(c =>
                     c.Color != previousSnapshot.CurrentTurn &&
@@ -196,21 +205,39 @@ public sealed record GameSnapshot
             ? 0 
             : previousSnapshot.HalfMoveClock + 1;
 
-        var fullMoveCounter = CurrentTurn == Color.Black 
-            ? FullMoveCounter + 1 
-            : FullMoveCounter;
+        var fullMoveCounter = previousSnapshot.CurrentTurn == Color.Black 
+            ? previousSnapshot.FullMoveCounter + 1 
+            : previousSnapshot.FullMoveCounter;
         
-        var pieceMoved = Board.GetPiece(currentMove.From);
+        var pieceMoved = previousSnapshot.Board.GetPiece(currentMove.From);
         
-        Position? enPassantTarget = pieceMoved?.Type == PieceType.Pawn
+        Position? enPassantTarget = pieceMoved is { Type: PieceType.Pawn, HasMoved: false }
                                     && Math.Abs(currentMove.To.Row - currentMove.From.Row) == 2
             ? currentMove.From with { Row = (currentMove.From.Row + currentMove.To.Row) / 2 }
             : null;
 
-        var positionHistory = PositionHistory.Add(ToFen());
-        
-        // TODO check if updated snapshot is checkmate/stalemate/draw
+        var positionHistory = previousSnapshot.PositionHistory.Add(ToFen(previousSnapshot));
 
-        return null;
+        var gameStatus = StateValidator
+            .ValidateState(
+                previousMove,
+                currentTurn,
+                previousSnapshot.Board,
+                halfMoveClock,
+                fullMoveCounter,
+                enPassantTarget,
+                castlingRights,
+                positionHistory);
+
+        return new GameSnapshot(
+            gameStatus,
+            previousSnapshot.Board,
+            currentTurn,
+            castlingRights,
+            enPassantTarget,
+            halfMoveClock,
+            fullMoveCounter,
+            previousMove,
+            positionHistory);
     }
 }

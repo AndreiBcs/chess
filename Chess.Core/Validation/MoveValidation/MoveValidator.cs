@@ -51,7 +51,7 @@ public static class MoveValidator
 
         // 3. check for en passant
         if (piece.Type == PieceType.Pawn && 
-            EnPassantValidator.IsEnPassant(snapshot, move))
+            EnPassantValidator.IsValidEnPassant(snapshot, move))
         {
             // simulate
             var enPassantTestBoard = snapshot.Board.Copy();
@@ -180,7 +180,7 @@ public static class MoveValidator
                 // check for en passant possible move
                 if (piece.Type == PieceType.Pawn && 
                     snapshot.EnPassantTargetSquare is not null &&
-                    EnPassantValidator.IsEnPassant(
+                    EnPassantValidator.IsValidEnPassant(
                         snapshot, 
                         new Move(square.Position, destination)))
                 {
