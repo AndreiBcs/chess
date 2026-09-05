@@ -1,4 +1,4 @@
-﻿namespace Chess.Tests.Core.Game;
+﻿namespace Chess.Tests.Core.ValidationTests;
 
 public class EnPassantTests
 {

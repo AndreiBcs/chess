@@ -1,99 +1,291 @@
 ﻿using System.Collections.Immutable;
 using chess.Board;
 using chess.Moves;
+using chess.Pieces;
+using chess.Validation.StateValidation;
 
 namespace chess.Game;
 
-public sealed class GameSnapshot
+public sealed record GameSnapshot
 {
-    public GameStatus GameStatus { get; }
-    public Color CurrentTurn { get; }
-    public IReadOnlyBoard Board { get; }
-    public int FullMoveCounter { get; }
-    public int HalfMoveCounter { get; }
-    public CastlingRights CastlingRights { get; }
-    public ImmutableList<Move> MoveHistory { get; }
-    public Position? EnPassantTargetSquare { get; }
+    public readonly GameStatus Status;
+    public readonly Board.Board Board;
+    public readonly Color CurrentTurn;
+    public readonly ImmutableList<CastlingRights> CastlingRights;
+    public readonly Position? EnPassantTarget;
+    public readonly int HalfMoveClock;
+    public readonly int FullMoveCounter;
+    public readonly Move PreviousMove;
+    public readonly ImmutableList<string> PositionHistory;
 
-    public GameSnapshot(
-        GameStatus gameStatus,
-        Color currentTurn, 
-        Board.Board board, 
-        int fullMoveCounter, 
-        int halfMoveCounter,
-        CastlingRights castlingRights,
-        List<Move> moveHistory, 
-        Position? enPassantTarget)
+    private GameSnapshot(
+        GameStatus status,
+        Board.Board board,
+        Color currentTurn,
+        ImmutableList<CastlingRights> castlingRights,
+        Position? enPassantTarget,
+        int halfMoveClock,
+        int fullMoveCounter,
+        Move previousMove,
+        ImmutableList<string> positionHistory)
     {
-        CurrentTurn = currentTurn;
+        Status = status;
         Board = board;
-        FullMoveCounter = fullMoveCounter;
-        HalfMoveCounter = halfMoveCounter;
+        CurrentTurn = currentTurn;
         CastlingRights = castlingRights;
-        EnPassantTargetSquare = enPassantTarget;
-        GameStatus = gameStatus;
-        MoveHistory = moveHistory.ToImmutableList();
+        EnPassantTarget = enPassantTarget;
+        HalfMoveClock = halfMoveClock;
+        FullMoveCounter = fullMoveCounter;
+        PreviousMove = previousMove;
+        PositionHistory = positionHistory;
     }
     
-    public string ToFen(bool justPositionKey = false)
+    public static GameSnapshot GetInitialGameSnapshot()
+    {
+        const GameStatus status = GameStatus.InProgress;
+        var board = chess.Board.Board.CreateInitial();
+        const Color currentTurn = Color.White;
+        var castlingRightsList = new List<CastlingRights>
+        {
+            new(
+                'K',
+                Color.White,
+                new Position(7, 4), new Position(7, 6),
+                new Position(7, 7), new Position(7, 5),
+                new[]{new Position(7, 4), new Position(7, 5), new Position(7, 6)},
+                new[]{new Position(7, 5), new Position(7, 6)}
+            ),
+            new(
+                'Q',
+                Color.White,
+                new Position(7, 4), new Position(7, 2),
+                new Position(7, 0), new Position(7, 3),
+                new[]{new Position(7, 4), new Position(7, 3), new Position(7, 2)},
+                new[]{new Position(7, 1), new Position(7, 3), new Position(7, 2)}
+            ),
+            new(
+                'k',
+                Color.Black,
+                new Position(0, 4), new Position(0, 6),
+                new Position(0, 7), new Position(0, 5),
+                new[]{new Position(0, 4), new Position(0, 5), new Position(0, 6)},
+                new[]{new Position(0, 5), new Position(0, 6)}
+            ),
+            new(
+                'q',
+                Color.Black,
+                new Position(0, 4), new Position(0, 2),
+                new Position(0, 0), new Position(0, 3),
+                new[]{new Position(0, 4), new Position(0, 3), new Position(0, 2)},
+                new[]{new Position(0, 1), new Position(0, 3), new Position(0, 2)}
+            )
+        }.ToImmutableList();
+        const int halfMoveClock = 0;
+        const int fullMoveCounter = 1;
+        Position? enPassantTarget = null;
+        var previousMove = new Move(new Position(0, 0), new Position(0, 0));
+        var positionHistory = new List<string>().ToImmutableList();
+
+        return new GameSnapshot(
+            status,
+            board, 
+            currentTurn,
+            castlingRightsList, 
+            enPassantTarget, 
+            halfMoveClock, 
+            fullMoveCounter, 
+            previousMove,
+            positionHistory);
+    }
+    
+    public static string ToFen(
+        Board.Board board,
+        Color currentTurn,
+        ImmutableList<CastlingRights> castlingRights,
+        Position? enPassantTarget,
+        int halfMoveClock,
+        int fullMoveCounter)
     {
         var fen = "";
-
         for (var row = 0; row < 8; row++)
         {
             var empty = 0;
-
             for (var col = 0; col < 8; col++)
             {
-                var piece = Board.GetPiece(new Position(row, col));
+                var piece = board.GetPiece(new Position(row, col));
 
                 if (piece is null)
                 {
                     empty++;
                     continue;
                 }
-
                 if (empty > 0)
                 {
                     fen += empty;
                     empty = 0;
                 }
-
                 fen += piece.LetterId;
             }
 
-            if (empty > 0)
-                fen += empty;
-
-            if (row < 7)
-                fen += "/";
+            if (empty > 0) fen += empty;
+            
+            if (row < 7) fen += "/";
         }
-
-        fen += CurrentTurn == Color.White ? " w " : " b ";
+        fen += currentTurn == Color.White ? " w " : " b ";
         
-        fen += CastlingRights.ToString();
-
-        if (EnPassantTargetSquare is not null)
+        if (castlingRights.Count > 0)
         {
-            fen += $" {EnPassantTargetSquare.ToString()} ";
+            var rights = "";
+            
+            foreach (var castling in castlingRights)
+            {
+                rights += string.Join(' ', castling.LetterId);
+            }
+            
+            fen += rights.Trim();
+        } 
+        else
+        {
+            fen += "-";
+        }
+        
+        fen += enPassantTarget is not null 
+            ? $" {enPassantTarget.ToString()} " 
+            : " - ";
+        
+        return fen + $"{halfMoveClock} {fullMoveCounter}";
+    }
+
+    public static GameSnapshot GetUpdatedGameSnapshot(
+        GameSnapshot previousSnapshot,
+        Move currentMove,
+        MoveStatus moveStatus)
+    {
+        // update previous move
+        var previousMove = currentMove;
+        // update current turn
+        var currentTurn = previousSnapshot.CurrentTurn == Color.White 
+            ? Color.Black 
+            : Color.White;
+
+        var board = previousSnapshot.Board.CopyBoard();
+        
+        // update board after move
+        if (moveStatus.IsCastling)
+        {
+            var kingFrom = moveStatus.CastlingRights!.Value.KingFrom;
+            var kingTo = moveStatus.CastlingRights.Value.KingTo;
+            var rookFrom = moveStatus.CastlingRights.Value.RookFrom;
+            var rookTo = moveStatus.CastlingRights.Value.RookTo;
+            board = board
+                .WithMove(kingFrom, kingTo)
+                .WithMove(rookFrom, rookTo);
+            
+        }
+        else if (moveStatus.IsEnPassant)
+        {
+            var capturedPawnPos = new Position(currentMove.From.Row, currentMove.To.Column);
+            board = board
+                .WithMove(currentMove.From, currentMove.To)
+                .WithoutPiece(capturedPawnPos);
         }
         else
         {
-            fen += " - ";
+            if (moveStatus.IsPromotion && currentMove.Promotion != null)
+            {
+                board = board.WithPromotion(
+                    currentMove.To,
+                    currentMove.Promotion.Value,
+                    previousSnapshot.CurrentTurn);
+            }
+            else
+            {
+                board = board.WithMove(currentMove.From, currentMove.To);
+            }
         }
+        
+        // update castling rights
+        var currentMovedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
+        var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
 
-        if (!justPositionKey) 
+        var castlingRights = currentMovedPiece!.Type switch
         {
-            // because position history doesn't need the move counter
-            // so it can match identical positions when check for draw
-            fen += AddMoveCounter();
+            PieceType.King => previousSnapshot.CastlingRights
+                .Where(c => 
+                    c.Color != previousSnapshot.CurrentTurn)
+                .ToImmutableList(),
+                
+            PieceType.Rook => previousSnapshot.CastlingRights
+                .Where(c => 
+                    !(c.Color == previousSnapshot.CurrentTurn &&
+                      c.RookFrom == currentMove.From))
+                .ToImmutableList(),
+            
+            _ => previousSnapshot.CastlingRights
+        };
+
+        if (capturedPiece?.Type == PieceType.Rook) 
+        {
+            castlingRights = castlingRights
+                .Where(c => 
+                    !(c.Color == capturedPiece.Color && 
+                      c.RookFrom == currentMove.To))
+                .ToImmutableList();
         }
+        
+        // update half move clock
+        var halfMoveClock = moveStatus.IsCapture || moveStatus.IsPawnMove 
+            ? 0 
+            : previousSnapshot.HalfMoveClock + 1;
 
-        return fen;
-    }
+        // update full move counter
+        var fullMoveCounter = previousSnapshot.CurrentTurn == Color.Black 
+            ? previousSnapshot.FullMoveCounter + 1 
+            : previousSnapshot.FullMoveCounter;
+        
+        // update en passant target square
+        var lastMovedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
+        
+        Position? enPassantTarget = lastMovedPiece is { Type: PieceType.Pawn, HasMoved: false }
+                                    && Math.Abs(currentMove.To.Row - currentMove.From.Row) == 2
+            ? currentMove.From with { Row = (currentMove.From.Row + currentMove.To.Row) / 2 }
+            : null;
 
-    private string AddMoveCounter()
-    {
-        return $"{HalfMoveCounter} {FullMoveCounter}";
+        
+        // update position history
+        var newPosition = ToFen(
+            board,
+            currentTurn,
+            castlingRights,
+            enPassantTarget,
+            halfMoveClock,
+            fullMoveCounter);
+        
+        var positionHistory = previousSnapshot.PositionHistory.Add(newPosition);
+
+        // update game status
+        var tempSnapshot = new GameSnapshot(
+            GameStatus.InProgress,
+            board,
+            currentTurn,
+            castlingRights,
+            enPassantTarget,
+            halfMoveClock,
+            fullMoveCounter,
+            previousMove,
+            positionHistory);
+        
+        var gameStatus = StateValidator.ValidateState(tempSnapshot);
+
+        return new GameSnapshot(
+            gameStatus,
+            board,
+            currentTurn,
+            castlingRights,
+            enPassantTarget,
+            halfMoveClock,
+            fullMoveCounter,
+            previousMove,
+            positionHistory);
     }
 }

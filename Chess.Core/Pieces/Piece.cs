@@ -1,20 +1,8 @@
-﻿using chess.Board;
+﻿namespace chess.Pieces;
 
-namespace chess.Pieces;
-
-public abstract class Piece
+public abstract record Piece(Color Color)
 {
-    protected Piece(Color color)
-    {
-        Color = color;
-    }
-
-    public Color Color { get; init; }
-    public bool IsCaptured { get; private set; }
-    public void MarkAsCaptured()
-    {
-        IsCaptured = true;
-    }
+    public bool HasMoved { get; init; }
     public abstract PieceType Type { get; }
     public char LetterId
     {
@@ -34,7 +22,6 @@ public abstract class Piece
             return Color == Color.White ? letter : char.ToLower(letter);
         }
     }
-    public abstract IEnumerable<Position> GetPossiblePositions(IReadOnlyBoard board, Position from);
-    public abstract IEnumerable<Position> GetAttackPositions(IReadOnlyBoard board, Position from);
-    public abstract Piece Copy();
+    public abstract (int Row, int Column)[] GetMoveDirections();
+    public abstract (int Rox, int Column)[] GetAttackDirections();
 }

@@ -6,15 +6,16 @@ using Xunit.Abstractions;
 
 namespace Chess.Tests.Core.Game;
 
-public class FullGameTests
+public class GameTests
 {
     private readonly ITestOutputHelper _output;
 
-    public FullGameTests(ITestOutputHelper output)
+    public GameTests(ITestOutputHelper output)
     {
         _output = output;
     }
 
+    // dotnet test Chess.Tests --filter "FullyQualifiedName~GameTests.StockfishPlaysStockfish" --logger "console;verbosity=minimal"
     [Fact]
     public async Task StockfishPlaysStockfish()
     {
@@ -49,7 +50,14 @@ public class FullGameTests
                 
                 await foreach (var snapshot in game.GameLoop())
                 {
-                    Console.WriteLine($"Fen pos: {snapshot.ToFen()}");
+                    Console.WriteLine($"Fen pos: {GameSnapshot
+                        .ToFen(
+                            snapshot.Board,
+                            snapshot.CurrentTurn,
+                            snapshot.CastlingRights,
+                            snapshot.EnPassantTarget,
+                            snapshot.HalfMoveClock,
+                            snapshot.FullMoveCounter)}");
                     
                     moveNumber++;
                     
@@ -64,10 +72,12 @@ public class FullGameTests
                 //_output.WriteLine($"Game {gameNumber} finished after {moveNumber} moves");
                 //_output.WriteLine($"Result: {game.Status}");
                 
-                Assert.True(game.IsFinished, $"Game {gameNumber} ended without IsOver being true");
                 Assert.Contains(game.Status, new []
                 {
-                    GameStatus.Draw,
+                    GameStatus.DrawBy75MoveRule,
+                    GameStatus.DrawByInsufficientMaterial,
+                    GameStatus.DrawByStalemate,
+                    GameStatus.DrawByThreefoldRepetition,
                     GameStatus.BlackWon,
                     GameStatus.WhiteWon
                 });

@@ -1,4 +1,4 @@
-﻿namespace chess.Validation;
+﻿namespace chess.Validation.MoveValidation;
 
 public static class CheckValidator
 {
@@ -8,17 +8,16 @@ public static class CheckValidator
 
         var enemyColor = kingColor == Color.White ? Color.Black : Color.White;
 
-        foreach (var square in board.GetSquares())
+        foreach (var square in board.CopySquares())
         {
             var piece = square.Piece;
 
             if (piece is null || piece.Color != enemyColor)
                 continue;
 
-            if (piece
-                .GetAttackPositions(board, square.Position)
-                .Contains(kingPosition))
+            if (piece.GetPiecePositions(board, true).Contains(kingPosition))
             {
+                // king is in an attacked position
                 return true;
             }
         }
