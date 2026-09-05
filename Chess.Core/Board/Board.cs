@@ -194,4 +194,48 @@ public sealed record Board
             _ => null
         };
     }
+
+    public static Board CreateEmptyBoard()
+    {
+        var squares = new Square[8, 8];
+        
+        for (var row = 0; row < 8; row++)
+        {
+            for (var col = 0; col < 8; col++)
+            {
+                var position = new Position(row, col);
+                squares[row, col] = new Square
+                {
+                    Color = (row + col) % 2 == 0
+                        ? Color.White
+                        : Color.Black,
+                    Position = position
+                };
+            }
+        }
+
+        return new Board(squares);
+    }
+
+    public Board WithPiece(Piece piece, Position position)
+    {
+        var squares = new Square[8, 8];
+        
+        for (var row = 0; row < 8; row++)
+        {
+            for (var col = 0; col < 8; col++)
+            {
+                if (row == position.Row && col == position.Column)
+                {
+                    squares[row, col] = _squares[row, col] with { Piece = piece };
+                }
+                else
+                {
+                    squares[row, col] = _squares[row, col];
+                }
+            }
+        }
+
+        return new Board(squares);
+    }
 }
