@@ -7,7 +7,7 @@ using chess.Player;
 
 namespace Chess.Engine;
 
-public class EnginePlayer : Player, IDisposable
+public sealed class EnginePlayer : Player, IDisposable
 {
     public readonly Uci Uci; // public because the consumer needs to interact with it
 

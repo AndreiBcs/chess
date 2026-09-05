@@ -1,14 +1,13 @@
 ﻿using System.Text.RegularExpressions;
 using chess.Board;
-using chess.Game;
 using chess.Moves;
 using Spectre.Console;
 
 namespace Chess.Cli.Presentation;
 
-public partial class ConsoleInteraction 
+public static partial class ConsoleInteraction 
 {
-    public Task<Move> ReadMove(GameSnapshot snapshot)
+    public static Task<Move> ReadMove()
     {
         try
         {
@@ -17,7 +16,7 @@ public partial class ConsoleInteraction
                 AnsiConsole.WriteLine();
 
                 var fromSquare = AnsiConsole.Prompt(
-                    new TextPrompt<string>("[bold blue]Select piece square (e.g., e2):[/]")
+                    new TextPrompt<string>("[bold blue]Select piece square:[/]")
                         .PromptStyle("yellow")
                         .Validate(input =>
                         {
@@ -31,7 +30,7 @@ public partial class ConsoleInteraction
 
                 var toSquare = AnsiConsole.Prompt(
                     new TextPrompt<string>(
-                            $"[bold blue]Move piece from [yellow]{fromSquare.ToLower()}[/] to (e.g., e4):[/]")
+                            $"[bold blue]Move piece from [yellow]{fromSquare.ToLower()}[/] to:[/]")
                         .PromptStyle("yellow")
                         .Validate(input =>
                         {
@@ -76,8 +75,8 @@ public partial class ConsoleInteraction
     [GeneratedRegex("^[a-hA-H][1-8]$")]
     private static partial Regex MyRegex();
 
-    public void ShowMoveError(MoveResult? previousResult)
+    public static void ShowMoveError()
     {
-        throw new NotImplementedException();
+        AnsiConsole.MarkupLine("[red]Invalid move.[/]");
     }
 }

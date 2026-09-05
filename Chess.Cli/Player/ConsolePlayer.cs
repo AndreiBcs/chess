@@ -5,19 +5,17 @@ using chess.Moves;
 
 namespace Chess.Cli.Player;
 
-public class ConsolePlayer : chess.Player.Player
+public sealed class ConsolePlayer : chess.Player.Player
 {
-    private readonly ConsoleInteraction _interaction;
     public ConsolePlayer(Color color) : base(color)
     {
-        _interaction = new ConsoleInteraction();
     }
 
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
         if (previousResult == MoveResult.Invalid)
-            _interaction.ShowMoveError(previousResult);
+            ConsoleInteraction.ShowMoveError();
             
-        return await _interaction.ReadMove(snapshot);
+        return await ConsoleInteraction.ReadMove();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Chess.Engine;
 
-public class Uci
+public sealed class Uci
 {
     private static readonly TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
     private readonly Process _process;

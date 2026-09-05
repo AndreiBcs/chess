@@ -6,17 +6,12 @@ using Chess.Engine;
 
 namespace Chess.Cli.Game;
 
-public class GameRunner
+internal sealed class GameRunner
 {
-    private readonly BoardRenderer _renderer;
-    private readonly ConsoleInteraction _interaction;
     private readonly chess.Game.Game _game;
 
     public GameRunner(CliArguments.ParsedOptions options)
     {
-        _renderer = new BoardRenderer();
-        _interaction = new ConsoleInteraction();
-
         var userColor = options.PlayerColor;
         var engineColor = userColor == Color.White?
             Color.Black : 
@@ -38,7 +33,7 @@ public class GameRunner
     {
         await foreach (var snapshot in _game.GameLoop())
         {
-            _renderer.Render(snapshot);
+            BoardRenderer.Render(snapshot);
         }
     }
 }

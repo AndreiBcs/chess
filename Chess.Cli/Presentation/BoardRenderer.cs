@@ -4,16 +4,17 @@ using Spectre.Console;
 
 namespace Chess.Cli.Presentation;
 
-public class BoardRenderer
+public static class BoardRenderer
 {
-    private readonly Table _table = new Table().Border(TableBorder.None).HideHeaders();
-
-    public void Render(GameSnapshot snapshot)
+    public static void Render(GameSnapshot snapshot)
     {
-        _table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
+        Console.Clear();
+        var table = new Table().Border(TableBorder.None).HideHeaders();
+        
+        table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         for (var i = 0; i < 8; i++)
         {
-            _table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
+            table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         }
 
         var headerRow = new List<string> { "   " };
@@ -21,7 +22,7 @@ public class BoardRenderer
         {
             headerRow.Add($"[bold yellow] {file} [/]");
         }
-        _table.AddRow(headerRow.ToArray());
+        table.AddRow(headerRow.ToArray());
 
         for (var i = 0; i < 8; i++)
         {
@@ -41,10 +42,10 @@ public class BoardRenderer
                 rowCells.Add($"[{fgColor} on {bgColor}] {symbol} [/]");
             }
 
-            _table.AddRow(rowCells.ToArray());
+            table.AddRow(rowCells.ToArray());
         }
 
-        AnsiConsole.Write(Align.Center(_table));
+        AnsiConsole.Write(Align.Center(table));
     }
 
     private static string GetPieceSymbol(char? letterId) => letterId switch
