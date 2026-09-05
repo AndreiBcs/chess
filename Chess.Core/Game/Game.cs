@@ -5,6 +5,7 @@ namespace chess.Game;
 
 public sealed class Game
 {
+    public GameStatus Status;
     public Game(Player.Player player1, Player.Player player2)
     {
         Players = [player1, player2];
@@ -12,6 +13,7 @@ public sealed class Game
         var initialSnapshot = GameSnapshot.GetInitialGameSnapshot();
         _snapshots.Add(initialSnapshot);
         _currentSnapshot = _snapshots[^1];
+        Status = _currentSnapshot.Status;
     }
     
     private readonly List<GameSnapshot> _snapshots = [];
@@ -49,11 +51,12 @@ public sealed class Game
                         .GetUpdatedGameSnapshot(_currentSnapshot, move, status);
                     
                     _snapshots.Add(_currentSnapshot);
+                    Status = _currentSnapshot.Status;
                     break;
                 }
             }
         }
-        // return final snapshot
+        // return final snapshot after game is over
         yield return _currentSnapshot;
     }
 }

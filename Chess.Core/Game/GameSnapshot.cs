@@ -126,7 +126,7 @@ public sealed record GameSnapshot
             if (row < 7) fen += "/";
         }
         fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
-        fen += snapshot.CastlingRights.ToString();
+        snapshot.CastlingRights.ForEach(c => fen += c.ToString());
         fen += snapshot.EnPassantTarget is not null 
             ? $" {snapshot.EnPassantTarget.ToString()} " 
             : " - ";
