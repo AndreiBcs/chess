@@ -6,9 +6,11 @@ using Chess.Engine;
 
 namespace Chess.Cli.Game;
 
-internal sealed class GameRunner
+internal sealed class GameRunner : IAsyncDisposable
 {
     private readonly chess.Game.Game _game;
+    private readonly EnginePlayer _enginePlayer;
+    private readonly int _elo;
 
     public GameRunner(CliArguments.ParsedOptions options)
     {
@@ -18,22 +20,28 @@ internal sealed class GameRunner
             Color.White;
 
         var engineType = options.Engine;
-        var elo = options.Elo;
+        _elo = options.Elo;
         
         var player1 = new ConsolePlayer(userColor);
-        var player2 = new EnginePlayer(engineColor, engineType);
-        _ = player2.Uci.StartEngine();
-        _ = player2.Uci.SetElo(elo);
-        _ = player2.Uci.NewGame();
+        _enginePlayer = new EnginePlayer(engineColor, engineType);
         
-        _game = new chess.Game.Game(player1, player2);
+        _game = new chess.Game.Game(player1, _enginePlayer);
     }
 
     public async Task Run()
     {
+        await _enginePlayer.Uci.StartEngine();
+        await _enginePlayer.Uci.SetElo(_elo);
+        await _enginePlayer.Uci.NewGame();
+
         await foreach (var snapshot in _game.GameLoop())
         {
             BoardRenderer.Render(snapshot);
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _enginePlayer.DisposeAsync();
     }
 }

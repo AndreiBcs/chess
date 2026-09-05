@@ -31,7 +31,7 @@ public class UciTests
         _testOutputHelper.WriteLine(move.ToString());
         _testOutputHelper.WriteLine(move.ToNotation());
         
-        await engine.StopEngine();
+        await engine.DisposeAsync();
 
         Assert.Matches("^[a-h][1-8][a-h][1-8][qrbn]?$", move.ToString());
     }

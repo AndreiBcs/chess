@@ -1,13 +1,14 @@
-﻿using System.Diagnostics;
+﻿﻿using System.Diagnostics;
 
 namespace Chess.Engine;
 
-public sealed class Uci
+public sealed class Uci : IAsyncDisposable
 {
     private static readonly TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
     private readonly Process _process;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
+    private int _disposed;
 
     public Uci(string path)
     {
@@ -88,18 +89,6 @@ public sealed class Uci
         );
     }
 
-    public async Task StopEngine()
-    {
-        if (!_process.HasExited)
-        {
-            await SendCommand("quit");
-            await _process.WaitForExitAsync();
-        }
-        _reader.Dispose();
-        await _writer.DisposeAsync();
-        _process.Dispose();
-    }
-
     public async Task SetElo(int elo)
     {
         elo = Math.Clamp(elo, 1320, 3190);
@@ -133,11 +122,71 @@ public sealed class Uci
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
-            throw new TimeoutException($"Stockfish did not return '{expectedResponse}' within {ResponseTimeout.TotalSeconds:0} seconds.");
+            throw new TimeoutException($"Stockfish did not return '{expectedResponse}' " +
+                                       $"within {ResponseTimeout.TotalSeconds:0} seconds.");
         }
         
         throw new InvalidOperationException(
             $"Stockfish exited before sending '{expectedResponse}'"
         );
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            if (IsRunning())
+            {
+                await SendCommand("quit");
+                await _process.WaitForExitAsync();
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // streams already closed, process already terminated
+        }
+        catch (Exception)
+        {
+            // ignore other errors during shutdown
+        }
+        finally
+        {
+            // force kill if still running
+            if (IsRunning())
+            {
+                _process.Kill();
+            }
+        
+            await CastAndDispose(_process);
+            await CastAndDispose(_reader);
+            await _writer.DisposeAsync();
+        }
+
+        return;
+
+        static async ValueTask CastAndDispose(IDisposable resource)
+        {
+            if (resource is IAsyncDisposable resourceAsyncDisposable)
+                await resourceAsyncDisposable.DisposeAsync();
+            else
+                resource.Dispose();
+        }
+
+        bool IsRunning()
+        {
+            try
+            {
+                return !_process.HasExited;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
     }
 }

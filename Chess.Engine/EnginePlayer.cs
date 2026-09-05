@@ -7,7 +7,7 @@ using chess.Player;
 
 namespace Chess.Engine;
 
-public sealed class EnginePlayer : Player, IDisposable
+public sealed class EnginePlayer : Player, IAsyncDisposable
 {
     public readonly Uci Uci; // public because the consumer needs to interact with it
 
@@ -57,9 +57,9 @@ public sealed class EnginePlayer : Player, IDisposable
         return new Move(from, to, promotion);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _ = Uci.StopEngine();
+        await Uci.DisposeAsync();
     }
 }
 

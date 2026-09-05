@@ -26,8 +26,8 @@ public class GameTests
             Console.WriteLine($"Starting game {gameNumber}");
             //_output.WriteLine($"======== Game {gameNumber} ========");
             
-            using var white = new EnginePlayer(Color.White, ChessEngine.Stockfish);
-            using var black = new EnginePlayer(Color.Black, ChessEngine.Stockfish);
+            await using var white = new EnginePlayer(Color.White, ChessEngine.Stockfish);
+            await using var black = new EnginePlayer(Color.Black, ChessEngine.Stockfish);
             
             Console.WriteLine("Starting white Stockfish...");
             await white.Uci.StartEngine();
