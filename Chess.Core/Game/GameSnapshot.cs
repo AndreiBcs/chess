@@ -52,32 +52,32 @@ public sealed record GameSnapshot
                 Color.White,
                 new Position(7, 4), new Position(7, 6),
                 new Position(7, 7), new Position(7, 5),
-                [new Position(7, 4), new Position(7, 5), new Position(7, 6)],
-                [new Position(7, 5), new Position(7, 6)]
+                new[]{new Position(7, 4), new Position(7, 5), new Position(7, 6)},
+                new[]{new Position(7, 5), new Position(7, 6)}
             ),
             new(
                 'Q',
                 Color.White,
                 new Position(7, 4), new Position(7, 2),
                 new Position(7, 0), new Position(7, 3),
-                [new Position(7, 4), new Position(7, 3), new Position(7, 2)],
-                [new Position(7, 1), new Position(7, 3), new Position(7, 2)]
+                new[]{new Position(7, 4), new Position(7, 3), new Position(7, 2)},
+                new[]{new Position(7, 1), new Position(7, 3), new Position(7, 2)}
             ),
             new(
                 'k',
                 Color.Black,
                 new Position(0, 4), new Position(0, 6),
                 new Position(0, 7), new Position(0, 5),
-                [new Position(0, 4), new Position(0, 5), new Position(0, 6)],
-                [new Position(0, 5), new Position(0, 6)]
+                new[]{new Position(0, 4), new Position(0, 5), new Position(0, 6)},
+                new[]{new Position(0, 5), new Position(0, 6)}
             ),
             new(
                 'q',
                 Color.Black,
                 new Position(0, 4), new Position(0, 2),
                 new Position(0, 0), new Position(0, 3),
-                [new Position(0, 4), new Position(0, 3), new Position(0, 2)],
-                [new Position(0, 1), new Position(0, 3), new Position(0, 2)]
+                new[]{new Position(0, 4), new Position(0, 3), new Position(0, 2)},
+                new[]{new Position(0, 1), new Position(0, 3), new Position(0, 2)}
             )
         }.ToImmutableList();
         const int halfMoveClock = 0;
@@ -98,7 +98,13 @@ public sealed record GameSnapshot
             positionHistory);
     }
     
-    public static string ToFen(GameSnapshot snapshot)
+    public static string ToFen(
+        Board.Board board,
+        Color currentTurn,
+        ImmutableList<CastlingRights> castlingRights,
+        Position? enPassantTarget,
+        int halfMoveClock,
+        int fullMoveCounter)
     {
         var fen = "";
         for (var row = 0; row < 8; row++)
@@ -106,7 +112,7 @@ public sealed record GameSnapshot
             var empty = 0;
             for (var col = 0; col < 8; col++)
             {
-                var piece = snapshot.Board.GetPiece(new Position(row, col));
+                var piece = board.GetPiece(new Position(row, col));
 
                 if (piece is null)
                 {
@@ -125,13 +131,29 @@ public sealed record GameSnapshot
             
             if (row < 7) fen += "/";
         }
-        fen += snapshot.CurrentTurn == Color.White ? " w " : " b ";
-        snapshot.CastlingRights.ForEach(c => fen += c.ToString());
-        fen += snapshot.EnPassantTarget is not null 
-            ? $" {snapshot.EnPassantTarget.ToString()} " 
+        fen += currentTurn == Color.White ? " w " : " b ";
+        
+        if (castlingRights.Count > 0)
+        {
+            var rights = "";
+            
+            foreach (var castling in castlingRights)
+            {
+                rights += string.Join(' ', castling.LetterId);
+            }
+            
+            fen += rights.Trim();
+        } 
+        else
+        {
+            fen += "-";
+        }
+        
+        fen += enPassantTarget is not null 
+            ? $" {enPassantTarget.ToString()} " 
             : " - ";
         
-        return fen + $"{snapshot.HalfMoveClock} {snapshot.FullMoveCounter}";
+        return fen + $"{halfMoveClock} {fullMoveCounter}";
     }
 
     public static GameSnapshot GetUpdatedGameSnapshot(
@@ -169,8 +191,6 @@ public sealed record GameSnapshot
         }
         else
         {
-            board = board.WithMove(currentMove.From, currentMove.To);
-            
             if (moveStatus.IsPromotion && currentMove.Promotion != null)
             {
                 board = board.WithPromotion(
@@ -178,22 +198,27 @@ public sealed record GameSnapshot
                     currentMove.Promotion.Value,
                     previousSnapshot.CurrentTurn);
             }
+            else
+            {
+                board = board.WithMove(currentMove.From, currentMove.To);
+            }
         }
         
         // update castling rights
-        var movedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
+        var currentMovedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
         var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
 
-        var castlingRights = movedPiece!.Type switch
+        var castlingRights = currentMovedPiece!.Type switch
         {
             PieceType.King => previousSnapshot.CastlingRights
-                .Where(c => c.Color == previousSnapshot.CurrentTurn)
+                .Where(c => 
+                    c.Color != previousSnapshot.CurrentTurn)
                 .ToImmutableList(),
                 
             PieceType.Rook => previousSnapshot.CastlingRights
                 .Where(c => 
-                    c.Color == previousSnapshot.CurrentTurn &&
-                    c.RookFrom == currentMove.From)
+                    !(c.Color == previousSnapshot.CurrentTurn &&
+                      c.RookFrom == currentMove.From))
                 .ToImmutableList(),
             
             _ => previousSnapshot.CastlingRights
@@ -201,9 +226,10 @@ public sealed record GameSnapshot
 
         if (capturedPiece?.Type == PieceType.Rook) 
         {
-            castlingRights.Where(c =>
-                    c.Color != previousSnapshot.CurrentTurn &&
-                    c.RookFrom == currentMove.To)
+            castlingRights = castlingRights
+                .Where(c => 
+                    !(c.Color == capturedPiece.Color && 
+                      c.RookFrom == currentMove.To))
                 .ToImmutableList();
         }
         
@@ -225,21 +251,31 @@ public sealed record GameSnapshot
             ? currentMove.From with { Row = (currentMove.From.Row + currentMove.To.Row) / 2 }
             : null;
 
+        
         // update position history
-        var positionHistory = previousSnapshot.PositionHistory.Add(ToFen(previousSnapshot));
+        var newPosition = ToFen(
+            board,
+            currentTurn,
+            castlingRights,
+            enPassantTarget,
+            halfMoveClock,
+            fullMoveCounter);
+        
+        var positionHistory = previousSnapshot.PositionHistory.Add(newPosition);
 
         // update game status
-        var gameStatus = StateValidator.ValidateState(
-            new GameSnapshot(
-                GameStatus.InProgress,
-                board,
-                currentTurn,
-                castlingRights,
-                enPassantTarget,
-                halfMoveClock,
-                fullMoveCounter,
-                previousMove,
-                positionHistory));
+        var tempSnapshot = new GameSnapshot(
+            GameStatus.InProgress,
+            board,
+            currentTurn,
+            castlingRights,
+            enPassantTarget,
+            halfMoveClock,
+            fullMoveCounter,
+            previousMove,
+            positionHistory);
+        
+        var gameStatus = StateValidator.ValidateState(tempSnapshot);
 
         return new GameSnapshot(
             gameStatus,

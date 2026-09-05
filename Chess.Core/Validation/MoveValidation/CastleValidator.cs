@@ -29,9 +29,14 @@ public static class CastleValidator
                 c.Color == snapshot.CurrentTurn &&
                 c.KingFrom == move.From &&
                 c.KingTo == move.To);
+
+        if (castling is null)
+        {
+            return false;
+        }
         
         // get the rook
-        var rook = snapshot.Board.GetPiece(castling.Value.KingFrom);
+        var rook = snapshot.Board.GetPiece(castling.Value.RookFrom);
         
         if (rook is not { Type: PieceType.Rook, HasMoved: false } ||
            rook.Color != king.Color)

@@ -16,17 +16,20 @@ public static class StateValidator
         }
 
         // 2. check for DrawByThreefoldRepetition
-        var parts = snapshot.PositionHistory[^1].Split(' ');
-        var currentPosition = string.Join(" ", parts, 0, parts.Length - 2);
-        
-        if (snapshot.PositionHistory.Count(p =>
-            {
-                var part = p.Split(' ');
-                var pos = string.Join(" ", part, 0, part.Length - 2);
-                return pos == currentPosition;
-            }) >= 3)
+        if (snapshot.PositionHistory.Count >= 3)
         {
-            return GameStatus.DrawByThreefoldRepetition;
+            var parts = snapshot.PositionHistory[^1].Split(' ');
+            var currentPosition = string.Join(" ", parts, 0, parts.Length - 2);
+        
+            if (snapshot.PositionHistory.Count(p =>
+                {
+                    var part = p.Split(' ');
+                    var pos = string.Join(" ", part, 0, part.Length - 2);
+                    return pos == currentPosition;
+                }) >= 3)
+            {
+                return GameStatus.DrawByThreefoldRepetition;
+            }
         }
         
         // 3. check for DrawByInsufficientMaterial
@@ -64,7 +67,7 @@ public static class StateValidator
             // king + bishop vs king + bishop
             if (nonKings.Count == 2 && nonKings.All(p => p.Type == PieceType.Bishop))
             {
-                // if bishops are on the same color its a draw
+                // if bishops are on the same color it's a draw
                 if (snapshot.Board.BishopsAreSameColor())
                 {
                     return GameStatus.DrawByInsufficientMaterial;

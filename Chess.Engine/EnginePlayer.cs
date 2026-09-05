@@ -27,7 +27,14 @@ public class EnginePlayer : Player, IDisposable
     
     public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
-        var fen = GameSnapshot.ToFen(snapshot);
+        var fen = GameSnapshot
+            .ToFen(
+                snapshot.Board,
+                snapshot.CurrentTurn,
+                snapshot.CastlingRights,
+                snapshot.EnPassantTarget,
+                snapshot.HalfMoveClock,
+                snapshot.FullMoveCounter);
         
         var move = await Uci.GetMove(fen);
 

@@ -15,6 +15,7 @@ public class GameTests
         _output = output;
     }
 
+    // dotnet test Chess.Tests --filter "FullyQualifiedName~GameTests.StockfishPlaysStockfish" --logger "console;verbosity=minimal"
     [Fact]
     public async Task StockfishPlaysStockfish()
     {
@@ -49,7 +50,14 @@ public class GameTests
                 
                 await foreach (var snapshot in game.GameLoop())
                 {
-                    Console.WriteLine($"Fen pos: {GameSnapshot.ToFen(snapshot)}");
+                    Console.WriteLine($"Fen pos: {GameSnapshot
+                        .ToFen(
+                            snapshot.Board,
+                            snapshot.CurrentTurn,
+                            snapshot.CastlingRights,
+                            snapshot.EnPassantTarget,
+                            snapshot.HalfMoveClock,
+                            snapshot.FullMoveCounter)}");
                     
                     moveNumber++;
                     
