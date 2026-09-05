@@ -12,14 +12,7 @@ public static class MoveValidator
         var piece = board.GetPiece(move.From);
         var target = board.GetPiece(move.To);
 
-        // 1. basic move validation
-        if (piece is null || piece.Color != snapshot.CurrentTurn ||
-            !piece.GetPiecePositions(board).Contains(move.To))
-        {
-            return new MoveStatus(MoveResult.Invalid);
-        }
-
-        // 2. check for castling
+        // 1. check for special moves before basic movement validation
         if (CastleValidator.IsValidCastling(snapshot, move, out var castlingRights))
         {
             return new MoveStatus(
@@ -28,7 +21,6 @@ public static class MoveValidator
                 CastlingRights: castlingRights);
         }
 
-        // 3. check for en passant
         if (EnPassantValidator.IsValidEnPassant(snapshot, move))
         {
             return new MoveStatus(
@@ -37,8 +29,15 @@ public static class MoveValidator
                 IsCapture: true,
                 IsPawnMove: true);
         }
-        
-        // 4. check + simulate non-special move
+
+        // 2. basic move validation
+        if (piece is null || piece.Color != snapshot.CurrentTurn ||
+            !piece.GetPiecePositions(board).Contains(move.To))
+        {
+            return new MoveStatus(MoveResult.Invalid);
+        }
+
+        // 3. check + simulate non-special move
         var testBoard = board.CopyBoard();
         var isPromotion = false;
         

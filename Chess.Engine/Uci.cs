@@ -4,6 +4,7 @@ namespace Chess.Engine;
 
 public class Uci
 {
+    private static readonly TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
     private readonly Process _process;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
@@ -56,17 +57,30 @@ public class Uci
     public async Task<string> GetMove(string fen)
     {
         await SendCommand($"position fen {fen}");
-        // spend at most 1000 ms to calculate the move
         await SendCommand("go movetime 1000");
         
-        string? line;
-        while ((line = await _reader.ReadLineAsync()) is not null)
+        using var timeout = new CancellationTokenSource(ResponseTimeout);
+        try
         {
-            if (line.StartsWith("bestmove"))
+            string? line;
+            while ((line = await _reader.ReadLineAsync(timeout.Token)) is not null)
             {
-                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                return parts[1];
+                if (line.StartsWith("bestmove", StringComparison.Ordinal))
+                {
+                    var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length > 1)
+                    {
+                        return parts[1];
+                    }
+
+                    throw new InvalidOperationException($"Engine returned malformed response: '{line}'");
+                }
             }
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Engine did not return a best move within {
+                ResponseTimeout.TotalSeconds:0} seconds for FEN '{fen}'");
         }
 
         throw new InvalidOperationException(
@@ -104,14 +118,22 @@ public class Uci
     
     private async Task WaitForResponse(string expectedResponse)
     {
-        string? line;
-        while ((line = await _reader.ReadLineAsync()) is not null)
+        using var timeout = new CancellationTokenSource(ResponseTimeout);
+        try
         {
-            if (string.Equals(line, expectedResponse, 
-                    StringComparison.OrdinalIgnoreCase))
+            string? line;
+            while ((line = await _reader.ReadLineAsync(timeout.Token)) is not null)
             {
-                return;
+                if (string.Equals(line, expectedResponse,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
             }
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Stockfish did not return '{expectedResponse}' within {ResponseTimeout.TotalSeconds:0} seconds.");
         }
         
         throw new InvalidOperationException(

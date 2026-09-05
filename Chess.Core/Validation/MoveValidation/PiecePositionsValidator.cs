@@ -102,9 +102,13 @@ public static class PiecePositionsValidator
                         var pos = new Position(row, col);
                         var localPiece = board.GetPiece(pos);
 
-                        if (localPiece is not null && localPiece.Color != piece.Color)
+                        if (localPiece is not null)
                         {
-                            positions.Add(pos);
+                            if (localPiece.Color != piece.Color)
+                            {
+                                positions.Add(pos);
+                            }
+
                             break;
                         }
                 

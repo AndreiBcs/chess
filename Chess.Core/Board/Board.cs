@@ -45,7 +45,7 @@ public sealed record Board
     {
         foreach (var square in _squares)
         {
-            if (square.Piece == piece)
+            if (ReferenceEquals(square.Piece, piece))
             {
                 return square.Position;
             }
