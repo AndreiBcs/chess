@@ -6,9 +6,10 @@ namespace Chess.Cli.Presentation;
 
 public static class BoardRenderer
 {
-    public static void Render(GameSnapshot snapshot)
+    public static void Render(GameSnapshot snapshot, chess.Color playerColor)
     {
-        Console.Clear();
+        Console.Write("\e[2J\e[3J\e[H");
+        Console.Out.Flush();
         var table = new Table().Border(TableBorder.None).HideHeaders();
         
         table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
@@ -17,8 +18,12 @@ public static class BoardRenderer
             table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
         }
 
+        var files = playerColor == chess.Color.White
+            ? new[] { "A", "B", "C", "D", "E", "F", "G", "H" }
+            : new[] { "H", "G", "F", "E", "D", "C", "B", "A" };
+
         var headerRow = new List<string> { "   " };
-        foreach (var file in new[] { "A", "B", "C", "D", "E", "F", "G", "H" })
+        foreach (var file in files)
         {
             headerRow.Add($"[bold yellow] {file} [/]");
         }
@@ -26,15 +31,17 @@ public static class BoardRenderer
 
         for (var i = 0; i < 8; i++)
         {
-            var rankLabel = (8 - i).ToString();
+            var boardRow = playerColor == chess.Color.White ? i : 7 - i;
+            var rankLabel = (8 - boardRow).ToString();
             
             var rowCells = new List<string> { $"[bold yellow] {rankLabel} [/]" };
 
             for (var j = 0; j < 8; j++)
             {
-                var piece = snapshot.Board.GetPiece(new Position(i, j));
+                var boardColumn = playerColor == chess.Color.White ? j : 7 - j;
+                var piece = snapshot.Board.GetPiece(new Position(boardRow, boardColumn));
                 
-                var bgColor = (i + j) % 2 == 0 ? "#b89a74" : "#6b4f35";
+                var bgColor = (boardRow + boardColumn) % 2 == 0 ? "#b89a74" : "#6b4f35";
                 var letterId = piece?.LetterId;
                 var symbol = GetPieceSymbol(letterId);
                 var fgColor = GetPieceTextColor(letterId);
