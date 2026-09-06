@@ -1,8 +1,12 @@
+using Chess.Api.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddOpenApi()
     .AddControllers();
+
+builder.Services.AddSingleton<GameHub>();
 
 var app = builder.Build();
 
