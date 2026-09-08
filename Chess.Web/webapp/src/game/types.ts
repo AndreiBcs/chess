@@ -31,6 +31,12 @@ export type Position = {
     col: number
 }
 
+export type Move = {
+    from: Position,
+    to: Position,
+    promotion?: PieceType
+}
+
 export type Square = {
     color: Color,
     position: Position,
