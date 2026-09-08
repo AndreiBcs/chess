@@ -2,6 +2,8 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using Chess.Api.Dtos;
+using Chess.Api.Game;
 using chess.Game;
 
 namespace Chess.Api.Hubs;
@@ -9,6 +11,7 @@ namespace Chess.Api.Hubs;
 public class GameHub
 {
     private readonly ConcurrentDictionary<string, List<WebSocket>> _connection = new();
+    private readonly ConcurrentDictionary<string, GameRunner> _games = new();
 
     public async Task HandleConnectionAsync(
         string gameId,
@@ -33,7 +36,16 @@ public class GameHub
                     break;
                 }
 
-                // TODO handle moves
+                // parse received moves
+                var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var moveDto = JsonSerializer.Deserialize<MoveDto>(json);
+
+                if (moveDto.Type == DtoType.Move &&
+                    _games.TryGetValue(gameId, out var game))
+                {
+                    var move = MoveDto.FromMoveDto(moveDto);
+                    game.HttpPlayer.ProvideMoveFromClient(move);
+                }
             }
         }
         finally
@@ -45,31 +57,53 @@ public class GameHub
         }
     }
 
-    public async Task BroadcastGameStateAsync(
+    public async Task BroadcastGameSnapshotAsync(
         string gameId,
-        GameSnapshot snapshot)
+        GameSnapshot snapshot,
+        CancellationToken ct = default)
     {
         if (!_connection.TryGetValue(gameId, out var sockets))
         {
             return;
         }
 
-        var json = JsonSerializer.Serialize(snapshot);
+        var dto = SnapshotDto.ToSnapshotDto(snapshot);
+        var json = JsonSerializer.Serialize(dto);
         var bytes = Encoding.UTF8.GetBytes(json);
         
         List<WebSocket> clients;
         lock (sockets)
         {
-            clients = sockets.ToList();
+            clients = sockets
+                .Where(s => s.State == WebSocketState.Open)
+                .ToList();
         }
 
-        foreach (var client in clients.Where(s => s.State == WebSocketState.Open))
+        foreach (var client in clients)
         {
-            await client.SendAsync(
-                bytes,
-                WebSocketMessageType.Text, 
-                true,
-                CancellationToken.None);
+            try
+            {
+                await client.SendAsync(
+                    bytes,
+                    WebSocketMessageType.Text, 
+                    true,
+                    ct);    
+            }
+            catch
+            {
+                // connection lost
+            }
         }
+    }
+    
+    public void RegisterGame(string gameId, GameRunner game)
+    {
+        _games.TryAdd(gameId, game);        
+    }
+
+    public GameRunner? GetGame(string gameId)
+    {
+        _games.TryGetValue(gameId, out var game);
+        return game;
     }
 }

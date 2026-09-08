@@ -1,4 +1,5 @@
 using Chess.Api.Hubs;
+using Microsoft.AspNetCore.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,10 @@ builder.Services
     .AddControllers();
 
 builder.Services.AddSingleton<GameHub>();
+builder.Services.AddWebSockets(new WebSocketOptions 
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30)
+});
 
 var app = builder.Build();
 
@@ -18,6 +23,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseWebSockets();
 app.MapControllers();
+app.UseWebSockets();
 app.Run();
