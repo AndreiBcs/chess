@@ -16,21 +16,31 @@ public sealed class GameRunner : IAsyncDisposable
 
     public GameRunner(StartOptionsDto options)
     {
-        var playerColor = options.PlayerColor switch
+        if (string.IsNullOrWhiteSpace(options.PlayerColor))
+            throw new ArgumentException("PlayerColor is required.", nameof(options));
+
+        if (string.IsNullOrWhiteSpace(options.EngineType))
+            throw new ArgumentException("EngineType is required.", nameof(options));
+
+        var playerColor = options.PlayerColor.Trim().ToLowerInvariant() switch
         {
             "white" => Color.White,
             "black" => Color.Black,
-            _ => Color.White
+            _ => throw new ArgumentException("PlayerColor must be 'white' or 'black'.", nameof(options))
         };
         
         var engineColor = playerColor == Color.White ?
             Color.Black : 
             Color.White;
 
-        var engineType = options.EngineType switch
+        var engineType = options.EngineType.Trim().ToLowerInvariant() switch
         {
-            _ => ChessEngine.Stockfish
+            "stockfish" => ChessEngine.Stockfish,
+            _ => throw new ArgumentException("EngineType must be 'stockfish'.", nameof(options))
         };
+
+        if (options.Elo <= 0)
+            throw new ArgumentOutOfRangeException(nameof(options), "Elo must be greater than zero.");
 
         _elo = options.Elo;
         HttpPlayer = new HttpPlayer(playerColor);
@@ -49,8 +59,6 @@ public sealed class GameRunner : IAsyncDisposable
         await foreach (var snapshot in _game.GameLoop().WithCancellation(ct))
         {
             yield return snapshot;
-            
-            HttpPlayer.ResetForNextMove();
         }
     }
 

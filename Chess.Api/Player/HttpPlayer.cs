@@ -1,31 +1,32 @@
 ﻿using chess;
 using chess.Game;
 using chess.Moves;
+using System.Threading.Channels;
 
 namespace Chess.Api.Player;
 
 public class HttpPlayer : chess.Player.Player
 {
-    private TaskCompletionSource<Move> _moveSource = new();
+    private readonly Channel<Move> _moves = Channel.CreateUnbounded<Move>();
+
+    public event Action<MoveResult>? MoveResultReceived;
+
     public HttpPlayer(Color color) : base(color)
     {
     }
 
     public override Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
     {
-        return _moveSource.Task;
+        if (previousResult is not null)
+        {
+            MoveResultReceived?.Invoke(previousResult.Value);
+        }
+
+        return _moves.Reader.ReadAsync().AsTask();
     }
 
     public void ProvideMoveFromClient(Move move)
     {
-        if (!_moveSource.Task.IsCompleted)
-        {
-            _moveSource.SetResult(move);
-        }
-    }
-
-    public void ResetForNextMove()
-    {
-        _moveSource = new TaskCompletionSource<Move>();
+        _moves.Writer.TryWrite(move);
     }
 }

@@ -3,5 +3,6 @@
 public enum ResponseDtoType
 {
     Snapshot,
-    MoveResult
+        MoveResult,
+        Error
 }

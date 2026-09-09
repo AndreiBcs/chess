@@ -16,13 +16,15 @@ public readonly record struct MoveDto
 
     public static Move FromMoveDto(MoveDto dto)
     {
-        PieceType? promotion = dto.Promotion?.Trim().ToLower()
-            switch 
+        PieceType? promotion = dto.Promotion?.Trim().ToLowerInvariant()
+            switch
             {
                 "bishop" => PieceType.Bishop,
                 "knight" => PieceType.Knight,
                 "rook" => PieceType.Rook,
-                _ => PieceType.Queen
+                "queen" => PieceType.Queen,
+                null => null,
+                _ => throw new ArgumentException("Promotion must be bishop, knight, queen, or rook.", nameof(dto))
             };
         
         var from = new Position(dto.From.Row, dto.From.Column);
