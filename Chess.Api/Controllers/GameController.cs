@@ -1,7 +1,9 @@
-﻿using chess;
+﻿using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
+using Chess.Api.Dtos.RequestDtos;
+using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
-using Chess.Api.Hubs;
-using Chess.Engine;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chess.Api.Controllers;
@@ -10,31 +12,11 @@ namespace Chess.Api.Controllers;
 [Route("api/[controller]")]
 public class GameController : ControllerBase
 {
-    private readonly GameHub _hub;
-    public GameController(GameHub hub)
-    {
-        _hub = hub;
-    }
     
-    [HttpPost("{gameId}/start")]
-    public async Task<IActionResult> StartGame(
-        [FromRoute] string gameId,
-        [FromQuery] int elo = 1600,
-        CancellationToken ct = default)
-    {
-        var runner = new GameRunner(gameId, _hub, Color.White, elo, ChessEngine.Stockfish);
-        _hub.RegisterGame(gameId, runner);
-        
-        _ = runner.Run(ct);
-        
-        return Accepted(new { gameId, status = "started" });
-    }
-
-    [WebSocketRoute("/ws/game/{gameId}")]
-    public async Task GetGameSnapshot(
+    [Route("/ws")]
+    public async Task WebSocket(
         HttpContext context,
-        [FromRoute] string gameId,
-        GameHub hub)
+        CancellationToken ct = default)
     {
         if (!context.WebSockets.IsWebSocketRequest)
         {
@@ -44,12 +26,58 @@ public class GameController : ControllerBase
         
         using var socket = await context.WebSockets.AcceptWebSocketAsync();
 
-        if (hub.GetGame(gameId) is var game)
+        GameRunner? runner = null;
+        Task? gameTask = null;
+
+        while (socket.State == WebSocketState.Open)
         {
-            var snapshot = game.GameSnapshot;
-            await hub.BroadcastGameSnapshotAsync(gameId, snapshot, context.RequestAborted);    
+            var buffer = new ArraySegment<byte>(new byte[1024]);
+            var result = await socket.ReceiveAsync(buffer, ct);
+            var message = Encoding.UTF8.GetString(buffer.Array!, 0, result.Count);
+            var request = JsonSerializer.Deserialize<WebSocketRequest>(message);
+
+            switch (request!.Type)
+            {
+                case RequestDtoType.StartOptions:
+                {
+                    var options = request.Data.Deserialize<StartOptionsDto>();
+                        
+                    runner = new GameRunner(options);
+
+                    gameTask = Task.Run(async () =>
+                    {
+                        await foreach (var snapshot in runner.Run(ct))
+                        {
+                            var dto = SnapshotDto.ToSnapshotDto(snapshot);
+                            var json = JsonSerializer.Serialize(dto);
+                            var bytes = Encoding.UTF8.GetBytes(json);
+
+                            await socket.SendAsync(
+                                bytes,
+                                WebSocketMessageType.Text,
+                                true,
+                                ct);
+                        }
+                    }, ct);
+                        
+                    break;
+                }
+                case RequestDtoType.Move:
+                {
+                    if (runner is null)
+                        break;
+                    
+                    var moveDto = request.Data.Deserialize<MoveDto>();
+                    var move = MoveDto.FromMoveDto(moveDto);
+                    
+                    runner.HttpPlayer.ProvideMoveFromClient(move);
+                    
+                    break;
+                }
+            }
         }
-        
-        await hub.HandleConnectionAsync(gameId, socket, context.RequestAborted);
+
+        if (gameTask is not null)
+            await gameTask;
     }
 }

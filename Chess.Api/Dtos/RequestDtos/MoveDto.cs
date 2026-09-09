@@ -10,7 +10,6 @@ public readonly record struct PositionDto(
 
 public readonly record struct MoveDto
 {
-    public RequestDtoType Type { get; init; }
     public PositionDto From { get; init; }
     public PositionDto To { get; init; }
     public string? Promotion { get; init; }
