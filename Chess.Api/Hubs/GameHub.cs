@@ -2,7 +2,8 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using Chess.Api.Dtos;
+using Chess.Api.Dtos.RequestDtos;
+using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
 using chess.Game;
 
@@ -40,7 +41,7 @@ public class GameHub
                 var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 var moveDto = JsonSerializer.Deserialize<MoveDto>(json);
 
-                if (moveDto.Type == DtoType.Move &&
+                if (moveDto.Type == RequestDtoType.Move &&
                     _games.TryGetValue(gameId, out var game))
                 {
                     var move = MoveDto.FromMoveDto(moveDto);

@@ -2,11 +2,15 @@
 using chess.Moves;
 using chess.Pieces;
 
-namespace Chess.Api.Dtos;
+namespace Chess.Api.Dtos.RequestDtos;
+
+public readonly record struct PositionDto(
+    int Row,
+    int Column);
 
 public readonly record struct MoveDto
 {
-    public DtoType Type { get; init; }
+    public RequestDtoType Type { get; init; }
     public PositionDto From { get; init; }
     public PositionDto To { get; init; }
     public string? Promotion { get; init; }
@@ -27,20 +31,4 @@ public readonly record struct MoveDto
         
         return new Move(from, to, promotion);
     } 
-}
-
-
-public readonly record struct MoveResultDto
-{
-    public DtoType Type { get; init; }
-    public string Result { get; init; }
-
-    public static MoveResultDto ToMoveResultDto(MoveResult result)
-    {
-        return new MoveResultDto
-        {
-            Type = DtoType.MoveResult,
-            Result = result.ToString()
-        };
-    }
 }

@@ -1,12 +1,13 @@
 ﻿using chess;
+using Chess.Api.Dtos.RequestDtos;
 using chess.Board;
 using chess.Game;
 
-namespace Chess.Api.Dtos;
+namespace Chess.Api.Dtos.ResponseDtos;
 
 public readonly record struct SnapshotDto
 {
-    public DtoType Type { get; init; } 
+    public ResponseDtoType Type { get; init; } 
     public Square[][] BoardSquares { get; init; }
     public GameStatus Status { get; init; }
     public Color CurrentTurn { get; init; }
@@ -27,7 +28,7 @@ public readonly record struct SnapshotDto
         
         var snapshotDto = new SnapshotDto
         {
-            Type = DtoType.Snapshot,
+            Type = ResponseDtoType.Snapshot,
             CurrentTurn = snapshot.CurrentTurn,
             Status = snapshot.Status,
             BoardSquares = squaresDto
