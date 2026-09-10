@@ -1,7 +1,6 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
 using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
@@ -11,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Chess.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
 public class GameController : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOptions =
