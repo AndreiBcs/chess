@@ -52,3 +52,12 @@ export type GameState = {
     board: Board,
     currentTurn: Color
 }
+
+export type EngineType = 
+    "Stockfish"
+
+export type GameConfig = {
+    playerColor: Color,
+    engineType: EngineType,
+    elo: number
+}

@@ -1,4 +1,4 @@
-import type Move from '..//game/types.ts'
+import type {Move} from '..//game/types.ts'
 
 const socket = new WebSocket("ws://localhost:5204/ws");
 
