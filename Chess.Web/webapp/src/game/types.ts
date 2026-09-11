@@ -40,7 +40,7 @@ export type Move = {
 export type Square = {
     color: Color,
     position: Position,
-    piece?: Piece
+    piece: Piece | null
 }
 
 export type Board = {

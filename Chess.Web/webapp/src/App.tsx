@@ -13,8 +13,12 @@ export default function App() {
     console.log(config);
   }
   
-  return gameStarted 
-      ? <GamePage/>
-      : <HomePage onStartGame={startGame}/>
+  return <>
+    {
+      gameStarted
+          ? <GamePage/>
+          : <HomePage onStartGame={startGame}/>
+    }
+  </>
 }
 
