@@ -7,7 +7,6 @@ builder.Services
 var app = builder.Build();
 
 
-app.UseHttpsRedirection();
-app.MapControllers();
 app.UseWebSockets();
+app.MapControllers();
 app.Run();

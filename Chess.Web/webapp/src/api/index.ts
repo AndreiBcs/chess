@@ -1,6 +1,6 @@
 import type Move from '..//game/types.ts'
 
-const socket = new WebSocket("ws://localhost:5000/ws");
+const socket = new WebSocket("ws://localhost:5204/ws");
 
 socket.onopen = () => {
     console.log("Connection opened");

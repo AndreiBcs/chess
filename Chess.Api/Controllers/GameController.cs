@@ -1,6 +1,7 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
@@ -13,7 +14,10 @@ namespace Chess.Api.Controllers;
 public class GameController : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOptions =
-        new(JsonSerializerDefaults.Web);
+        new(JsonSerializerDefaults.Web)
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
 
     [Route("/ws")]
     public async Task WebSocket(CancellationToken ct = default)
@@ -25,7 +29,7 @@ public class GameController : ControllerBase
         }
 
         using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            
+        
         GameRunner? runner = null;
         
         // start the game when the client sends start options
@@ -45,6 +49,8 @@ public class GameController : ControllerBase
 
             if (request is null)
                 continue;
+            
+            Console.WriteLine(request);
             
             // check the request type
             switch (request.Type)
