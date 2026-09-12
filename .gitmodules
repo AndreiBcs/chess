@@ -1,0 +1,3 @@
+[submodule "deakfish"]
+	path = deakfish
+	url = git@github.com:AndreiBcs/deakfish.git
