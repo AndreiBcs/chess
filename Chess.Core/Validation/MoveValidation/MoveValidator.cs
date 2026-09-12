@@ -46,7 +46,9 @@ public static class MoveValidator
             && move.Promotion is not null)
         {
             isPromotion = true;
-            testBoard = testBoard.WithPromotion(move.To, move.Promotion.Value, piece.Color);
+            testBoard = testBoard
+                .WithMove(move.From, move.To)
+                .WithPromotion(move.To, move.Promotion.Value, piece.Color);
         }
         else // not promotion => normal move
         {

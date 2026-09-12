@@ -193,10 +193,12 @@ public sealed record GameSnapshot
         {
             if (moveStatus.IsPromotion && currentMove.Promotion != null)
             {
-                board = board.WithPromotion(
-                    currentMove.To,
-                    currentMove.Promotion.Value,
-                    previousSnapshot.CurrentTurn);
+                board = board
+                    .WithMove(currentMove.From, currentMove.To)
+                    .WithPromotion(
+                        currentMove.To,
+                        currentMove.Promotion.Value,
+                        previousSnapshot.CurrentTurn);
             }
             else
             {

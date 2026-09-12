@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.Concurrent;
 using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
@@ -13,6 +14,7 @@ namespace Chess.Api.Controllers;
 [ApiController]
 public class GameController : ControllerBase
 {
+    private static readonly ConcurrentDictionary<string, GameSession> Sessions = new();
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web)
         {
@@ -30,10 +32,7 @@ public class GameController : ControllerBase
 
         using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
         
-        GameRunner? runner = null;
-        
-        // start the game when the client sends start options
-        Task? gameTask = null;
+        GameSession? session = null;
             
         while (socket.State == WebSocketState.Open)
         {
@@ -55,35 +54,26 @@ public class GameController : ControllerBase
             // check the request type
             switch (request.Type)
             {
-                case RequestDtoType.StartOptions when runner is null:
+                case RequestDtoType.StartOptions when session is null:
                 {
                     var options = request.Data.Deserialize<StartOptionsDto>(JsonOptions);
+                    if (string.IsNullOrWhiteSpace(options.GameId))
+                        break;
 
-                    runner = new GameRunner(options);
-
-                    runner.HttpPlayer.MoveResultReceived += async result =>
-                    {
-                        if (result == MoveResult.Invalid)
-                        {
-                            await SendMessageAsync(
-                                socket,
-                                MoveResultDto.ToMoveResultDto(result),
-                                ct);
-                        }
-                    };
-
-                    gameTask = RunGameAsync(runner, socket, ct);
+                    session = Sessions.GetOrAdd(options.GameId, _ => new GameSession(new GameRunner(options)));
+                    await session.AttachAsync(socket, ct);
+                    session.GameTask ??= RunGameAsync(session, CancellationToken.None);
 
                     break;
                 }
 
-                case RequestDtoType.Move when runner is not null:
+                case RequestDtoType.Move when session is not null:
                 {
                     var moveDto = request.Data.Deserialize<MoveDto>(JsonOptions);
                     
                     var move = MoveDto.FromMoveDto(moveDto);
                     
-                    runner.HttpPlayer.ProvideMoveFromClient(move);
+                    session.Runner.HttpPlayer.ProvideMoveFromClient(move);
                     
                     break;
                 }
@@ -101,27 +91,18 @@ public class GameController : ControllerBase
             }
         }
         
-        if(gameTask is not null)
-            await gameTask;
-
-        if (runner is not null)
-            await runner.DisposeAsync();
+        session?.Detach(socket);
     }
 
-    private static async Task RunGameAsync(
-        GameRunner runner,
-        WebSocket socket,
-        CancellationToken ct)
+    private static async Task RunGameAsync(GameSession session, CancellationToken ct)
     {
-        await foreach (var snapshot in runner.Run(ct))
+        await foreach (var snapshot in session.Runner.Run(ct))
         {
-            var dto = SnapshotDto.ToSnapshotDto(snapshot);
-
-            await SendMessageAsync(socket, dto, ct);
+            await session.PublishAsync(snapshot, ct);
         }
     }
 
-    private static async Task SendMessageAsync(
+    public static async Task SendMessageAsync(
         WebSocket socket, 
         object message,
         CancellationToken ct)

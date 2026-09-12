@@ -3,22 +3,33 @@ import GamePage from "./pages/GamePage.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import type {GameConfig} from "./game/types.ts";
 
+const gameConfigStorageKey = "chess.gameConfig";
+const gameIdStorageKey = "chess.gameId";
+
 export default function App() {
-  
-  const [gameStarted, setGameStarted] = useState(false);
+  const [gameConfig, setGameConfig] = useState<GameConfig | undefined>(() => {
+    const savedConfig = sessionStorage.getItem(gameConfigStorageKey);
+    return savedConfig ? JSON.parse(savedConfig) as GameConfig : undefined;
+  });
   
   function startGame(config: GameConfig) {
-    setGameStarted(true);
+    if (config === null) {
+      return;
+    }
     
-    console.log(config);
+    sessionStorage.setItem(gameConfigStorageKey, JSON.stringify(config));
+    sessionStorage.setItem(gameIdStorageKey, crypto.randomUUID());
+    setGameConfig(config);
+  }
+
+  function exitGame() {
+    sessionStorage.removeItem(gameConfigStorageKey);
+    sessionStorage.removeItem(gameIdStorageKey);
+    setGameConfig(undefined);
   }
   
-  return <>
-    {
-      gameStarted
-          ? <GamePage/>
-          : <HomePage onStartGame={startGame}/>
-    }
-  </>
+  return gameConfig
+      ? <GamePage config={gameConfig} gameId={sessionStorage.getItem(gameIdStorageKey) ?? crypto.randomUUID()} onExit={exitGame}/>
+      : <HomePage onStartGame={startGame}/>
 }
 

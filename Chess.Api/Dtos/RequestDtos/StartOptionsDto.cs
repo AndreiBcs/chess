@@ -3,4 +3,5 @@
 public readonly record struct StartOptionsDto(
     string PlayerColor,
     string EngineType,
-    int Elo);
+    int Elo,
+    string? GameId = null);

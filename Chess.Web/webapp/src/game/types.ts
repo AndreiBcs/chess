@@ -22,7 +22,6 @@ export type PieceType =
 export type Piece = {
     color: Color, 
     type: PieceType,
-    filePath: string,
     letterId: string
 }
 
@@ -44,7 +43,7 @@ export type Square = {
 }
 
 export type Board = {
-    squares: Square[][],
+    squares: Square[],
 }
 
 export type GameState = {
@@ -54,7 +53,8 @@ export type GameState = {
 }
 
 export type EngineType = 
-    "Stockfish"
+    "Stockfish" |
+    "Deakfish"
 
 export type GameConfig = {
     playerColor: Color,
