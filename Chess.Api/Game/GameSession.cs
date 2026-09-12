@@ -7,11 +7,11 @@ namespace Chess.Api.Game;
 
 public sealed class GameSession
 {
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
     private WebSocket? _socket;
 
     public GameRunner Runner { get; }
-    public GameSnapshot? LatestSnapshot { get; private set; }
+    private GameSnapshot? LatestSnapshot { get; set; }
     public Task? GameTask { get; set; }
 
     public GameSession(GameRunner runner)

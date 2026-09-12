@@ -16,6 +16,6 @@ public sealed class ConsolePlayer : chess.Player.Player
         if (previousResult == MoveResult.Invalid)
             ConsoleInteraction.ShowMoveError();
             
-        return await ConsoleInteraction.ReadMove();
+        return await ConsoleInteraction.ReadMove(snapshot);
     }
 }

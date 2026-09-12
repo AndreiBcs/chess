@@ -1,13 +1,15 @@
 ﻿using System.Text.RegularExpressions;
 using chess.Board;
+using chess.Game;
 using chess.Moves;
+using chess.Pieces;
 using Spectre.Console;
 
 namespace Chess.Cli.Presentation;
 
 public static partial class ConsoleInteraction 
 {
-    public static Task<Move> ReadMove()
+    public static Task<Move> ReadMove(GameSnapshot snapshot)
     {
         try
         {
@@ -51,11 +53,26 @@ public static partial class ConsoleInteraction
 
                 var (fromRow, fromCol) = ParseNotation(fromSquare);
                 var (toRow, toCol) = ParseNotation(toSquare);
+
+                PieceType? promotion = null;
+                var piece = snapshot.Board.GetPiece(new Position(fromRow, fromCol));
+                if (piece?.Type == PieceType.Pawn && toRow is 0 or 7)
+                {
+                    promotion = AnsiConsole.Prompt(
+                        new SelectionPrompt<PieceType>()
+                            .Title("Choose a promotion piece:")
+                            .AddChoices(
+                                PieceType.Knight,
+                                PieceType.Bishop,
+                                PieceType.Queen,
+                                PieceType.Rook));
+                }
             
                 return Task.FromResult(new Move
                 {
                     From = new Position(fromRow, fromCol),
-                    To = new Position(toRow, toCol)
+                    To = new Position(toRow, toCol),
+                    Promotion = promotion
                 });
             }
         }
