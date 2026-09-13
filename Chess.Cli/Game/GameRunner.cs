@@ -15,14 +15,14 @@ internal sealed class GameRunner : IAsyncDisposable
 
     public GameRunner(CliArguments.ParsedOptions options)
     {
-        if (!Equals(options.PlayerColor.ToString(), "White") || 
-            !Equals(options.PlayerColor.ToString(), "Black"))
-            throw new ArgumentException("You can only play as White or Black.", nameof(options));
-            
-        var userColor = options.PlayerColor;
-        _playerColor = userColor;
+        _playerColor = options.PlayerColor switch
+        {
+            Color.White => Color.White,
+            Color.Black => Color.Black,
+            _ => throw new ArgumentException("You can only play as White or Black.", nameof(options))
+        };
         
-        var engineColor = userColor == Color.White?
+        var engineColor = _playerColor == Color.White?
             Color.Black : 
             Color.White;
 
@@ -41,7 +41,7 @@ internal sealed class GameRunner : IAsyncDisposable
         }
         _elo = options.Elo;
         
-        var consolePlayer = new ConsolePlayer(userColor);
+        var consolePlayer = new ConsolePlayer(_playerColor);
         _enginePlayer = new EnginePlayer(engineColor, engineType);
         
         _game = new chess.Game.Game(consolePlayer, _enginePlayer);
