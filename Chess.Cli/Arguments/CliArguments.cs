@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Reflection;
 using chess;
 using Chess.Engine;
 
@@ -48,7 +49,11 @@ public sealed class CliArguments
 
         if (args.Contains("--version") || args.Contains("-v"))
         {
-            Console.WriteLine("v1.0.0");
+            var version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            
+            Console.WriteLine($"{version}");
             return null;
         }
         
