@@ -6,6 +6,10 @@ Console.OutputEncoding = Encoding.UTF8;
 
 var options = new CliArguments().Parse(args);
 
+if (options is null)
+{
+    return;
+}
 
 GameRunner? gameRunner = null;
 
