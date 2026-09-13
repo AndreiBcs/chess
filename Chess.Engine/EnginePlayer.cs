@@ -65,5 +65,6 @@ public sealed class EnginePlayer : Player, IAsyncDisposable
 
 public enum ChessEngine
 {
-    Stockfish
+    Stockfish,
+    Deakfish
 }

@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using Chess.Cli;
 using Chess.Cli.Arguments;
 using Chess.Cli.Game;
+using Chess.Engine;
 
 Console.OutputEncoding = Encoding.UTF8;
 
@@ -8,32 +10,42 @@ var options = new CliArguments().Parse(args);
 
 if (options is null)
 {
-    return;
+    // exit after "help" or "version" options
+    return ExitCodes.Success; 
 }
 
-GameRunner? gameRunner = null;
-
-AppDomain.CurrentDomain.ProcessExit += (_, _) => 
-    gameRunner?.DisposeAsync().AsTask().Wait();
-
-Console.CancelKeyPress += (_, e) =>
-{
-    e.Cancel = true;
-    gameRunner?.DisposeAsync().AsTask().Wait();
-    Environment.Exit(0);
-};
+// start the game runner
+GameRunner gameRunner;
 
 try
 {
     gameRunner = new GameRunner(options);
-    await gameRunner.Run();
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Error: {ex.Message}");
+    // catch option parse errors
+    Console.WriteLine(ex.Message);
+    return ExitCodes.InvalidArguments;
+}
+
+try
+{
+    await gameRunner.Run();
+}
+catch (EngineException ex)
+{
+    Console.WriteLine(ex.Message);
+    return ExitCodes.EngineError;
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+    return ExitCodes.RuntimeError;
 }
 finally
 {
-    gameRunner?.DisposeAsync().AsTask().Wait();
+    await gameRunner.DisposeAsync();
 }
+
+return ExitCodes.Success;
 

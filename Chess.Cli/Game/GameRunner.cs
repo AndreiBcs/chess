@@ -15,19 +15,36 @@ internal sealed class GameRunner : IAsyncDisposable
 
     public GameRunner(CliArguments.ParsedOptions options)
     {
+        if (!Equals(options.PlayerColor.ToString(), "White") || 
+            !Equals(options.PlayerColor.ToString(), "Black"))
+            throw new ArgumentException("You can only play as White or Black.", nameof(options));
+            
         var userColor = options.PlayerColor;
         _playerColor = userColor;
+        
         var engineColor = userColor == Color.White?
             Color.Black : 
             Color.White;
 
-        var engineType = options.Engine;
+        var engineType = options.Engine switch
+        {
+            ChessEngine.Stockfish => ChessEngine.Stockfish,
+            ChessEngine.Deakfish => ChessEngine.Deakfish,
+            _ => throw new ArgumentException("Engine not supported.", nameof(options))
+        };
+        
+        if (engineType is ChessEngine.Stockfish && 
+            options.Elo is < 1320 or > 3190)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options),
+                "Stockfish elo can be above 1320 and below 3190");
+        }
         _elo = options.Elo;
         
-        var player1 = new ConsolePlayer(userColor);
+        var consolePlayer = new ConsolePlayer(userColor);
         _enginePlayer = new EnginePlayer(engineColor, engineType);
         
-        _game = new chess.Game.Game(player1, _enginePlayer);
+        _game = new chess.Game.Game(consolePlayer, _enginePlayer);
     }
 
     public async Task Run()

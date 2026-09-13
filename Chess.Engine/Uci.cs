@@ -14,7 +14,9 @@ public sealed class Uci : IAsyncDisposable
     {
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException("engine not found", path);
+            throw new EngineException(
+                "Engine file not found. ",
+                new FileNotFoundException("Path: ", path));
         }
 
         _process = new Process
@@ -74,19 +76,22 @@ public sealed class Uci : IAsyncDisposable
                         return parts[1];
                     }
 
-                    throw new InvalidOperationException($"Engine returned malformed response: '{line}'");
+                    throw new EngineException(
+                        "Engine returned malformed response. ",
+                        new InvalidOperationException($"Line: {line}"));
                 }
             }
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
-            throw new TimeoutException($"Engine did not return a best move within {
-                ResponseTimeout.TotalSeconds:0} seconds for FEN '{fen}'");
+            throw new EngineException(
+                "Engine move response time exceeded. ",
+                new TimeoutException($"Time taken: {ResponseTimeout.TotalSeconds:0} seconds for FEN '{fen}'"));
         }
 
-        throw new InvalidOperationException(
-            "Engine did not return a best move"
-        );
+        throw new EngineException(
+            "Engine did not return a best move.",
+            new InvalidOperationException());
     }
 
     public async Task SetElo(int elo)
@@ -122,13 +127,15 @@ public sealed class Uci : IAsyncDisposable
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
-            throw new TimeoutException($"Stockfish did not return '{expectedResponse}' " +
-                                       $"within {ResponseTimeout.TotalSeconds:0} seconds.");
+            throw new EngineException(
+                "Engine response time exceeded. ",
+                new TimeoutException($"Time taken: {ResponseTimeout.TotalSeconds:0}" +
+                                     $" seconds for expected response: '{expectedResponse}'"));
         }
         
-        throw new InvalidOperationException(
-            $"Stockfish exited before sending '{expectedResponse}'"
-        );
+        throw new EngineException(
+            $"Engine exited before sending '{expectedResponse}'",
+            new InvalidOperationException());
     }
 
     public async ValueTask DisposeAsync()
