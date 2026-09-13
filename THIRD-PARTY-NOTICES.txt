@@ -1,0 +1,18 @@
+﻿Third-party software
+=============================
+
+Stockfish
+----------
+Stockfish is distributed with this application as a separate executable.
+
+Version: 19
+
+License: GNU General Public License v3.0 (GPLv3)
+
+Copyright: Stockfish developers
+
+Source: 
+https://stockfishchess.org/download/
+
+License:
+https://github.com/official-stockfish/Stockfish/blob/master/Copying.txt
