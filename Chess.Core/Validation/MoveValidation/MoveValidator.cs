@@ -10,6 +10,21 @@ public static class MoveValidator
     {
         var board = snapshot.Board;
         var piece = board.GetPiece(move.From);
+
+        if (piece is null)
+        {
+            return new MoveStatus(
+                MoveResult.Invalid,
+                InvalidMoveReason: "Cannot move from empty square.");
+        }
+
+        if (piece.Color != snapshot.CurrentTurn)
+        {
+            return new MoveStatus(
+                MoveResult.Invalid,
+                InvalidMoveReason: "Cannot move enemy piece.");
+        }
+        
         var target = board.GetPiece(move.To);
 
         // 1. check for special moves before basic movement validation
@@ -30,11 +45,12 @@ public static class MoveValidator
                 IsPawnMove: true);
         }
 
-        // 2. basic move validation
-        if (piece is null || piece.Color != snapshot.CurrentTurn ||
-            !piece.GetPiecePositions(board).Contains(move.To))
+        // 2. pseudo move validation
+        if (!piece.GetPiecePositions(board).Contains(move.To))
         {
-            return new MoveStatus(MoveResult.Invalid);
+            return new MoveStatus(
+                MoveResult.Invalid,
+                InvalidMoveReason: "Invalid move for selected piece.");
         }
 
         // 3. check + simulate non-special move
@@ -56,7 +72,9 @@ public static class MoveValidator
         }
 
         return CheckValidator.IsKingInCheck(testBoard, piece.Color) 
-            ? new MoveStatus(MoveResult.Invalid) 
+            ? new MoveStatus(
+                MoveResult.Invalid,
+                InvalidMoveReason: "Move leaves the king in check.") 
             : new MoveStatus(MoveResult.Valid,
                 IsCapture: target is not null,
                 IsPawnMove: piece.Type == PieceType.Pawn,

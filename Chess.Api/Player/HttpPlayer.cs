@@ -9,17 +9,17 @@ public class HttpPlayer : chess.Player.Player
 {
     private readonly Channel<Move> _moves = Channel.CreateUnbounded<Move>();
 
-    public event Action<MoveResult>? MoveResultReceived;
+    public event Action<MoveStatus>? MoveStatusReceived;
 
     public HttpPlayer(Color color) : base(color)
     {
     }
 
-    public override Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
+    public override Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus)
     {
-        if (previousResult is not null)
+        if (moveStatus is not null)
         {
-            MoveResultReceived?.Invoke(previousResult.Value);
+            MoveStatusReceived?.Invoke(moveStatus.Value);
         }
 
         return _moves.Reader.ReadAsync().AsTask();

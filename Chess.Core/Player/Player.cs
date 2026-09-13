@@ -11,5 +11,7 @@ public abstract class Player
     }
 
     public Color Color { get; }
-    public abstract Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult);
+    
+    // game passes the last move status only if the move was invalid
+    public abstract Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus);
 }

@@ -92,8 +92,8 @@ public static partial class ConsoleInteraction
     [GeneratedRegex("^[a-hA-H][1-8]$")]
     private static partial Regex MyRegex();
 
-    public static void ShowMoveError()
+    public static void ShowMoveError(string warningMessage)
     {
-        AnsiConsole.MarkupLine("[red]Invalid move.[/]");
+        AnsiConsole.MarkupLine($"[red]{warningMessage}[/]");
     }
 }

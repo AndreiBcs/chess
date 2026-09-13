@@ -9,7 +9,7 @@ namespace Chess.Engine;
 
 public sealed class EnginePlayer : Player, IAsyncDisposable
 {
-    public readonly Uci Uci; // public because the consumer needs to interact with it
+    public readonly Uci Uci; // consumer handles start / stop / set elo
 
     public EnginePlayer(Color color, ChessEngine chessEngine) : base(color)
     {
@@ -25,7 +25,7 @@ public sealed class EnginePlayer : Player, IAsyncDisposable
         Uci = new Uci(engineFilePath);
     }
     
-    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
+    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus)
     {
         var fen = GameSnapshot
             .ToFen(

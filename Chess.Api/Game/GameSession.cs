@@ -17,11 +17,13 @@ public sealed class GameSession
     public GameSession(GameRunner runner)
     {
         Runner = runner;
-        Runner.HttpPlayer.MoveResultReceived += async result =>
+        Runner.HttpPlayer.MoveStatusReceived += async moveStatus =>
         {
-            if (result == chess.Moves.MoveResult.Invalid)
+            if (moveStatus.MoveResult == chess.Moves.MoveResult.Invalid)
             {
-                await SendAsync(MoveResultDto.ToMoveResultDto(result), CancellationToken.None);
+                await SendAsync(
+                    MoveStatusDto.ToMoveStatusDto(moveStatus),
+                    CancellationToken.None);
             }
         };
     }

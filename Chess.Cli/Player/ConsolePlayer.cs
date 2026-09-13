@@ -11,10 +11,13 @@ public sealed class ConsolePlayer : chess.Player.Player
     {
     }
 
-    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveResult? previousResult)
+    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus)
     {
-        if (previousResult == MoveResult.Invalid)
-            ConsoleInteraction.ShowMoveError();
+        if (moveStatus is not null &&
+            moveStatus.Value.MoveResult == MoveResult.Invalid)
+        {
+            ConsoleInteraction.ShowMoveError(moveStatus.Value.InvalidMoveReason!);
+        }
             
         return await ConsoleInteraction.ReadMove(snapshot);
     }

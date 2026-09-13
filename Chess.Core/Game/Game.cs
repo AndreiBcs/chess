@@ -30,25 +30,25 @@ public sealed class Game
         {
             yield return _currentSnapshot;
             
-            MoveResult? result = null;
+            MoveStatus? moveStatus = null;
 
             while (true) // wait for player move and validate
             {
                 var currentPlayer = GetPlayer(_currentSnapshot.CurrentTurn);
-                var move = await currentPlayer.GetMoveAsync(_currentSnapshot, result);
+                var move = await currentPlayer.GetMoveAsync(_currentSnapshot, moveStatus);
                 
-                var status = MoveValidator.ValidateMove(_currentSnapshot, move);
-                result = status.MoveResult;
+                moveStatus = MoveValidator.ValidateMove(_currentSnapshot, move);
 
-                if (result == MoveResult.Invalid)
+                if (moveStatus.Value.MoveResult == MoveResult.Invalid)
                 {
+                    // move status is not null and is being passed as a warning for the player 
                     continue;
                 }
 
-                if (result == MoveResult.Valid)
+                if (moveStatus.Value.MoveResult == MoveResult.Valid)
                 {
                     _currentSnapshot = GameSnapshot
-                        .GetUpdatedGameSnapshot(_currentSnapshot, move, status);
+                        .GetUpdatedGameSnapshot(_currentSnapshot, move, moveStatus.Value);
                     
                     _snapshots.Add(_currentSnapshot);
                     Status = _currentSnapshot.Status;
