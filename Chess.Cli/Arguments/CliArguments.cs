@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Reflection;
 using chess;
 using Chess.Engine;
 
@@ -30,7 +31,7 @@ public sealed class CliArguments
 
     public sealed record ParsedOptions(Color PlayerColor, ChessEngine Engine, int Elo);
 
-    public ParsedOptions Parse(string[] args)
+    public ParsedOptions? Parse(string[] args)
     {
         var root = new RootCommand("Chess")
         { 
@@ -39,6 +40,22 @@ public sealed class CliArguments
             _elo
         };
         var parseResult = root.Parse(args);
+
+        if (args.Contains("--help") || args.Contains("-h"))
+        {
+            parseResult.Invoke();
+            return null;
+        }
+
+        if (args.Contains("--version") || args.Contains("-v"))
+        {
+            var version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            
+            Console.WriteLine($"{version}");
+            return null;
+        }
         
         return new ParsedOptions(
             parseResult.GetValue(_playerColor),
