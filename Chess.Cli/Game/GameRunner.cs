@@ -17,30 +17,14 @@ internal sealed class GameRunner : IAsyncDisposable
 
     public GameRunner(Options options)
     {
-        _playerColor = options.PlayerColor switch
-        {
-            Color.White => Color.White,
-            Color.Black => Color.Black,
-            _ => throw new ArgumentException("You can only play as White or Black.", nameof(options))
-        };
+        _playerColor = options.PlayerColor;
         
         var engineColor = _playerColor == Color.White?
             Color.Black : 
             Color.White;
 
-        var engineType = options.Engine switch
-        {
-            ChessEngine.Stockfish => ChessEngine.Stockfish,
-            ChessEngine.Deakfish => ChessEngine.Deakfish,
-            _ => throw new ArgumentException("Engine not supported.", nameof(options))
-        };
+        var engineType = options.Engine;
         
-        if (engineType is ChessEngine.Stockfish && 
-            options.Elo is < 1320 or > 3190)
-        {
-            throw new ArgumentOutOfRangeException(nameof(options),
-                "Stockfish elo can be above 1320 and below 3190");
-        }
         _elo = options.Elo;
         
         _consolePlayer = new ConsolePlayer(_playerColor);

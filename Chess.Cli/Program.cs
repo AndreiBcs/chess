@@ -15,7 +15,16 @@ if (args.Length == 0)
 }
 else
 {
-    options = new CliArguments().Parse(args);
+    try
+    {
+        options = new CliArguments().Parse(args);
+    }
+    catch (ArgumentException ex)
+    {
+        // catch option parse errors
+        Console.WriteLine(ex.Message);
+        return ExitCodes.InvalidArguments;
+    }
     
     if (options is null)
     {
@@ -25,18 +34,7 @@ else
 
 
 // start the game runner
-GameRunner gameRunner;
-
-try
-{
-    gameRunner = new GameRunner(options);
-}
-catch (Exception ex)
-{
-    // catch option parse errors
-    Console.WriteLine(ex.Message);
-    return ExitCodes.InvalidArguments;
-}
+var gameRunner = new GameRunner(options);
 
 try
 {

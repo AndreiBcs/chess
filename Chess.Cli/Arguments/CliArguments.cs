@@ -35,6 +35,19 @@ public sealed class CliArguments
         DefaultValueFactory = _ => false
     };
 
+    public CliArguments()
+    {
+        _elo.Validators.Add(result =>
+        {
+            var elo = result.GetValue(_elo);
+
+            if (elo is < 1320 or > 3190)
+            {
+                result.AddError("Stockfish Elo must be between 1320 and 3190.");
+            }
+        });
+    }
+    
     public Options? Parse(string[] args)
     {
         var root = new RootCommand("Chess")
@@ -60,6 +73,12 @@ public sealed class CliArguments
             
             Console.WriteLine($"{version}");
             return null;
+        }
+
+        if (parseResult.Errors.Count > 0)
+        {
+            foreach (var error in parseResult.Errors)
+                throw new ArgumentException(error.ToString());
         }
         
         return new Options(
