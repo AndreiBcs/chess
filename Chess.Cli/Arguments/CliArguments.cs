@@ -1,7 +1,6 @@
 ﻿using System.CommandLine;
 using System.Reflection;
 using chess;
-using Chess.Cli.Presentation;
 using Chess.Engine;
 
 namespace Chess.Cli.Arguments;
@@ -36,10 +35,7 @@ public sealed class CliArguments
         DefaultValueFactory = _ => false
     };
 
-
-    public sealed record ParsedOptions(Color PlayerColor, ChessEngine Engine, int Elo, bool TextRender);
-
-    public ParsedOptions? Parse(string[] args)
+    public Options? Parse(string[] args)
     {
         var root = new RootCommand("Chess")
         { 
@@ -66,7 +62,7 @@ public sealed class CliArguments
             return null;
         }
         
-        return new ParsedOptions(
+        return new Options(
             parseResult.GetValue(_playerColor),
             parseResult.GetValue(_chessEngine),
             parseResult.GetValue(_elo),

@@ -1,9 +1,12 @@
 ﻿using System.Text.RegularExpressions;
 using chess.Board;
+using Chess.Cli.Arguments;
+using Chess.Engine;
 using chess.Game;
 using chess.Moves;
 using chess.Pieces;
 using Spectre.Console;
+using Color = chess.Color;
 
 namespace Chess.Cli.Presentation;
 
@@ -95,5 +98,35 @@ public static partial class ConsoleInteraction
     public static void ShowMoveError(string warningMessage)
     {
         AnsiConsole.MarkupLine($"[red]{warningMessage}[/]");
+    }
+
+    public static Options GetGameOptions()
+    {
+        var playerColor = AnsiConsole.Prompt(
+            new SelectionPrompt<Color>()
+                .Title("Choose a color:")
+                .AddChoices(Color.White, Color.Black));
+        
+        var engineType = AnsiConsole.Prompt(
+            new SelectionPrompt<ChessEngine>()
+                .Title("Choose a chess engine:")
+                .AddChoices(ChessEngine.Stockfish, ChessEngine.Deakfish));
+
+        var elo = AnsiConsole.Prompt(
+            new TextPrompt<int>("Chess engine Elo:")
+                .Validate(value =>
+                    value is >= 1320 and <= 3190
+                        ? ValidationResult.Success()
+                        : ValidationResult.Error("[red]Elo must be between 1320 and 3190.[/]"))
+        );
+
+        var pieceRender = AnsiConsole.Prompt(
+            new SelectionPrompt<bool>()
+                .Title("Render pieces as text?")
+                .AddChoices(true, false)
+                .UseConverter(value => value ? "Yes" : "No")
+        );
+
+        return new Options(playerColor, engineType, elo, pieceRender);
     }
 }

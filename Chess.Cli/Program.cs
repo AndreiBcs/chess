@@ -2,17 +2,27 @@
 using Chess.Cli;
 using Chess.Cli.Arguments;
 using Chess.Cli.Game;
+using Chess.Cli.Presentation;
 using Chess.Engine;
 
 Console.OutputEncoding = Encoding.UTF8;
 
-var options = new CliArguments().Parse(args);
+Options? options;
 
-if (options is null)
+if (args.Length == 0)
 {
-    // exit after "help" or "version" options
-    return ExitCodes.Success; 
+    options = ConsoleInteraction.GetGameOptions();
 }
+else
+{
+    options = new CliArguments().Parse(args);
+    
+    if (options is null)
+    {
+        return ExitCodes.Success;
+    }
+}
+
 
 // start the game runner
 GameRunner gameRunner;

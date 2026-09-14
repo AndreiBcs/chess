@@ -56,6 +56,24 @@ public static class BoardRenderer
         }
 
         AnsiConsole.Write(Align.Center(table));
+
+        var endMessage = snapshot.Status switch
+        {
+            GameStatus.WhiteWon => "White won by checkmate.",
+            GameStatus.BlackWon => "Black won by checkmate.",
+            GameStatus.DrawBy75MoveRule => "Draw by 75 more rule.",
+            GameStatus.DrawByInsufficientMaterial => "Draw by insufficient material.",
+            GameStatus.DrawByStalemate => "Draw by stalemate.",
+            GameStatus.DrawByThreefoldRepetition => "Draw by threefold repetition.",
+            _ => null
+        };
+
+        if (endMessage is not null)
+        {
+            AnsiConsole.MarkupLine($"[green]{endMessage}[/]");
+            Console.WriteLine();
+            Console.WriteLine("Press R to restart or Q to quit.");
+        }
     }
 
     private static string GetPieceText(char? letterId)

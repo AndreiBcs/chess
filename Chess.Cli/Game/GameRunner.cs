@@ -8,13 +8,14 @@ namespace Chess.Cli.Game;
 
 internal sealed class GameRunner : IAsyncDisposable
 {
-    private readonly chess.Game.Game _game;
+    private chess.Game.Game _game;
     private readonly EnginePlayer _enginePlayer;
+    private readonly ConsolePlayer _consolePlayer;
     private readonly Color _playerColor;
     private readonly int _elo;
     private readonly bool _textRender;
 
-    public GameRunner(CliArguments.ParsedOptions options)
+    public GameRunner(Options options)
     {
         _playerColor = options.PlayerColor switch
         {
@@ -42,23 +43,41 @@ internal sealed class GameRunner : IAsyncDisposable
         }
         _elo = options.Elo;
         
-        var consolePlayer = new ConsolePlayer(_playerColor);
+        _consolePlayer = new ConsolePlayer(_playerColor);
         _enginePlayer = new EnginePlayer(engineColor, engineType);
         
         _textRender = options.TextRender;
         
-        _game = new chess.Game.Game(consolePlayer, _enginePlayer);
+        _game = new chess.Game.Game(_consolePlayer, _enginePlayer);
     }
 
     public async Task Run()
     {
         await _enginePlayer.Uci.StartEngine();
         await _enginePlayer.Uci.SetElo(_elo);
-        await _enginePlayer.Uci.NewGame();
 
-        await foreach (var snapshot in _game.GameLoop())
+        while (true)
         {
-            BoardRenderer.Render(snapshot, _playerColor, _textRender);
+            await _enginePlayer.Uci.NewGame();
+            
+            await foreach (var snapshot in _game.GameLoop())
+            {
+                BoardRenderer.Render(snapshot, _playerColor, _textRender);
+            }
+        
+            while (true)
+            {
+                var key = Console.ReadKey(true).Key;
+                
+                if (key == ConsoleKey.R)
+                {
+                    _game = new chess.Game.Game(_consolePlayer, _enginePlayer);
+                    break;
+                }
+                
+                if (key == ConsoleKey.Q)
+                    return;
+            }
         }
     }
 
