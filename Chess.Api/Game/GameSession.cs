@@ -21,8 +21,9 @@ public sealed class GameSession
         {
             if (moveStatus.MoveResult == chess.Moves.MoveResult.Invalid)
             {
-                await SendAsync(
+                await SendResponseAsync(
                     MoveStatusDto.ToMoveStatusDto(moveStatus),
+                    ResponseType.MoveStatus,
                     CancellationToken.None);
             }
         };
@@ -39,7 +40,7 @@ public sealed class GameSession
 
         if (latest is not null)
         {
-            await SendAsync(SnapshotDto.ToSnapshotDto(latest), ct);
+            await SendResponseAsync(SnapshotDto.ToSnapshotDto(latest), ResponseType.Snapshot, ct);
         }
     }
 
@@ -61,10 +62,13 @@ public sealed class GameSession
             LatestSnapshot = snapshot;
         }
 
-        await SendAsync(SnapshotDto.ToSnapshotDto(snapshot), ct);
+        await SendResponseAsync(SnapshotDto.ToSnapshotDto(snapshot), ResponseType.Snapshot, ct);
     }
 
-    private async Task SendAsync(object message, CancellationToken ct)
+    private async Task SendResponseAsync(
+        object message,
+        ResponseType responseType,
+        CancellationToken ct)
     {
         WebSocket? socket;
         lock (_sync)
@@ -79,7 +83,7 @@ public sealed class GameSession
 
         try
         {
-            await GameController.SendMessageAsync(socket, message, ct);
+            await GameController.SendMessageAsync(socket, message, responseType, ct);
         }
         catch (WebSocketException)
         {

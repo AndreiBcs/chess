@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Concurrent;
+using Chess.Api.Dtos;
 using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
@@ -42,21 +43,21 @@ public class GameController : ControllerBase
             if (message is null)
                 break;
 
-            var request = JsonSerializer.Deserialize<WebSocketRequest>(
+            var request = JsonSerializer.Deserialize<RequestObject>(
                 message,
                 JsonOptions);
 
             if (request is null)
                 continue;
             
-            Console.WriteLine(request);
+            //Console.WriteLine(request);
             
             // check the request type
             switch (request.Type)
             {
-                case RequestDtoType.StartOptions when session is null:
+                case RequestType.StartOptions when session is null:
                 {
-                    var options = request.Data.Deserialize<StartOptionsDto>(JsonOptions);
+                    var options = request.Data.Deserialize<StartRequestDto>(JsonOptions);
                     if (string.IsNullOrWhiteSpace(options.GameId))
                         break;
 
@@ -67,11 +68,11 @@ public class GameController : ControllerBase
                     break;
                 }
 
-                case RequestDtoType.Move when session is not null:
+                case RequestType.Move when session is not null:
                 {
-                    var moveDto = request.Data.Deserialize<MoveDto>(JsonOptions);
+                    var moveDto = request.Data.Deserialize<MoveRequestDto>(JsonOptions);
                     
-                    var move = MoveDto.FromMoveDto(moveDto);
+                    var move = MoveRequestDto.FromMoveDto(moveDto);
                     
                     session.Runner.HttpPlayer.ProvideMoveFromClient(move);
                     
@@ -81,11 +82,10 @@ public class GameController : ControllerBase
                 {
                     var error = new ErrorDto
                     {
-                        Type = ResponseDtoType.Error,
-                        Error = "Unknown Request"
+                        Error = "Unexpected request."
                     };
                     
-                    await SendMessageAsync(socket, error, ct);
+                    await SendMessageAsync(socket, error, ResponseType.Error, ct);
                     break;
                 }
             }
@@ -105,10 +105,15 @@ public class GameController : ControllerBase
     public static async Task SendMessageAsync(
         WebSocket socket, 
         object message,
+        ResponseType responseType,
         CancellationToken ct)
     {
+        var response = new ResponseObject(
+            responseType,
+            message);
+        
         var json = JsonSerializer.SerializeToUtf8Bytes(
-            message,
+            response,
             JsonOptions);
 
         await socket.SendAsync(

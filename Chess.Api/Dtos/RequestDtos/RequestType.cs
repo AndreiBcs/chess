@@ -1,6 +1,6 @@
 ﻿namespace Chess.Api.Dtos.RequestDtos;
 
-public enum RequestDtoType
+public enum RequestType
 {
     StartOptions,
     Move

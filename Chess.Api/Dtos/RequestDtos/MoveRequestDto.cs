@@ -8,15 +8,15 @@ public readonly record struct PositionDto(
     int Row,
     int Column);
 
-public readonly record struct MoveDto
+public readonly record struct MoveRequestDto
 {
     public PositionDto From { get; init; }
     public PositionDto To { get; init; }
     public string? Promotion { get; init; }
 
-    public static Move FromMoveDto(MoveDto dto)
+    public static Move FromMoveDto(MoveRequestDto requestDto)
     {
-        PieceType? promotion = dto.Promotion?.Trim().ToLowerInvariant()
+        PieceType? promotion = requestDto.Promotion?.Trim().ToLowerInvariant()
             switch
             {
                 "bishop" => PieceType.Bishop,
@@ -24,11 +24,13 @@ public readonly record struct MoveDto
                 "rook" => PieceType.Rook,
                 "queen" => PieceType.Queen,
                 null => null,
-                _ => throw new ArgumentException("Promotion must be bishop, knight, queen, or rook.", nameof(dto))
+                _ => throw new ArgumentException(
+                    "Promotion must be bishop, knight, queen, or rook.",
+                    nameof(requestDto))
             };
         
-        var from = new Position(dto.From.Row, dto.From.Column);
-        var to = new Position(dto.To.Row, dto.To.Column);
+        var from = new Position(requestDto.From.Row, requestDto.From.Column);
+        var to = new Position(requestDto.To.Row, requestDto.To.Column);
         
         return new Move(from, to, promotion);
     } 

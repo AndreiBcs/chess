@@ -7,7 +7,7 @@ namespace Chess.Api.Dtos.ResponseDtos;
 
 public readonly record struct SnapshotDto
 {
-    public ResponseDtoType Type { get; init; } 
+    public ResponseType Type { get; init; } 
     public Square[][] BoardSquares { get; init; }
     public GameStatus Status { get; init; }
     public Color CurrentTurn { get; init; }
@@ -28,7 +28,7 @@ public readonly record struct SnapshotDto
         
         var snapshotDto = new SnapshotDto
         {
-            Type = ResponseDtoType.Snapshot,
+            Type = ResponseType.Snapshot,
             CurrentTurn = snapshot.CurrentTurn,
             Status = snapshot.Status,
             BoardSquares = squaresDto
