@@ -16,6 +16,7 @@ public class GameTests
     }
 
     // dotnet test Chess.Tests --filter "FullyQualifiedName~GameTests.StockfishPlaysStockfish" --logger "console;verbosity=minimal"
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task StockfishPlaysStockfish()
     {
