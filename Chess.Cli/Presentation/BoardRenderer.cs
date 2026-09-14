@@ -6,10 +6,13 @@ namespace Chess.Cli.Presentation;
 
 public static class BoardRenderer
 {
-    public static void Render(GameSnapshot snapshot, chess.Color playerColor)
+    public static void Render(
+        GameSnapshot snapshot,
+        chess.Color playerColor,
+        bool textRender)
     {
-        Console.Write("\e[2J\e[3J\e[H");
-        Console.Out.Flush();
+        Console.Clear();
+        
         var table = new Table().Border(TableBorder.None).HideHeaders();
         
         table.AddColumn(new TableColumn("").Centered().PadLeft(0).PadRight(0));
@@ -43,7 +46,7 @@ public static class BoardRenderer
                 
                 var bgColor = (boardRow + boardColumn) % 2 == 0 ? "#b89a74" : "#6b4f35";
                 var letterId = piece?.LetterId;
-                var symbol = GetPieceSymbol(letterId);
+                var symbol = textRender ? GetPieceText(letterId) : GetPieceSymbol(letterId);
                 var fgColor = GetPieceTextColor(letterId);
 
                 rowCells.Add($"[{fgColor} on {bgColor}] {symbol} [/]");
@@ -55,6 +58,11 @@ public static class BoardRenderer
         AnsiConsole.Write(Align.Center(table));
     }
 
+    private static string GetPieceText(char? letterId)
+    {
+        return !letterId.HasValue ? " " : letterId.Value.ToString();
+    }
+    
     private static string GetPieceSymbol(char? letterId) => letterId switch
     {
         'p' => "♙",

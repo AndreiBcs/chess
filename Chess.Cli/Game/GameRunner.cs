@@ -12,6 +12,7 @@ internal sealed class GameRunner : IAsyncDisposable
     private readonly EnginePlayer _enginePlayer;
     private readonly Color _playerColor;
     private readonly int _elo;
+    private readonly bool _textRender;
 
     public GameRunner(CliArguments.ParsedOptions options)
     {
@@ -44,6 +45,8 @@ internal sealed class GameRunner : IAsyncDisposable
         var consolePlayer = new ConsolePlayer(_playerColor);
         _enginePlayer = new EnginePlayer(engineColor, engineType);
         
+        _textRender = options.TextRender;
+        
         _game = new chess.Game.Game(consolePlayer, _enginePlayer);
     }
 
@@ -55,7 +58,7 @@ internal sealed class GameRunner : IAsyncDisposable
 
         await foreach (var snapshot in _game.GameLoop())
         {
-            BoardRenderer.Render(snapshot, _playerColor);
+            BoardRenderer.Render(snapshot, _playerColor, _textRender);
         }
     }
 
