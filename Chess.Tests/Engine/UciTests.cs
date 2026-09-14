@@ -15,6 +15,7 @@ public class UciTests
         _testOutputHelper = testOutputHelper;
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task Stockfish_ReturnsValidMove()
     {
