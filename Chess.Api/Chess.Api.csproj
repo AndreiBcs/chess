@@ -11,8 +11,4 @@
     <ProjectReference Include="..\Chess.Engine\Chess.Engine.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.13" />
-  </ItemGroup>
-
 </Project>

@@ -1,11 +1,15 @@
-﻿using Chess.Api.Game;
+﻿using Chess.Api.Dtos.RequestDtos;
+using Chess.Api.Dtos.ResponseDtos;
+using Chess.Api.Game;
+using chess.Game;
 using chess.Moves;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Hubs;
 
-public class GameHub : Hub
+public sealed class GameHub : Hub
 {
+    private const string SessionCookieName = "chess_session_id";
     private readonly GameSessionManager _sessionManager;
 
     public GameHub(GameSessionManager sessionManager)
@@ -13,39 +17,114 @@ public class GameHub : Hub
         _sessionManager = sessionManager;
     }
 
-    public override async Task OnConnectedAsync()
+    public override Task OnDisconnectedAsync(Exception? exception)
     {
-        await base.OnConnectedAsync();
+        _sessionManager.RemoveConnection(Context.ConnectionId);
+        return base.OnDisconnectedAsync(exception);
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    public async Task StartGame(StartRequestDto request)
     {
-        await base.OnDisconnectedAsync(exception);
-    }
-
-    public async Task JoinGame(string id)
-    {
-        var session = _sessionManager.GetSession(id);
-        if (session is null)
+        try
         {
-            await Clients.Caller.SendAsync("Error", "Game session not found");
+            StartRequestDto.Validate(request);
+
+            var sessionId = ResolveSessionId(request.GameId);
+            var session = _sessionManager.GetSession(sessionId);
+
+            if (session is null)
+            {
+                session = _sessionManager.CreateSession(sessionId, request);
+                await session.StartAsync();
+            }
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
+            _sessionManager.RegisterConnection(Context.ConnectionId, sessionId);
+            SetSessionCookie(sessionId);
+
+            if (session.LastSnapshot is not null)
+            {
+                await Clients.Caller.SendAsync(
+                    "ReceiveMessage",
+                    SnapshotDto.ToSnapshotDto(session.LastSnapshot));
+            }
+        }
+        catch (Exception ex)
+        {
+            await SendErrorAsync(ex.Message);
+        }
+    }
+
+    public async Task SubmitMove(Move move)
+    {
+        try
+        {
+            var sessionId = _sessionManager.GetSessionIdForConnection(Context.ConnectionId);
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                await SendErrorAsync("No active game session for this connection.");
+                return;
+            }
+
+            var session = _sessionManager.GetSession(sessionId);
+            if (session is null)
+            {
+                await SendErrorAsync("Game session not found.");
+                return;
+            }
+
+            if (session.LastSnapshot is not null && session.LastSnapshot.Status != GameStatus.InProgress)
+            {
+                await SendErrorAsync("The game is already over.");
+                return;
+            }
+
+            session.ProvideMoveFromClient(move);
+        }
+        catch (Exception ex)
+        {
+            await SendErrorAsync(ex.Message);
+        }
+    }
+
+    private string ResolveSessionId(string? providedSessionId)
+    {
+        var httpContext = Context.GetHttpContext();
+        var cookieSessionId = httpContext?.Request.Cookies[SessionCookieName];
+
+        if (!string.IsNullOrWhiteSpace(providedSessionId))
+        {
+            return providedSessionId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cookieSessionId))
+        {
+            return cookieSessionId;
+        }
+
+        return Guid.NewGuid().ToString("N");
+    }
+
+    private void SetSessionCookie(string sessionId)
+    {
+        var httpContext = Context.GetHttpContext();
+        if (httpContext is null)
+        {
             return;
         }
-        
-        await Groups.AddToGroupAsync(Context.ConnectionId, id);
-        await Clients.Group(id).SendAsync("PlayerJoined", Context.ConnectionId);
+
+        httpContext.Response.Cookies.Append(SessionCookieName, sessionId, new CookieOptions
+        {
+            HttpOnly = true,
+            IsEssential = true,
+            SameSite = SameSiteMode.Lax,
+            Secure = true,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+        });
     }
 
-    public async Task SendMove(string sessionId, Move move)
+    private async Task SendErrorAsync(string message)
     {
-        var session = _sessionManager.GetSession(sessionId);
-
-        session?.ProvideMoveFromClient(move);
-    }
-
-    public async Task LeaveGame(string sessionId)
-    {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionId);
-        await Clients.Group(sessionId).SendAsync("PlayerLeft", Context.ConnectionId);
+        await Clients.Caller.SendAsync("ReceiveMessage", message);
     }
 }
