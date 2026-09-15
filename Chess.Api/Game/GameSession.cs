@@ -1,4 +1,3 @@
-using System.Net.WebSockets;
 using chess.Game;
 using chess.Moves;
 
@@ -6,17 +5,16 @@ namespace Chess.Api.Game;
 
 public sealed class GameSession
 {
-    private readonly Lock _sync = new();
+    private readonly Lock _lock = new();
     private readonly GameRunner _runner;
-    private WebSocket? _socket;
-    private GameSnapshot? _latestSnapshot;
-    private bool _gameStarted;
-    
+    public string SessionId { get; }
+    public CancellationTokenSource? GameCts { get; private set; }
     public event Func<GameSnapshot,CancellationToken, Task>? SnapshotPublished;
     public event Func<MoveStatus, CancellationToken, Task>? MoveStatusReceived;
 
-    public GameSession(GameRunner runner)
+    public GameSession(string id, GameRunner runner)
     {
+        SessionId = id;
         _runner = runner;
         
         // subscribe to http player events
@@ -29,61 +27,30 @@ public sealed class GameSession
         };
     }
 
-    public async Task AttachAsync(WebSocket socket, CancellationToken ct)
-    {
-        GameSnapshot? latest;
-        bool shouldStartGame;
-        
-        lock (_sync)
-        {
-            _socket = socket;
-            latest = _latestSnapshot;
-            shouldStartGame = !_gameStarted;
-            _gameStarted = true;
-        }
-
-        // send latest snapshot if available
-        if (latest is not null)
-        {
-            await OnSnapshotPublishedAsync(latest, ct);
-        }
-        
-        // start game loop on first client attach
-        if (shouldStartGame)
-        {
-            _ = RunGameLoopAsync(ct);
-        }
-    }
-
-    public void Detach(WebSocket socket)
-    {
-        lock (_sync)
-        {
-            if (ReferenceEquals(_socket, socket))
-            {
-                _socket = null;
-            }
-        }
-    }
-
     private async Task RunGameLoopAsync(CancellationToken ct)
     {
+        GameCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         try
         {
-            await foreach (var snapshot in _runner.Run(ct))
+            await foreach (var snapshot in _runner.Run(GameCts.Token))
             {
-                lock (_sync)
-                {
-                    _latestSnapshot = snapshot;
-                }
-
-                await OnSnapshotPublishedAsync(snapshot, ct);
+                await OnSnapshotPublishedAsync(snapshot, GameCts.Token);
             }
         }
         catch (OperationCanceledException)
         {
             // game was canceled
         }
+    }
+
+    public void StopGame()
+    {
+        GameCts?.Cancel();
+    }
+
+    public void ProvideMoveFromClient(Move move)
+    {
+        _runner.HttpPlayer.ProvideMoveFromClient(move);
     }
     
     private async Task OnSnapshotPublishedAsync(GameSnapshot snapshot, CancellationToken ct)
@@ -100,10 +67,5 @@ public sealed class GameSession
         {
             await MoveStatusReceived.Invoke(moveStatus, ct);
         }
-    }
-
-    public void ProvideMoveFromClient(Move move)
-    {
-        _runner.HttpPlayer.ProvideMoveFromClient(move);
     }
 }
