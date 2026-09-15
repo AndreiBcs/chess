@@ -9,4 +9,5 @@ builder.Services.AddSingleton<GameSessionManager>();
 var app = builder.Build();
 
 app.MapHub<GameHub>("/gamehub");
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.Run();

@@ -1,4 +1,5 @@
-﻿import {createSocket, sendStartOptions, sendMove} from "../api/index.ts"
+﻿import {createConnection, startGame, submitMove} from "../api/index.ts"
+import type { HubConnection } from "@microsoft/signalr";
 import {useEffect, useRef, useState} from "react";
 import Board from "../components/Board.tsx";
 import type {GameConfig, Board as BoardState, GameStatus, PieceType, Position} from "../game/types.ts";
@@ -8,13 +9,34 @@ type PendingPromotion = {
     to: Position;
 };
 
+type ApiMessage = Record<string, unknown>;
+
+function isSnapshot(message: unknown): message is ApiMessage & {
+    boardSquares: Array<Array<ApiMessage & {position: {row: number, column: number}, piece: ApiMessage | null}>>;
+    status: string | number;
+} {
+    return typeof message === "object" && message !== null && "boardSquares" in message && "status" in message;
+}
+
+function isMoveStatus(message: unknown): message is ApiMessage & {resultReason: string} {
+    return typeof message === "object" && message !== null && "resultReason" in message;
+}
+
+function messageValue(message: ApiMessage, key: string) {
+    return message[key] as string | number;
+}
+
+function enumName<const T extends string>(value: string | number, names: readonly T[]): T {
+    return (typeof value === "number" ? names[value] : value) as T;
+}
+
 export default function GamePage ({config, gameId, onExit}: {config: GameConfig, gameId: string, onExit: () => void}) {
     const [board, setBoard] = useState<BoardState>();
     const [status, setStatus] = useState<GameStatus>("InProgress");
     const [selected, setSelected] = useState<Position>();
     const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion>();
     const [invalidMove, setInvalidMove] = useState<string>();
-    const socketRef = useRef<WebSocket | null>(null);
+    const connectionRef = useRef<HubConnection | null>(null);
     const invalidMoveTimerRef = useRef<number | undefined>(undefined);
 
     const gameEnded = status !== "InProgress";
@@ -26,40 +48,54 @@ export default function GamePage ({config, gameId, onExit}: {config: GameConfig,
                 ? ""
                 : "Draw";
 
+    function showInvalidMove(message: string) {
+        setInvalidMove(message);
+        window.clearTimeout(invalidMoveTimerRef.current);
+        invalidMoveTimerRef.current = window.setTimeout(() => setInvalidMove(undefined), 2000);
+    }
+
     useEffect(() => {
-        const socket = createSocket();
-        socketRef.current = socket;
-        socket.onopen = () => {
-            sendStartOptions(config, gameId, socket);
-        }
+        const connection = createConnection();
+        connectionRef.current = connection;
+        connection.on("ReceiveMessage", (message: unknown) => {
+            if (typeof message === "string") {
+                setInvalidMove(message);
+                return;
+            }
 
-        socket.onmessage = (e) => {
-            const message = JSON.parse(e.data);
-
-            if (message.type === "Snapshot"){
+            if (isSnapshot(message)) {
                 setBoard({
-                    squares: message.boardSquares.flat().map((square: {position: {row: number, column: number}}) => ({
+                    squares: message.boardSquares.flat().map(square => ({
                         ...square,
+                        color: enumName(messageValue(square, "color"), ["White", "Black"]),
                         position: {row: square.position.row, col: square.position.column},
+                        piece: square.piece ? {
+                            ...square.piece,
+                            color: enumName(messageValue(square.piece, "color"), ["White", "Black"]),
+                            type: enumName(messageValue(square.piece, "type"), ["Pawn", "Rook", "Knight", "Bishop", "Queen", "King"]),
+                            letterId: String(square.piece.letterId ?? "")
+                        } : null
                     }))
                 })
-                setStatus(message.status);
-            } else if (message.type === "MoveResult") {
-                if (message.result === "Invalid") {
-                    setInvalidMove("The move is not valid");
-                    window.clearTimeout(invalidMoveTimerRef.current);
-                    invalidMoveTimerRef.current = window.setTimeout(() => setInvalidMove(undefined), 2000);
-                }
+                setStatus(enumName(message.status, ["InProgress", "WhiteWon", "BlackWon", "DrawByStalemate", "DrawByInsufficientMaterial", "DrawByThreefoldRepetition", "DrawBy75MoveRule"]));
+            } else if (isMoveStatus(message)) {
+                showInvalidMove(message.resultReason);
             }
-        }
+
+        });
+
+        connection.onreconnected(() => startGame(connection, config, gameId));
+        connection.start().then(() => startGame(connection, config, gameId)).catch(() => showInvalidMove("Unable to connect to the game server."));
+
         return () => {
-            socket.close();
+            connection.off("ReceiveMessage");
+            void connection.stop();
             window.clearTimeout(invalidMoveTimerRef.current);
         };
     }, [config, gameId]);
 
     function exitGame() {
-        socketRef.current?.close();
+        void connectionRef.current?.stop();
         onExit();
     }
 
@@ -89,16 +125,16 @@ export default function GamePage ({config, gameId, onExit}: {config: GameConfig,
             return;
         }
 
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-            sendMove({from: selected, to: position}, socketRef.current);
+        if (connectionRef.current?.state === "Connected") {
+            void submitMove(connectionRef.current, {from: selected, to: position});
         }
         setSelected(undefined);
     }
 
     function promotePiece(piece: PieceType) {
-        if (!pendingPromotion || socketRef.current?.readyState !== WebSocket.OPEN) return;
+        if (!pendingPromotion || connectionRef.current?.state !== "Connected") return;
 
-        sendMove({...pendingPromotion, promotion: piece}, socketRef.current);
+        void submitMove(connectionRef.current, {...pendingPromotion, promotion: piece});
         setPendingPromotion(undefined);
     }
 
