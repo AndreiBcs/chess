@@ -7,7 +7,7 @@ using chess.Game;
 
 namespace Chess.Api.Game;
 
-public sealed class GameRunner : IAsyncDisposable
+public sealed class GameRunner
 {
     private readonly chess.Game.Game _game;
     private readonly EnginePlayer _enginePlayer;
@@ -60,10 +60,5 @@ public sealed class GameRunner : IAsyncDisposable
         {
             yield return snapshot;
         }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _enginePlayer.DisposeAsync();
     }
 }

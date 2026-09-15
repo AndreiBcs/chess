@@ -1,30 +1,30 @@
 using System.Net.WebSockets;
-using Chess.Api.Controllers;
-using Chess.Api.Dtos.ResponseDtos;
 using chess.Game;
+using chess.Moves;
 
 namespace Chess.Api.Game;
 
 public sealed class GameSession
 {
     private readonly Lock _sync = new();
+    private readonly GameRunner _runner;
     private WebSocket? _socket;
-
-    public GameRunner Runner { get; }
-    private GameSnapshot? LatestSnapshot { get; set; }
-    public Task? GameTask { get; set; }
+    private GameSnapshot? _latestSnapshot;
+    private bool _gameStarted;
+    
+    public event Func<GameSnapshot,CancellationToken, Task>? SnapshotPublished;
+    public event Func<MoveStatus, CancellationToken, Task>? MoveStatusReceived;
 
     public GameSession(GameRunner runner)
     {
-        Runner = runner;
-        Runner.HttpPlayer.MoveStatusReceived += async moveStatus =>
+        _runner = runner;
+        
+        // subscribe to http player events
+        _runner.HttpPlayer.MoveStatusReceived += async moveStatus =>
         {
-            if (moveStatus.MoveResult == chess.Moves.MoveResult.Invalid)
+            if (moveStatus.MoveResult == MoveResult.Invalid)
             {
-                await SendResponseAsync(
-                    MoveStatusDto.ToMoveStatusDto(moveStatus),
-                    ResponseType.MoveStatus,
-                    CancellationToken.None);
+                await OnMoveStatusReceivedAsync(moveStatus, CancellationToken.None);
             }
         };
     }
@@ -32,15 +32,26 @@ public sealed class GameSession
     public async Task AttachAsync(WebSocket socket, CancellationToken ct)
     {
         GameSnapshot? latest;
+        bool shouldStartGame;
+        
         lock (_sync)
         {
             _socket = socket;
-            latest = LatestSnapshot;
+            latest = _latestSnapshot;
+            shouldStartGame = !_gameStarted;
+            _gameStarted = true;
         }
 
+        // send latest snapshot if available
         if (latest is not null)
         {
-            await SendResponseAsync(SnapshotDto.ToSnapshotDto(latest), ResponseType.Snapshot, ct);
+            await OnSnapshotPublishedAsync(latest, ct);
+        }
+        
+        // start game loop on first client attach
+        if (shouldStartGame)
+        {
+            _ = RunGameLoopAsync(ct);
         }
     }
 
@@ -55,39 +66,44 @@ public sealed class GameSession
         }
     }
 
-    public async Task PublishAsync(GameSnapshot snapshot, CancellationToken ct)
+    private async Task RunGameLoopAsync(CancellationToken ct)
     {
-        lock (_sync)
-        {
-            LatestSnapshot = snapshot;
-        }
-
-        await SendResponseAsync(SnapshotDto.ToSnapshotDto(snapshot), ResponseType.Snapshot, ct);
-    }
-
-    private async Task SendResponseAsync(
-        object message,
-        ResponseType responseType,
-        CancellationToken ct)
-    {
-        WebSocket? socket;
-        lock (_sync)
-        {
-            socket = _socket;
-        }
-
-        if (socket is null || socket.State != WebSocketState.Open)
-        {
-            return;
-        }
-
         try
         {
-            await GameController.SendMessageAsync(socket, message, responseType, ct);
+            await foreach (var snapshot in _runner.Run(ct))
+            {
+                lock (_sync)
+                {
+                    _latestSnapshot = snapshot;
+                }
+
+                await OnSnapshotPublishedAsync(snapshot, ct);
+            }
         }
-        catch (WebSocketException)
+        catch (OperationCanceledException)
         {
-            Detach(socket);
+            // game was canceled
         }
+    }
+    
+    private async Task OnSnapshotPublishedAsync(GameSnapshot snapshot, CancellationToken ct)
+    {
+        if (SnapshotPublished is not null)
+        {
+            await SnapshotPublished.Invoke(snapshot, ct);
+        }
+    }
+
+    private async Task OnMoveStatusReceivedAsync(MoveStatus moveStatus, CancellationToken ct)
+    {
+        if (MoveStatusReceived is not null)
+        {
+            await MoveStatusReceived.Invoke(moveStatus, ct);
+        }
+    }
+
+    public void ProvideMoveFromClient(Move move)
+    {
+        _runner.HttpPlayer.ProvideMoveFromClient(move);
     }
 }

@@ -7,6 +7,7 @@ using Chess.Api.Dtos;
 using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
+using chess.Game;
 using chess.Moves;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,93 +35,113 @@ public class GameController : ControllerBase
         using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
         
         GameSession? session = null;
-            
-        while (socket.State == WebSocketState.Open)
+
+        try
         {
-            // get the request
-            var message = await ReceiveMessageAsync(socket, ct);
-
-            if (message is null)
-                break;
-
-            var request = JsonSerializer.Deserialize<RequestObject>(
-                message,
-                JsonOptions);
-
-            if (request is null)
-                continue;
-            
-            //Console.WriteLine(request);
-            
-            // check the request type
-            switch (request.Type)
+            while (socket.State == WebSocketState.Open)
             {
-                case RequestType.StartOptions when session is null:
-                {
-                    var options = request.Data.Deserialize<StartRequestDto>(JsonOptions);
-                    if (string.IsNullOrWhiteSpace(options.GameId))
-                        break;
+                var message = await ReceiveMessageAsync(socket, ct);
 
-                    session = Sessions.GetOrAdd(options.GameId, _ => new GameSession(new GameRunner(options)));
-                    await session.AttachAsync(socket, ct);
-                    session.GameTask ??= RunGameAsync(session, CancellationToken.None);
-
+                if (message is null)
                     break;
-                }
 
-                case RequestType.Move when session is not null:
+                var request = JsonSerializer.Deserialize<RequestObject>(message, JsonOptions);
+
+                if (request is null)
+                    continue;
+            
+                switch (request.Type)
                 {
-                    var moveDto = request.Data.Deserialize<MoveRequestDto>(JsonOptions);
-                    
-                    var move = MoveRequestDto.FromMoveDto(moveDto);
-                    
-                    session.Runner.HttpPlayer.ProvideMoveFromClient(move);
-                    
-                    break;
-                }
-                default:
-                {
-                    var error = new ErrorDto
+                    case RequestType.StartOptions when session is null:
                     {
-                        Error = "Unexpected request."
-                    };
+                        var options = request.Data.Deserialize<StartRequestDto>(JsonOptions);
+                        
+                        if (string.IsNullOrWhiteSpace(options.GameId))
+                            break;
+
+                        session = Sessions.GetOrAdd(options.GameId, _ => 
+                            new GameSession(new GameRunner(options)));
+                        
+                        // Subscribe to session events
+                        session.SnapshotPublished += (snapshot, token) => 
+                            SendSnapshotAsync(socket, snapshot, token);
+                        
+                        session.MoveStatusReceived += (moveStatus, token) => 
+                            SendMoveStatusAsync(socket, moveStatus, token);
+                        
+                        await session.AttachAsync(socket, ct);
+
+                        break;
+                    }
+
+                    case RequestType.Move when session is not null:
+                    {
+                        var moveDto = request.Data.Deserialize<MoveRequestDto>(JsonOptions);
                     
-                    await SendMessageAsync(socket, error, ResponseType.Error, ct);
-                    break;
+                        var move = MoveRequestDto.FromMoveDto(moveDto);
+                    
+                        session.ProvideMoveFromClient(move);
+                    
+                        break;
+                    }
+                    default:
+                    {
+                        var error = new ErrorDto { Error = "Unexpected request." };
+                        await SendMessageAsync(socket, error, ResponseType.Error, ct);
+                        break;
+                    }
                 }
             }
         }
-        
-        session?.Detach(socket);
-    }
-
-    private static async Task RunGameAsync(GameSession session, CancellationToken ct)
-    {
-        await foreach (var snapshot in session.Runner.Run(ct))
+        finally
         {
-            await session.PublishAsync(snapshot, ct);
+            session?.Detach(socket);
         }
     }
+    
+    private static async Task SendSnapshotAsync(
+        WebSocket socket, 
+        GameSnapshot snapshot,
+        CancellationToken ct)
+    {
+        await SendMessageAsync(
+            socket, 
+            SnapshotDto.ToSnapshotDto(snapshot), 
+            ResponseType.Snapshot, 
+            ct);
+    }
 
-    public static async Task SendMessageAsync(
+    private static async Task SendMoveStatusAsync(
+        WebSocket socket, 
+        MoveStatus moveStatus, 
+        CancellationToken ct)
+    {
+        await SendMessageAsync(
+            socket, 
+            MoveStatusDto.ToMoveStatusDto(moveStatus),
+            ResponseType.MoveStatus,
+            ct);
+    }
+
+    private static async Task SendMessageAsync(
         WebSocket socket, 
         object message,
         ResponseType responseType,
         CancellationToken ct)
     {
-        var response = new ResponseObject(
-            responseType,
-            message);
-        
-        var json = JsonSerializer.SerializeToUtf8Bytes(
-            response,
-            JsonOptions);
+        if (socket.State != WebSocketState.Open)
+            return;
 
-        await socket.SendAsync(
-            json,
-            WebSocketMessageType.Text,
-            true,
-            ct);
+        try
+        {
+            var response = new ResponseObject(responseType, message);
+            var json = JsonSerializer.SerializeToUtf8Bytes(response, JsonOptions);
+            await socket.SendAsync(json, WebSocketMessageType.Text, true, ct);
+        }
+        catch (WebSocketException)
+        {
+            // connection lost
+        }
     }
 
     private static async Task<string?> ReceiveMessageAsync(
