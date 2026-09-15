@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chess single-player websocket contract",
+  "description": "Exact payload contract currently implemented by the SignalR hub for a single player vs engine game.",
+  "clientToServer": [
+    {
+      "method": "StartGame",
+      "description": "Starts or resumes a game. The server resolves the session id from the payload or the chess_session_id cookie.",
+      "payload": {
+        "playerColor": "white | black",
+        "engineType": "stockfish",
+        "elo": 1320,
+        "gameId": "string | null"
+      },
+      "example": {
+        "playerColor": "white",
+        "engineType": "stockfish",
+        "elo": 1600,
+        "gameId": null
+      }
+    },
+    {
+      "method": "SubmitMove",
+      "description": "Submits a move for the active session. The server validates it and either updates the game or returns a move-status error.",
+      "payload": {
+        "from": {
+          "row": 0,
+          "column": 0
+        },
+        "to": {
+          "row": 0,
+          "column": 1
+        },
+        "promotion": "queen | rook | bishop | knight | null"
+      },
+      "example": {
+        "from": {
+          "row": 6,
+          "column": 4
+        },
+        "to": {
+          "row": 4,
+          "column": 4
+        },
+        "promotion": null
+      }
+    }
+  ],
+  "serverToClient": [
+    {
+      "method": "ReceiveMessage",
+      "description": "The server emits one concrete payload at a time. The payload is not wrapped in a Type/Data envelope.",
+      "payloads": [
+        {
+          "type": "SnapshotDto",
+          "shape": {
+            "boardSquares": [
+              [
+                {
+                  "color": "White | Black",
+                  "position": {
+                    "row": 0,
+                    "column": 0
+                  },
+                  "piece": {
+                    "color": "White | Black",
+                    "type": "Pawn | Rook | Knight | Bishop | Queen | King",
+                    "hasMoved": true,
+                    "letterId": "P | R | N | B | Q | K"
+                  }
+                }
+              ]
+            ],
+            "status": "InProgress | WhiteWon | BlackWon | DrawByStalemate | DrawByInsufficientMaterial | DrawByThreefoldRepetition | DrawBy75MoveRule",
+            "currentTurn": "White | Black"
+          }
+        },
+        {
+          "type": "MoveStatusDto",
+          "shape": {
+            "resultReason": "string"
+          }
+        },
+        {
+          "type": "string",
+          "description": "Error message sent when the game cannot be started, the session is missing, the move is rejected due to lifecycle state, or another server-side issue occurs."
+        }
+      ]
+    }
+  ],
+  "sessionLifecycle": {
+    "cookieName": "chess_session_id",
+    "cookieLifeMinutes": 5,
+    "sessionBehavior": [
+      "A session is created when StartGame is called with a new session id.",
+      "The session id is stored in the chess_session_id cookie and reused on reconnect.",
+      "The server keeps the session in memory in GameSessionManager.",
+      "Once the snapshot status is no longer InProgress, the game is treated as complete and the session is effectively closed."
+    ]
+  }
+}

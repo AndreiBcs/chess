@@ -7,45 +7,26 @@ using chess.Game;
 
 namespace Chess.Api.Game;
 
-public sealed class GameRunner : IAsyncDisposable
+public sealed class GameRunner
 {
     private readonly chess.Game.Game _game;
     private readonly EnginePlayer _enginePlayer;
     public readonly HttpPlayer HttpPlayer;
     private readonly int _elo;
 
-    public GameRunner(StartOptionsDto options)
+    public GameRunner(StartRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(options.PlayerColor))
-            throw new ArgumentException("PlayerColor is required.", nameof(options));
+        var normalizedPlayerColor = request.PlayerColor.Trim().ToLowerInvariant();
+        var normalizedEngineType = request.EngineType.Trim().ToLowerInvariant();
 
-        if (string.IsNullOrWhiteSpace(options.EngineType))
-            throw new ArgumentException("EngineType is required.", nameof(options));
+        var playerColor = normalizedPlayerColor == "white" ? Color.White : Color.Black;
+        var engineColor = playerColor == Color.White ? Color.Black : Color.White;
+        var engineType = ChessEngine.Stockfish;
 
-        var playerColor = options.PlayerColor.Trim().ToLowerInvariant() switch
-        {
-            "white" => Color.White,
-            "black" => Color.Black,
-            _ => throw new ArgumentException("PlayerColor must be 'white' or 'black'.", nameof(options))
-        };
-        
-        var engineColor = playerColor == Color.White ?
-            Color.Black : 
-            Color.White;
-
-        var engineType = options.EngineType.Trim().ToLowerInvariant() switch
-        {
-            "stockfish" => ChessEngine.Stockfish,
-            _ => throw new ArgumentException("EngineType must be 'stockfish'.", nameof(options))
-        };
-
-        if (options.Elo <= 0)
-            throw new ArgumentOutOfRangeException(nameof(options), "Elo must be greater than zero.");
-
-        _elo = options.Elo;
+        _elo = request.Elo;
         HttpPlayer = new HttpPlayer(playerColor);
         _enginePlayer = new EnginePlayer(engineColor, engineType);
-        
+
         _game = new chess.Game.Game(HttpPlayer, _enginePlayer);
     }
 
@@ -60,10 +41,5 @@ public sealed class GameRunner : IAsyncDisposable
         {
             yield return snapshot;
         }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _enginePlayer.DisposeAsync();
     }
 }

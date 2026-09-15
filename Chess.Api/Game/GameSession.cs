@@ -1,89 +1,112 @@
-using System.Net.WebSockets;
-using Chess.Api.Controllers;
-using Chess.Api.Dtos.ResponseDtos;
+using Chess.Api.Dtos.RequestDtos;
 using chess.Game;
+using chess.Moves;
 
 namespace Chess.Api.Game;
 
 public sealed class GameSession
 {
-    private readonly Lock _sync = new();
-    private WebSocket? _socket;
+    private readonly Lock _startLock = new();
+    private readonly GameRunner _runner;
+    private Task? _gameLoopTask;
+    public string SessionId { get; }
+    public GameSnapshot? LastSnapshot { get; private set; }
+    private CancellationTokenSource? GameCts { get; set; }
+    public event Func<GameSnapshot, CancellationToken, Task>? SnapshotPublished;
+    public event Func<MoveStatus, CancellationToken, Task>? MoveStatusReceived;
+    public event Func<string, CancellationToken, Task>? ErrorOccurred;
 
-    public GameRunner Runner { get; }
-    private GameSnapshot? LatestSnapshot { get; set; }
-    public Task? GameTask { get; set; }
-
-    public GameSession(GameRunner runner)
+    public static GameSession Create(string id, StartRequestDto request)
     {
-        Runner = runner;
-        Runner.HttpPlayer.MoveStatusReceived += async moveStatus =>
+        StartRequestDto.Validate(request);
+        return new GameSession(id, new GameRunner(request));
+    }
+
+    private GameSession(string id, GameRunner runner)
+    {
+        SessionId = id;
+        _runner = runner;
+
+        _runner.HttpPlayer.MoveStatusReceived += async moveStatus =>
         {
-            if (moveStatus.MoveResult == chess.Moves.MoveResult.Invalid)
+            if (moveStatus.MoveResult == MoveResult.Invalid)
             {
-                await SendAsync(
-                    MoveStatusDto.ToMoveStatusDto(moveStatus),
-                    CancellationToken.None);
+                await OnMoveStatusReceivedAsync(moveStatus, CancellationToken.None);
             }
         };
     }
 
-    public async Task AttachAsync(WebSocket socket, CancellationToken ct)
+    public Task StartAsync()
     {
-        GameSnapshot? latest;
-        lock (_sync)
+        lock (_startLock)
         {
-            _socket = socket;
-            latest = LatestSnapshot;
-        }
-
-        if (latest is not null)
-        {
-            await SendAsync(SnapshotDto.ToSnapshotDto(latest), ct);
-        }
-    }
-
-    public void Detach(WebSocket socket)
-    {
-        lock (_sync)
-        {
-            if (ReferenceEquals(_socket, socket))
+            if (_gameLoopTask is not null)
             {
-                _socket = null;
+                return _gameLoopTask;
             }
+
+            GameCts = new CancellationTokenSource();
+            _gameLoopTask = RunGameLoopAsync(GameCts.Token);
+            return _gameLoopTask;
         }
     }
 
-    public async Task PublishAsync(GameSnapshot snapshot, CancellationToken ct)
+    private async Task RunGameLoopAsync(CancellationToken ct)
     {
-        lock (_sync)
-        {
-            LatestSnapshot = snapshot;
-        }
-
-        await SendAsync(SnapshotDto.ToSnapshotDto(snapshot), ct);
-    }
-
-    private async Task SendAsync(object message, CancellationToken ct)
-    {
-        WebSocket? socket;
-        lock (_sync)
-        {
-            socket = _socket;
-        }
-
-        if (socket is null || socket.State != WebSocketState.Open)
-        {
-            return;
-        }
-
         try
         {
-            await GameController.SendMessageAsync(socket, message, ct);
+            await foreach (var snapshot in _runner.Run(ct))
+            {
+                LastSnapshot = snapshot;
+                await OnSnapshotPublishedAsync(snapshot, ct);
+
+                if (snapshot.Status != GameStatus.InProgress)
+                {
+                    break;
+                }
+            }
         }
-        catch (WebSocketException)
+        catch (OperationCanceledException)
         {
-            Detach(socket);
+            // game was canceled by the server lifecycle
         }
+        catch (Exception ex)
+        {
+            await OnErrorOccurredAsync(ex.Message, ct);
+        }
+    }
+
+    public void ProvideMoveFromClient(Move move)
+    {
+        _runner.HttpPlayer.ProvideMoveFromClient(move);
+    }
+    
+    private async Task OnSnapshotPublishedAsync(GameSnapshot snapshot, CancellationToken ct)
+    {
+        if (SnapshotPublished is not null)
+        {
+            await SnapshotPublished.Invoke(snapshot, ct);
+        }
+    }
+
+    private async Task OnMoveStatusReceivedAsync(MoveStatus moveStatus, CancellationToken ct)
+    {
+        if (MoveStatusReceived is not null)
+        {
+            await MoveStatusReceived.Invoke(moveStatus, ct);
+        }
+    }
+
+    private async Task OnErrorOccurredAsync(string message, CancellationToken ct)
+    {
+        if (ErrorOccurred is not null)
+        {
+            await ErrorOccurred.Invoke(message, ct);
+        }
+    }
+    
+    public void Cancel()
+    {
+        GameCts?.Cancel();
     }
 }

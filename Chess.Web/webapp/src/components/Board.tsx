@@ -23,7 +23,7 @@ export default function Board({ board, playerColor, selected, onSquareClick }: B
     ));
 
     return (
-        <div className={`grid aspect-square w-full grid-cols-8 overflow-hidden border-4 border-[#3d2b24] shadow-2xl ${playerColor === "Black" ? "rotate-180" : ""}`}>
+        <div aria-label="Chess board" className={`grid aspect-square w-full grid-cols-8 overflow-hidden border-4 border-[#3d2b24] shadow-2xl ${playerColor === "Black" ? "rotate-180" : ""}`}>
             {squares}
         </div>
     );
