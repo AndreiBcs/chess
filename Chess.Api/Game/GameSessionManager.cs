@@ -77,6 +77,18 @@ public sealed class GameSessionManager : IDisposable
     {
         lock (_lock)
         {
+            if (_connectionToSession.TryGetValue(connectionId, out var previousSessionId) &&
+                previousSessionId != sessionId &&
+                _sessionConnections.TryGetValue(previousSessionId, out var previousConnections))
+            {
+                previousConnections.Remove(connectionId);
+
+                if (previousConnections.Count == 0)
+                {
+                    _idleSince[previousSessionId] = DateTime.UtcNow;
+                }
+            }
+
             _connectionToSession[connectionId] = sessionId;
 
             if (!_sessionConnections.TryGetValue(sessionId, out var connections))

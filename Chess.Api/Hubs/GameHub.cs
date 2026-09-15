@@ -35,7 +35,7 @@ public sealed class GameHub : Hub
             if (session is null)
             {
                 session = _sessionManager.CreateSession(sessionId, request);
-                await session.StartAsync();
+                _ = session.StartAsync();
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
@@ -55,7 +55,7 @@ public sealed class GameHub : Hub
         }
     }
 
-    public async Task SubmitMove(Move move)
+    public async Task SubmitMove(MoveRequestDto moveRequest)
     {
         try
         {
@@ -79,7 +79,7 @@ public sealed class GameHub : Hub
                 return;
             }
 
-            session.ProvideMoveFromClient(move);
+            session.ProvideMoveFromClient(MoveRequestDto.FromMoveDto(moveRequest));
         }
         catch (Exception ex)
         {
