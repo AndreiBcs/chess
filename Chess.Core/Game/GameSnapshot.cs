@@ -290,4 +290,27 @@ public sealed record GameSnapshot
             previousMove,
             positionHistory);
     }
+
+    public static GameSnapshot CreateCustomSnapshot(
+        GameStatus gameStatus,
+        Board.Board board,
+        Color currentTurn,
+        List<CastlingRights>? castlingRights,
+        Position? enPassantTarget,
+        int? halfMoveClock,
+        int? fullMoveCounter,
+        Move previousMove,
+        List<string>? positionHistory)
+    {
+        return new GameSnapshot(
+            gameStatus,
+            board,
+            currentTurn,
+            castlingRights?.ToImmutableList() ?? ImmutableList<CastlingRights>.Empty,
+            enPassantTarget,
+            halfMoveClock ?? 0,
+            fullMoveCounter ?? 1,
+            previousMove,
+            positionHistory?.ToImmutableList() ?? ImmutableList<string>.Empty);
+    }
 }
