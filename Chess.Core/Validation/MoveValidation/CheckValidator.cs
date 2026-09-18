@@ -17,7 +17,7 @@ public static class CheckValidator
 
             if (piece.GetPiecePositions(board, true).Contains(kingPosition))
             {
-                // king is in an attacked position
+                // king is in check
                 return true;
             }
         }

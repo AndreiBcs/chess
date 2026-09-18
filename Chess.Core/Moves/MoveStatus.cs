@@ -9,5 +9,6 @@ public readonly record struct MoveStatus(
     bool IsCastling = false,
     bool IsEnPassant = false,
     bool IsPromotion = false,
+    bool IsCheck = false,
     CastlingRights? CastlingRights = null,
     string? InvalidMoveReason = null);

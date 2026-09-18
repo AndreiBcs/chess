@@ -2,6 +2,7 @@
 using chess.Board;
 using chess.Moves;
 using chess.Pieces;
+using chess.Validation.MoveValidation;
 using chess.Validation.StateValidation;
 
 namespace chess.Game;
@@ -16,9 +17,10 @@ public sealed record GameSnapshot
     public readonly int HalfMoveClock;
     public readonly int FullMoveCounter;
     public readonly Move PreviousMove;
+    public readonly MoveStatus PreviousMoveStatus;
     public readonly ImmutableList<string> PositionHistory;
 
-    private GameSnapshot(
+    private GameSnapshot( 
         GameStatus status,
         Board.Board board,
         Color currentTurn,
@@ -27,6 +29,7 @@ public sealed record GameSnapshot
         int halfMoveClock,
         int fullMoveCounter,
         Move previousMove,
+        MoveStatus previousMoveStatus,
         ImmutableList<string> positionHistory)
     {
         Status = status;
@@ -38,6 +41,7 @@ public sealed record GameSnapshot
         FullMoveCounter = fullMoveCounter;
         PreviousMove = previousMove;
         PositionHistory = positionHistory;
+        PreviousMoveStatus = previousMoveStatus;
     }
     
     public static GameSnapshot GetInitialGameSnapshot()
@@ -84,6 +88,7 @@ public sealed record GameSnapshot
         const int fullMoveCounter = 1;
         Position? enPassantTarget = null;
         var previousMove = new Move(new Position(0, 0), new Position(0, 0));
+        var previousStatus = new MoveStatus(MoveResult.Valid);
         var positionHistory = new List<string>().ToImmutableList();
 
         return new GameSnapshot(
@@ -95,6 +100,7 @@ public sealed record GameSnapshot
             halfMoveClock, 
             fullMoveCounter, 
             previousMove,
+            previousStatus,
             positionHistory);
     }
     
@@ -264,6 +270,11 @@ public sealed record GameSnapshot
             fullMoveCounter);
         
         var positionHistory = previousSnapshot.PositionHistory.Add(newPosition);
+        
+        // update previous move status
+        moveStatus = CheckValidator.IsKingInCheck(board, currentTurn) 
+            ? moveStatus with { IsCheck = true } 
+            : moveStatus;
 
         // update game status
         var tempSnapshot = new GameSnapshot(
@@ -275,6 +286,7 @@ public sealed record GameSnapshot
             halfMoveClock,
             fullMoveCounter,
             previousMove,
+            moveStatus,
             positionHistory);
         
         var gameStatus = StateValidator.ValidateState(tempSnapshot);
@@ -288,6 +300,7 @@ public sealed record GameSnapshot
             halfMoveClock,
             fullMoveCounter,
             previousMove,
+            moveStatus,
             positionHistory);
     }
 
@@ -311,6 +324,7 @@ public sealed record GameSnapshot
             halfMoveClock ?? 0,
             fullMoveCounter ?? 1,
             previousMove,
+            new MoveStatus(MoveResult.Valid),
             positionHistory?.ToImmutableList() ?? ImmutableList<string>.Empty);
     }
 }

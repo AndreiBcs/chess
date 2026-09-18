@@ -11,12 +11,12 @@ public sealed class Game
         Players = [player1, player2];
         
         var initialSnapshot = GameSnapshot.GetInitialGameSnapshot();
-        _snapshots.Add(initialSnapshot);
-        _currentSnapshot = _snapshots[^1];
+        Snapshots.Add(initialSnapshot);
+        _currentSnapshot = Snapshots[^1];
         Status = _currentSnapshot.Status;
     }
     
-    private readonly List<GameSnapshot> _snapshots = [];
+    public readonly List<GameSnapshot> Snapshots = [];
     private GameSnapshot _currentSnapshot;
     private IReadOnlyList<Player.Player> Players { get; }
     private Player.Player GetPlayer(Color color)
@@ -50,7 +50,7 @@ public sealed class Game
                     _currentSnapshot = GameSnapshot
                         .GetUpdatedGameSnapshot(_currentSnapshot, move, moveStatus.Value);
                     
-                    _snapshots.Add(_currentSnapshot);
+                    Snapshots.Add(_currentSnapshot);
                     Status = _currentSnapshot.Status;
                     break;
                 }
