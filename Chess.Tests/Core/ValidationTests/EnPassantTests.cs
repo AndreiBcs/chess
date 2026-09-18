@@ -1,9 +1,7 @@
-﻿using System.Collections.Immutable;
-using chess;
+﻿using chess;
 using chess.Board;
 using chess.Game;
 using chess.Moves;
-using chess.Pieces;
 using chess.Pieces.Types;
 using chess.Validation.MoveValidation;
 
@@ -39,7 +37,7 @@ public class EnPassantTests
 
         var moveStatus = MoveValidator.ValidateMove(
             snapshot,
-            new Move(new Position(3, 2), new Position(2, 3)));
+            new Move(new Position(3, 2 ), new Position(2, 3)));
         
         Assert.Equal(
             new MoveStatus(
