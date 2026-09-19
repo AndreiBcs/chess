@@ -72,7 +72,6 @@ public static class BoardRenderer
         {
             AnsiConsole.MarkupLine($"[green]{endMessage}[/]");
             Console.WriteLine();
-            Console.WriteLine("Press R to restart or Q to quit.");
         }
     }
 

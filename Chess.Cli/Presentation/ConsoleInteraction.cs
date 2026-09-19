@@ -129,4 +129,16 @@ public static partial class ConsoleInteraction
 
         return new Options(playerColor, engineType, elo, pieceRender);
     }
+
+    public static bool SaveGameToFile()
+    {
+        var save = AnsiConsole.Prompt(
+            new SelectionPrompt<bool>()
+                .Title("Save game to file?")
+                .AddChoices(true, false)
+                .UseConverter(value => value ? "Yes" : "No")
+        );
+        
+        return save;
+    }
 }

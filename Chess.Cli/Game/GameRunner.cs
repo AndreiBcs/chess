@@ -2,7 +2,9 @@
 using Chess.Cli.Arguments;
 using Chess.Cli.Player;
 using Chess.Cli.Presentation;
+using Chess.Cli.Services;
 using Chess.Engine;
+using chess.Pgn;
 
 namespace Chess.Cli.Game;
 
@@ -48,7 +50,24 @@ internal sealed class GameRunner : IAsyncDisposable
             {
                 BoardRenderer.Render(snapshot, _playerColor, _textRender);
             }
-        
+
+            if (ConsoleInteraction.SaveGameToFile())
+            {
+                var pgn = PgnWriter.Write(_game.Snapshots);
+
+                try
+                {
+                    await GameSaver.SaveGameAsync(pgn);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Could not save game...");
+                }
+                
+                Console.WriteLine($"Game saved in: {GameSaver.GamesDirectory}");
+            }
+            
+            Console.WriteLine("Press R to restart or Q to quit.");
             while (true)
             {
                 var key = Console.ReadKey(true).Key;

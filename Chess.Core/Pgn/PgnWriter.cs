@@ -52,6 +52,7 @@ public static class PgnWriter
                     }
                     else
                     {
+                        // TODO identical pieces can move to the same position
                         sb.Append(snapshot.Board.GetPiece(move.From)!.LetterId)
                             .Append(move.To.ToString());
                     }
