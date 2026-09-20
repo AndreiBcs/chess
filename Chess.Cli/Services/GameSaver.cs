@@ -7,9 +7,18 @@ public static class GameSaver
 
     public static async Task SaveGameAsync(string pgn)
     {
-        var fileName = $"{DateTime.Now:g}.pgn";
+        var fileName = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.pgn";
         var filePath = Path.Combine(GamesDirectory, fileName);
-        
-        await File.WriteAllTextAsync(filePath, pgn);
+
+        if (Directory.Exists(GamesDirectory))
+        {
+            await File.WriteAllTextAsync(filePath, pgn);
+        }
+        else
+        {
+            Directory.CreateDirectory(GamesDirectory);
+            
+            await File.WriteAllTextAsync(filePath, pgn);
+        }
     }
 }

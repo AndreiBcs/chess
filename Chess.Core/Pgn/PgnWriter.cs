@@ -8,13 +8,17 @@ public static class PgnWriter
     public static string Write(List<GameSnapshot> snapshots)
     {
         var sb = new StringBuilder();
+        var index = 1;
 
         foreach (var snapshot in snapshots[1..]) // without initial one
         {
             var status = snapshot.PreviousMoveStatus;
             var move = snapshot.PreviousMove;
-            
-            sb.Append(snapshot.FullMoveCounter).Append(". ");
+
+            if (index++ % 2 == 1)
+            {
+                sb.Append(snapshot.FullMoveCounter).Append(". ");
+            }
 
             if (status is { IsCastling: true, CastlingRights: not null })
             {
@@ -39,7 +43,7 @@ public static class PgnWriter
                     }
                     else
                     {
-                        sb.Append(snapshot.Board.GetPiece(move.From)!.LetterId)
+                        sb.Append(snapshot.Board.GetPiece(move.To)!.LetterId.ToString().ToUpper())
                             .Append('x')
                             .Append(move.To.ToString());
                     }
@@ -48,12 +52,18 @@ public static class PgnWriter
                 {
                     if (status.IsPawnMove)
                     {
-                        sb.Append(move.From.ToString());
+                        sb.Append(move.To.ToString());
                     }
                     else
                     {
                         // TODO identical pieces can move to the same position
-                        sb.Append(snapshot.Board.GetPiece(move.From)!.LetterId)
+                        // get previous snapshot to have the board before the move
+                        // check if there are multiple pieces with the same type as the moved one
+                        // if so check if they can LEGALLY move to the same destination
+                        // if so check if they are on the same rank => add different file to notation
+                        // if so check if they are on the same file => add different rank to notation
+                        // maybe a board method can return the first check and their position for later
+                        sb.Append(snapshot.Board.GetPiece(move.To)!.LetterId.ToString().ToUpper())
                             .Append(move.To.ToString());
                     }
                 }

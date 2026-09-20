@@ -58,13 +58,13 @@ internal sealed class GameRunner : IAsyncDisposable
                 try
                 {
                     await GameSaver.SaveGameAsync(pgn);
+                    
+                    Console.WriteLine($"Game saved in: {GameSaver.GamesDirectory}");
                 }
                 catch (Exception e)
-                {
-                    Console.WriteLine("Could not save game...");
+                { 
+                    Console.WriteLine($"Could not save game... {e.Message}");
                 }
-                
-                Console.WriteLine($"Game saved in: {GameSaver.GamesDirectory}");
             }
             
             Console.WriteLine("Press R to restart or Q to quit.");
