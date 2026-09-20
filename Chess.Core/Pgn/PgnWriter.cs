@@ -8,14 +8,15 @@ public static class PgnWriter
     public static string Write(List<GameSnapshot> snapshots)
     {
         var sb = new StringBuilder();
-        var index = 1;
+        var index = 0;
 
         foreach (var snapshot in snapshots[1..]) // without initial one
         {
             var status = snapshot.PreviousMoveStatus;
             var move = snapshot.PreviousMove;
+            var previousSnapshot = snapshots[index];
 
-            if (index++ % 2 == 1)
+            if (index++ % 2 == 0)
             {
                 sb.Append(snapshot.FullMoveCounter).Append(". ");
             }

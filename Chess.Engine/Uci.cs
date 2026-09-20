@@ -60,6 +60,8 @@ public sealed class Uci : IAsyncDisposable
     public async Task<string> GetMove(string fen)
     {
         await SendCommand($"position fen {fen}");
+        
+        // TODO add a record for search limit for depth / move time / nodes
         await SendCommand("go movetime 1000");
         
         using var timeout = new CancellationTokenSource(ResponseTimeout);

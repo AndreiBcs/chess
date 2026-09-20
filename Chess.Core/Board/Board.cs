@@ -238,4 +238,37 @@ public sealed record Board
 
         return new Board(squares);
     }
+
+    public IEnumerable<Position> PositionsOfPiecesWithSameTypeAndColor(
+        PieceType type, 
+        Color color)
+    {
+        var positions = new List<Position>();
+        
+        foreach (var square in _squares)
+        {
+            var piece = square.Piece;
+            
+            if (piece?.Type == type && piece.Color == color)
+            {
+                positions.Add(square.Position);    
+            }
+        }
+        
+        return positions;
+    }
+
+    public (bool Row, bool Column) CommonPieceCoordinate(
+        List<Position> candidatePositions)
+    {
+        bool commonRow = candidatePositions
+            .GroupBy(p => p.Row)
+            .Any(g => g.Count() > 1);
+
+        bool commonColumn = candidatePositions
+            .GroupBy(p => p.Column)
+            .Any(g => g.Count() > 1);
+        
+        return (commonRow, commonColumn);
+    }
 }
