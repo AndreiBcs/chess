@@ -16,6 +16,7 @@ internal sealed class GameRunner : IAsyncDisposable
     private readonly Color _playerColor;
     private readonly int _elo;
     private readonly bool _textRender;
+    private readonly ChessEngine _engineType;
 
     public GameRunner(Options options)
     {
@@ -25,12 +26,12 @@ internal sealed class GameRunner : IAsyncDisposable
             Color.Black : 
             Color.White;
 
-        var engineType = options.Engine;
+        _engineType = options.Engine;
         
         _elo = options.Elo;
         
         _consolePlayer = new ConsolePlayer(_playerColor);
-        _enginePlayer = new EnginePlayer(engineColor, engineType);
+        _enginePlayer = new EnginePlayer(engineColor, _engineType);
         
         _textRender = options.TextRender;
         
@@ -53,7 +54,12 @@ internal sealed class GameRunner : IAsyncDisposable
 
             if (ConsoleInteraction.SaveGameToFile())
             {
-                var pgn = PgnWriter.Write(_game.Snapshots);
+                var pgn = PgnWriter.Write(
+                    _game.Snapshots,
+                    _playerColor,
+                    Config.PlayerName, 
+                    _engineType.ToString(),
+                    _elo);
 
                 try
                 {

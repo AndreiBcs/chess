@@ -9,11 +9,55 @@ namespace chess.Pgn;
 
 public static class PgnWriter
 {
-    public static string Write(List<GameSnapshot> snapshots)
-    {
-        var sb = new StringBuilder();
-        var index = 0;
+    private const string Event = "Chess CLI";
+    private const string Site = "Local";
+    private const string Round = "-";
 
+    public static string Write(
+        List<GameSnapshot> snapshots,
+        Color playerColor,
+        string playerName,
+        string engineName,
+        int engineElo)
+    {
+        var pgn = new StringBuilder();
+        var moves = new StringBuilder();
+        var index = 0;
+        
+        // metadata
+        pgn.Append($"[Event \"{Event}\"]").AppendLine();
+        pgn.Append($"[Site \"{Site}\"]").AppendLine();
+        pgn.Append($"[Date \"{DateTime.Now:yyyy.MM.dd}\"]").AppendLine();
+        pgn.Append($"[Round \"{Round}\"]").AppendLine();
+
+        if (playerColor == Color.White)
+        {
+            pgn.Append($"[White \"{playerName}\"]").AppendLine();
+            pgn.Append($"[Black \"{engineName}\"]").AppendLine();
+        }
+        else
+        {
+            pgn.Append($"[White \"{engineName}\"]").AppendLine();
+            pgn.Append($"[Black \"{playerName}\"]").AppendLine();
+        }
+
+        if (snapshots[^1].Status is GameStatus.WhiteWon)
+        {
+            pgn.Append("[Result \"1-0\"]").AppendLine();    
+        }
+        else if (snapshots[^1].Status is GameStatus.BlackWon)
+        {
+            pgn.Append("[Result \"0-1\"]").AppendLine();    
+        }
+        else
+        {
+            pgn.Append("[Result \"1/2-1/2\"]").AppendLine();
+        }
+        
+        pgn.Append($"[EngineElo \"{engineElo}\"]").AppendLine();
+        pgn.AppendLine();
+
+        // moves
         foreach (var snapshot in snapshots[1..]) // without initial one
         {
             var status = snapshot.PreviousMoveStatus;
@@ -22,7 +66,7 @@ public static class PgnWriter
 
             if (index++ % 2 == 0)
             {
-                sb.Append(snapshot.FullMoveCounter).Append(". ");
+                moves.Append(snapshot.FullMoveCounter).Append(". ");
             }
 
             // castling
@@ -30,11 +74,11 @@ public static class PgnWriter
             {
                 if (status.CastlingRights?.LetterId.ToString().ToLower() is "k")
                 {
-                    sb.Append("O-O");
+                    moves.Append("O-O");
                 }
                 else if (status.CastlingRights?.LetterId.ToString().ToLower() is "q")
                 {
-                    sb.Append("O-O-O");
+                    moves.Append("O-O-O");
                 }
             }
             else
@@ -43,7 +87,7 @@ public static class PgnWriter
 
                 if (piece is null)
                 {
-                    sb.Append(" Error constructing SAN... ");
+                    moves.Append(" Error constructing SAN... ");
                     break;
                 }
                 
@@ -52,62 +96,86 @@ public static class PgnWriter
                 {
                     if (status.IsCapture)
                     {
-                        sb.Append(move.From.ToString()[0])
+                        moves.Append(move.From.ToString()[0])
                             .Append('x');
                     }
-
-                    sb.Append(move.To.ToString());
                 }
                 // piece move
                 else
                 {
-                    sb.Append(piece.LetterId.ToString().ToUpper())
+                    moves.Append(piece.LetterId.ToString().ToUpper())
                         .Append(GetDisambiguation(previousSnapshot, move, piece));
 
                     if (status.IsCapture)
                     {
-                        sb.Append('x');
+                        moves.Append('x');
                     }
-
-                    sb.Append(move.To.ToString());
                 }
-                
+
+                moves.Append(move.To.ToString());
+
                 // promotion
                 if (status.IsPromotion && move.Promotion != null)
                 {
-                    sb.Append('=')
+                    moves.Append('=')
                         .Append(move.Promotion.Value.ToString().ToUpper()[0]);
                 }
 
                 // game status
                 if (snapshot.Status is GameStatus.BlackWon)
                 {
-                    sb.Append("# 0-1");
+                    moves.Append("# 0-1");
                     break;
                 }
                 
                 if (snapshot.Status is GameStatus.WhiteWon)
                 {
-                    sb.Append("# 1-0");
+                    moves.Append("# 1-0");
                     break;
                 }
 
                 if (snapshot.Status is not GameStatus.InProgress)
                 {
-                    sb.Append(" 1/2-1/2");
+                    moves.Append(" 1/2-1/2");
                     break;
                 }
                 
                 if (status.IsCheck)
                 {
-                    sb.Append('+');
+                    moves.Append('+');
                 }
             }
             
-            sb.Append(' ');
+            moves.Append(' ');
         }
         
-        return sb.ToString();
+        // format moves
+        const int maxLineLength = 80;
+
+        var moveText = moves.ToString().Trim();
+        var currentLineLength = 0;
+
+        foreach (var move in moveText.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (currentLineLength + move.Length + 1 > maxLineLength)
+            {
+                pgn.AppendLine();
+                currentLineLength = 0;
+            }
+
+            if (currentLineLength > 0)
+            {
+                pgn.Append(' ');
+                currentLineLength++;
+            }
+
+            pgn.Append(move);
+            currentLineLength += move.Length;
+        }
+
+        pgn.AppendLine();
+        
+        return pgn.ToString();
     }
     
     private static string GetDisambiguation(
