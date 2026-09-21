@@ -257,18 +257,4 @@ public sealed record Board
         
         return positions;
     }
-
-    public (bool Row, bool Column) CommonPieceCoordinate(
-        List<Position> candidatePositions)
-    {
-        bool commonRow = candidatePositions
-            .GroupBy(p => p.Row)
-            .Any(g => g.Count() > 1);
-
-        bool commonColumn = candidatePositions
-            .GroupBy(p => p.Column)
-            .Any(g => g.Count() > 1);
-        
-        return (commonRow, commonColumn);
-    }
 }

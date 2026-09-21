@@ -57,9 +57,10 @@ public static class MoveValidator
         var testBoard = board.CopyBoard();
         var isPromotion = false;
         
-        if (piece.Type == PieceType.Pawn // check promotion
-            && move.To.Row is 0 or 7 
-            && move.Promotion is not null)
+        if (piece.Type == PieceType.Pawn && 
+            move.Promotion is not null &&
+            (piece.Color == Color.White && move.To.Row is 0 ||
+             piece.Color == Color.Black && move.To.Row is 7))
         {
             isPromotion = true;
             testBoard = testBoard

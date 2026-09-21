@@ -1,5 +1,9 @@
 ﻿using System.Text;
+using chess.Board;
 using chess.Game;
+using chess.Moves;
+using chess.Pieces;
+using chess.Validation.MoveValidation;
 
 namespace chess.Pgn;
 
@@ -21,83 +25,119 @@ public static class PgnWriter
                 sb.Append(snapshot.FullMoveCounter).Append(". ");
             }
 
+            // castling
             if (status is { IsCastling: true, CastlingRights: not null })
             {
                 if (status.CastlingRights?.LetterId.ToString().ToLower() is "k")
                 {
-                    sb.Append("O-O ");
+                    sb.Append("O-O");
                 }
                 else if (status.CastlingRights?.LetterId.ToString().ToLower() is "q")
                 {
-                    sb.Append("O-O-O ");
+                    sb.Append("O-O-O");
                 }
             }
             else
             {
-                if (status.IsCapture)
+                var piece = previousSnapshot.Board.GetPiece(move.From);
+
+                if (piece is null)
                 {
-                    if (status.IsPawnMove)
+                    sb.Append(" Error constructing SAN... ");
+                    break;
+                }
+                
+                // pawn move
+                if (status.IsPawnMove)
+                {
+                    if (status.IsCapture)
                     {
                         sb.Append(move.From.ToString()[0])
-                            .Append('x')
-                            .Append(move.To.ToString());
+                            .Append('x');
                     }
-                    else
-                    {
-                        sb.Append(snapshot.Board.GetPiece(move.To)!.LetterId.ToString().ToUpper())
-                            .Append('x')
-                            .Append(move.To.ToString());
-                    }
+
+                    sb.Append(move.To.ToString());
                 }
+                // piece move
                 else
                 {
-                    if (status.IsPawnMove)
+                    sb.Append(piece.LetterId.ToString().ToUpper())
+                        .Append(GetDisambiguation(previousSnapshot, move, piece));
+
+                    if (status.IsCapture)
                     {
-                        sb.Append(move.To.ToString());
+                        sb.Append('x');
                     }
-                    else
-                    {
-                        // TODO identical pieces can move to the same position
-                        // get previous snapshot to have the board before the move
-                        // check if there are multiple pieces with the same type as the moved one
-                        // if so check if they can LEGALLY move to the same destination
-                        // if so check if they are on the same rank => add different file to notation
-                        // if so check if they are on the same file => add different rank to notation
-                        // maybe a board method can return the first check and their position for later
-                        sb.Append(snapshot.Board.GetPiece(move.To)!.LetterId.ToString().ToUpper())
-                            .Append(move.To.ToString());
-                    }
+
+                    sb.Append(move.To.ToString());
+                }
+                
+                // promotion
+                if (status.IsPromotion && move.Promotion != null)
+                {
+                    sb.Append('=')
+                        .Append(move.Promotion.Value.ToString().ToUpper()[0]);
+                }
+
+                // game status
+                if (snapshot.Status is GameStatus.BlackWon)
+                {
+                    sb.Append("# 0-1");
+                    break;
+                }
+                
+                if (snapshot.Status is GameStatus.WhiteWon)
+                {
+                    sb.Append("# 1-0");
+                    break;
                 }
 
                 if (snapshot.Status is not GameStatus.InProgress)
                 {
-                    if (snapshot.Status is GameStatus.BlackWon)
-                    {
-                        sb.Append("# 0-1");
-                        break;
-                    }
-
-                    if (snapshot.Status is GameStatus.WhiteWon)
-                    {
-                        sb.Append("# 1-0");
-                        break;
-                    }
-                    
                     sb.Append(" 1/2-1/2");
                     break;
                 }
                 
                 if (status.IsCheck)
                 {
-                    sb.Append("+ ");
-                }
-                else
-                {
-                    sb.Append(' ');
+                    sb.Append('+');
                 }
             }
+            
+            sb.Append(' ');
         }
         
         return sb.ToString();
+    }
+    
+    private static string GetDisambiguation(
+        GameSnapshot previousSnapshot,
+        Move move,
+        Piece piece)
+    {
+        var candidates = previousSnapshot.Board
+            .PositionsOfPiecesWithSameTypeAndColor(piece.Type, piece.Color)
+            .Where(pos => pos != move.From)
+            .Where(pos => MoveValidator.ValidateMove(
+                previousSnapshot,
+                new Move(pos, move.To)).MoveResult == MoveResult.Valid)
+            .ToList();
+
+        if (candidates.Count == 0)
+            return string.Empty;
+
+        var sameFileExists = candidates.Any(p => p.Column == move.From.Column);
+        var sameRankExists = candidates.Any(p => p.Row == move.From.Row);
+
+        if (sameFileExists && sameRankExists)
+            return move.From.ToString(); // file + rank
+
+        if (sameFileExists)
+            return $"{8 - move.From.Row}"; // rank only
+
+        if (sameRankExists)
+            return $"{(char)('a' + move.From.Column)}"; // file only
+
+        return $"{(char)('a' + move.From.Column)}"; // file is enough
     }
 }

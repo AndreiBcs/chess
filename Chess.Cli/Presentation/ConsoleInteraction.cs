@@ -59,7 +59,10 @@ public static partial class ConsoleInteraction
 
                 PieceType? promotion = null;
                 var piece = snapshot.Board.GetPiece(new Position(fromRow, fromCol));
-                if (piece?.Type == PieceType.Pawn && toRow is 0 or 7)
+                if (piece?.Type == PieceType.Pawn && 
+                    piece.Color == snapshot.CurrentTurn && 
+                    (piece.Color == Color.White && toRow is 0 ||
+                     piece.Color == Color.Black && toRow is 7))
                 {
                     promotion = AnsiConsole.Prompt(
                         new SelectionPrompt<PieceType>()
