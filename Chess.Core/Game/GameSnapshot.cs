@@ -2,6 +2,7 @@
 using chess.Board;
 using chess.Moves;
 using chess.Pieces;
+using chess.Pieces.Types;
 using chess.Validation.MoveValidation;
 using chess.Validation.StateValidation;
 
@@ -133,14 +134,17 @@ public sealed record GameSnapshot
         Move currentMove,
         MoveStatus moveStatus)
     {
+        var currentMovedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
+        var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
+        var board = previousSnapshot.Board.CopyBoard();
+        
         // update previous move
         var previousMove = currentMove;
+        
         // update current turn
         var currentTurn = previousSnapshot.CurrentTurn == Color.White 
             ? Color.Black 
             : Color.White;
-
-        var board = previousSnapshot.Board.CopyBoard();
         
         // update board after move
         if (moveStatus.IsCastling)
@@ -165,12 +169,20 @@ public sealed record GameSnapshot
         {
             if (moveStatus.IsPromotion && currentMove.Promotion != null)
             {
+                Piece promotingPiece = currentMove.Promotion switch
+                {
+                    PieceType.Rook => new Rook(currentMovedPiece!.Color),
+                    PieceType.Knight => new Knight(currentMovedPiece!.Color),
+                    PieceType.Bishop => new Bishop(currentMovedPiece!.Color),
+                    // move validator handles invalid promotion so this is safe
+                    _ => new Queen(currentMovedPiece!.Color)
+                };
+
                 board = board
                     .WithMove(currentMove.From, currentMove.To)
                     .WithPromotion(
                         currentMove.To,
-                        currentMove.Promotion.Value,
-                        previousSnapshot.CurrentTurn);
+                        promotingPiece);
             }
             else
             {
@@ -179,9 +191,6 @@ public sealed record GameSnapshot
         }
         
         // update castling rights
-        var currentMovedPiece = previousSnapshot.Board.GetPiece(currentMove.From);
-        var capturedPiece = previousSnapshot.Board.GetPiece(currentMove.To);
-
         var castlingRights = currentMovedPiece!.Type switch
         {
             PieceType.King => previousSnapshot.CastlingRights

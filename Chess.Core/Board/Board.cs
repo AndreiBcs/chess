@@ -89,23 +89,14 @@ public sealed record Board
 
     public Board WithPromotion(
         Position position,
-        PieceType promotion,
-        Color promotionColor)
+        Piece promotingPiece)
     {
         var squares = CopySquares();
-        
-        Piece promotionPiece = promotion switch
-        {
-            PieceType.Bishop => new Bishop(promotionColor),
-            PieceType.Knight => new Knight(promotionColor),
-            PieceType.Rook => new Rook(promotionColor),
-            _ => new Queen(promotionColor)
-        };
 
         squares[position.Row, position.Column] =
             squares[position.Row, position.Column] with
             {
-                Piece = promotionPiece
+                Piece = promotingPiece
             };
 
         return new Board(squares);

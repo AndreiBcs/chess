@@ -1,6 +1,7 @@
 ﻿using chess.Game;
 using chess.Moves;
 using chess.Pieces;
+using chess.Pieces.Types;
 
 namespace chess.Validation.MoveValidation;
 
@@ -23,6 +24,13 @@ public static class MoveValidator
             return new MoveStatus(
                 MoveResult.Invalid,
                 InvalidMoveReason: "Cannot move enemy piece.");
+        }
+
+        if (move.To == move.From)
+        {
+            return new MoveStatus(
+                MoveResult.Invalid,
+                InvalidMoveReason: "The destination must be different than the origin.");
         }
         
         var target = board.GetPiece(move.To);
@@ -62,10 +70,30 @@ public static class MoveValidator
             (piece.Color == Color.White && move.To.Row is 0 ||
              piece.Color == Color.Black && move.To.Row is 7))
         {
+            Piece promotingPiece;
+            switch (move.Promotion)
+            {
+                case PieceType.Rook:
+                    promotingPiece = new Rook(piece.Color);
+                    break;
+                case PieceType.Knight:
+                    promotingPiece = new Knight(piece.Color);
+                    break;
+                case PieceType.Bishop:
+                    promotingPiece = new Bishop(piece.Color);
+                    break;
+                case PieceType.Queen:
+                    promotingPiece = new Queen(piece.Color);
+                    break;
+                default:
+                    return new MoveStatus(MoveResult.Invalid,
+                        InvalidMoveReason: "Cannot promote to a Pawn or a King.");
+            }
+            
             isPromotion = true;
             testBoard = testBoard
                 .WithMove(move.From, move.To)
-                .WithPromotion(move.To, move.Promotion.Value, piece.Color);
+                .WithPromotion(move.To, promotingPiece);
         }
         else // not promotion => normal move
         {
