@@ -49,41 +49,7 @@ public sealed record GameSnapshot
         const GameStatus status = GameStatus.InProgress;
         var board = chess.Board.Board.CreateInitial();
         const Color currentTurn = Color.White;
-        var castlingRightsList = new List<CastlingRights>
-        {
-            new(
-                'K',
-                Color.White,
-                new Position(7, 4), new Position(7, 6),
-                new Position(7, 7), new Position(7, 5),
-                new[]{new Position(7, 4), new Position(7, 5), new Position(7, 6)},
-                new[]{new Position(7, 5), new Position(7, 6)}
-            ),
-            new(
-                'Q',
-                Color.White,
-                new Position(7, 4), new Position(7, 2),
-                new Position(7, 0), new Position(7, 3),
-                new[]{new Position(7, 4), new Position(7, 3), new Position(7, 2)},
-                new[]{new Position(7, 1), new Position(7, 3), new Position(7, 2)}
-            ),
-            new(
-                'k',
-                Color.Black,
-                new Position(0, 4), new Position(0, 6),
-                new Position(0, 7), new Position(0, 5),
-                new[]{new Position(0, 4), new Position(0, 5), new Position(0, 6)},
-                new[]{new Position(0, 5), new Position(0, 6)}
-            ),
-            new(
-                'q',
-                Color.Black,
-                new Position(0, 4), new Position(0, 2),
-                new Position(0, 0), new Position(0, 3),
-                new[]{new Position(0, 4), new Position(0, 3), new Position(0, 2)},
-                new[]{new Position(0, 1), new Position(0, 3), new Position(0, 2)}
-            )
-        }.ToImmutableList();
+        var castlingRightsList = chess.Game.CastlingRights.GetInitialCastlingRights().ToImmutableList();
         const int halfMoveClock = 0;
         const int fullMoveCounter = 1;
         Position? enPassantTarget = null;
@@ -305,25 +271,25 @@ public sealed record GameSnapshot
     }
 
     public static GameSnapshot CreateCustomSnapshot(
-        GameStatus gameStatus,
+        GameStatus? gameStatus,
         Board.Board board,
         Color currentTurn,
         List<CastlingRights>? castlingRights,
         Position? enPassantTarget,
         int? halfMoveClock,
         int? fullMoveCounter,
-        Move previousMove,
+        Move? previousMove,
         List<string>? positionHistory)
     {
         return new GameSnapshot(
-            gameStatus,
+            gameStatus ?? GameStatus.InProgress,
             board,
             currentTurn,
             castlingRights?.ToImmutableList() ?? ImmutableList<CastlingRights>.Empty,
             enPassantTarget,
             halfMoveClock ?? 0,
             fullMoveCounter ?? 1,
-            previousMove,
+            previousMove ?? new Move(new Position(0, 0), new Position(0, 0)),
             new MoveStatus(MoveResult.Valid),
             positionHistory?.ToImmutableList() ?? ImmutableList<string>.Empty);
     }

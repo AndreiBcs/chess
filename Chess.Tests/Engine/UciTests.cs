@@ -22,7 +22,6 @@ public class UciTests
         var enginePlayer = new EnginePlayer(Color.White, ChessEngine.Stockfish);
         var engine = enginePlayer.Uci;
 
-        var board = Board.CreateInitial();
         await engine.StartEngine();
         await engine.NewGame();
 
