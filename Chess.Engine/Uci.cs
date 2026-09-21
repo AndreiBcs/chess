@@ -9,6 +9,9 @@ public sealed class Uci : IAsyncDisposable
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
     private int _disposed;
+    public int Depth { get; set; } = 20;
+    public int MoveTime { get; set; } = 1500;
+    public long Nodes { get; set; } = 1_000_000;
 
     public Uci(string path)
     {
@@ -61,8 +64,7 @@ public sealed class Uci : IAsyncDisposable
     {
         await SendCommand($"position fen {fen}");
         
-        // TODO add a record for search limit for depth / move time / nodes
-        await SendCommand("go movetime 1000");
+        await SendCommand($"go movetime {MoveTime} depth {Depth} nodes {Nodes}");
         
         using var timeout = new CancellationTokenSource(ResponseTimeout);
         try

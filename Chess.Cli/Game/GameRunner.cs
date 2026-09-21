@@ -33,6 +33,10 @@ internal sealed class GameRunner : IAsyncDisposable
         _consolePlayer = new ConsolePlayer(_playerColor);
         _enginePlayer = new EnginePlayer(engineColor, _engineType);
         
+        _enginePlayer.Uci.Depth = options.Depth;
+        _enginePlayer.Uci.MoveTime = options.MoveTime;
+        _enginePlayer.Uci.Nodes = options.Nodes;
+        
         _textRender = options.TextRender;
         
         _game = new chess.Game.Game(_consolePlayer, _enginePlayer);
@@ -52,12 +56,12 @@ internal sealed class GameRunner : IAsyncDisposable
                 BoardRenderer.Render(snapshot, _playerColor, _textRender);
             }
 
-            if (ConsoleInteraction.SaveGameToFile())
+            if (ConsoleInteraction.SaveGameToFile(out var playerName))
             {
                 var pgn = PgnWriter.Write(
                     _game.Snapshots,
                     _playerColor,
-                    Config.PlayerName, 
+                    playerName, 
                     _engineType.ToString(),
                     _elo);
 

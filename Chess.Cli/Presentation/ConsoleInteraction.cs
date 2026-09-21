@@ -108,39 +108,82 @@ public static partial class ConsoleInteraction
         var playerColor = AnsiConsole.Prompt(
             new SelectionPrompt<Color>()
                 .Title("Choose a color:")
-                .AddChoices(Color.White, Color.Black));
+                .AddChoices(Color.White, Color.Black)
+                .DefaultValue(Color.White));
         
         var engineType = AnsiConsole.Prompt(
             new SelectionPrompt<ChessEngine>()
                 .Title("Choose a chess engine:")
-                .AddChoices(ChessEngine.Stockfish, ChessEngine.Deakfish));
+                .AddChoices(ChessEngine.Stockfish, ChessEngine.Deakfish)
+                .UseConverter(engine => engine switch
+                {
+                    ChessEngine.Stockfish => "Stockfish",
+                    ChessEngine.Deakfish => "Deakfish (in development)",
+                    _ => engine.ToString()
+                })
+                .DefaultValue(ChessEngine.Stockfish));
 
         var elo = AnsiConsole.Prompt(
             new TextPrompt<int>("Chess engine Elo:")
+                .DefaultValue(1500)
                 .Validate(value =>
-                    value is >= 1320 and <= 3190
+                    value is >= 1320 and <= 3190 && engineType == ChessEngine.Stockfish
                         ? ValidationResult.Success()
-                        : ValidationResult.Error("[red]Elo must be between 1320 and 3190.[/]"))
-        );
+                        : ValidationResult.Error("[red]Stockfish elo ranges between 1320 and 3190.[/]")));
+        
+        var depth = AnsiConsole.Prompt(
+            new TextPrompt<int>("Chess engine depth search:")
+                .DefaultValue(20)
+                .Validate(value => value is >= 1 and <= 50
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error("Depth must be between 1 and 50.")));
 
-        var pieceRender = AnsiConsole.Prompt(
+        var moveTime = AnsiConsole.Prompt(
+            new TextPrompt<int>("Chess engine move time (ms):")
+                .DefaultValue(1500)
+                .Validate(value => value is >= 1 and <= 600_000
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error("Move time must be between 1 and 600000 ms.")));
+
+        var nodes = AnsiConsole.Prompt(
+            new TextPrompt<long>("Chess engine search nodes:")
+                .DefaultValue(1_000_000)
+                .Validate(value => value is >= 1 and <= 1_000_000_000
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error("Nodes must be between 1 and 1000000000.")));
+
+        var textRender = AnsiConsole.Prompt(
             new SelectionPrompt<bool>()
                 .Title("Render pieces as text?")
                 .AddChoices(true, false)
                 .UseConverter(value => value ? "Yes" : "No")
-        );
+                .DefaultValue(false));
 
-        return new Options(playerColor, engineType, elo, pieceRender);
+        return new Options(
+            playerColor,
+            engineType,
+            elo,
+            depth,
+            moveTime,
+            nodes,
+            textRender);
     }
 
-    public static bool SaveGameToFile()
+    public static bool SaveGameToFile(out string name)
     {
+        name = "";
+        
         var save = AnsiConsole.Prompt(
             new SelectionPrompt<bool>()
                 .Title("Save game to file?")
                 .AddChoices(true, false)
                 .UseConverter(value => value ? "Yes" : "No")
         );
+
+        if (save)
+        {
+            name = AnsiConsole.Ask<string>("Input your name:");
+        }
         
         return save;
     }
