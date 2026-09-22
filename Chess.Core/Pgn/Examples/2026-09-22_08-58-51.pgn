@@ -1,0 +1,19 @@
+[Event "Chess CLI"]
+[Site "Local"]
+[Date "2026.09.22"]
+[Round "-"]
+[White "DEAK"]
+[Black "Stockfish"]
+[Result "0-1"]
+[EngineElo "1500"]
+
+1. d4 d5 2. e3 Bf5 3. Bd3 Bxd3 4. Qxd3 c6 5. Nf3 Nf6 6. O-O a5 7. Nbd2 e6 8. c4
+Be7 9. b3 O-O 10. Bb2 h6 11. h3 Qb6 12. Rfe1 Nbd7 13. Ne5 Qc7 14. Ndf3 a4 15.
+cxd5 exd5 16. e4 Nxe4 17. Nxd7 Qxd7 18. Ne5 Qc7 19. Rxe4 dxe4 20. Qxe4 Bd6 21.
+Nc4 Rfd8 22. Nxd6 Qxd6 23. Qg4 Qd5 24. Re1 Qg5 25. Qe4 Qd2 26. Qe2 Qxe2 27. Rxe2
+axb3 28. axb3 Re8 29. Rd2 Ra5 30. g4 Re1+ 31. Kg2 Rb5 32. Kg3 Rb1 33. f4 Rxb3+
+34. Kf2 R1xb2 35. Rxb2 Rxb2+ 36. Ke3 g5 37. fxg5 hxg5 38. Ke4 Kf8 39. Ke5 Ke7
+40. d5 Rb5 41. Kf5 Rxd5+ 42. Ke4 b5 43. Kf3 Rd3+ 44. Ke4 Rd1 45. Kf3 Rd6 46. Kg3
+Rd5 47. h4 Rd3+ 48. Kg2 Rd2+ 49. Kg3 Rd1 50. hxg5 Rd5 51. Kh4 b4 52. Kh5 Rd6 53.
+Kh4 Rd5 54. Kh5 Ra5 55. Kh4 b3 56. Kh5 Rd5 57. Kh4 b2 58. Kh5 b1=Q 59. Kh4 Qf1
+60. Kh5 Qf2 61. Kh6 Qh2+ 62. Kg7 Rxg5# 0-1
