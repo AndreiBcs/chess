@@ -15,18 +15,23 @@ public class HttpPlayer : chess.Player.Player
     {
     }
 
-    public override Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus)
+    public override Task<Move> GetMoveAsync(
+        GameSnapshot snapshot,
+        MoveStatus? moveStatus,
+        CancellationToken cancellationToken = default)
     {
+        // wait asynchronously for the client move, or stop when the session is cancelled
         if (moveStatus is not null)
         {
             MoveStatusReceived?.Invoke(moveStatus.Value);
         }
 
-        return _moves.Reader.ReadAsync().AsTask();
+        return _moves.Reader.ReadAsync(cancellationToken).AsTask();
     }
 
     public void ProvideMoveFromClient(Move move)
     {
+        // queue the move so the game loop can validate it
         _moves.Writer.TryWrite(move);
     }
 }

@@ -21,6 +21,7 @@ public sealed class GameHub : Hub
 
     public override Task OnDisconnectedAsync(Exception? exception)
     {
+        // remove disconnected users from the queue and their active session
         _matchmakingService.Cancel(Context.ConnectionId);
         _sessionManager.RemoveConnection(Context.ConnectionId);
         return base.OnDisconnectedAsync(exception);
@@ -28,6 +29,7 @@ public sealed class GameHub : Hub
 
     public async Task<MatchmakingResponseDto> FindMatch(string playerId)
     {
+        // put this connection in the one-player queue or start a match
         try
         {
             if (string.IsNullOrWhiteSpace(playerId))
@@ -45,10 +47,12 @@ public sealed class GameHub : Hub
         }
     }
 
+    // remove this connection from matchmaking without ending an active game
     public Task CancelMatch() => Task.FromResult(_matchmakingService.Cancel(Context.ConnectionId));
 
     public async Task StartGame(StartRequestDto request)
     {
+        // create or resume a player-versus-Stockfish session
         try
         {
             StartRequestDto.Validate(request);
@@ -85,6 +89,7 @@ public sealed class GameHub : Hub
 
     public async Task SubmitMove(MoveRequestDto moveRequest)
     {
+        // convert and route a client move to the player assigned to this connection
         try
         {
             var sessionId = _sessionManager.GetSessionIdForConnection(Context.ConnectionId);
@@ -148,7 +153,7 @@ public sealed class GameHub : Hub
             HttpOnly = true,
             IsEssential = true,
             SameSite = SameSiteMode.Lax,
-            Secure = true,
+            Secure = httpContext.Request.IsHttps,
             Expires = DateTimeOffset.UtcNow.AddMinutes(5)
         });
     }

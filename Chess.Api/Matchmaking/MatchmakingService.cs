@@ -22,6 +22,7 @@ public sealed class MatchmakingService
 
     public async Task<MatchResult> Enqueue(string connectionId, string playerId)
     {
+        // pair the caller with the waiting user, assign random colors, and start a session
         MatchResult result;
         string sessionId;
         Color firstColor;
@@ -73,6 +74,7 @@ public sealed class MatchmakingService
 
     public bool Cancel(string connectionId)
     {
+        // remove only a waiting connection; active sessions are managed separately
         lock (_lock)
         {
             return _queue.TryCancel(connectionId);

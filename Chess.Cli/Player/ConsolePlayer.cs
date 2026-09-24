@@ -11,7 +11,10 @@ public sealed class ConsolePlayer : chess.Player.Player
     {
     }
 
-    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus)
+    public override async Task<Move> GetMoveAsync(
+        GameSnapshot snapshot,
+        MoveStatus? moveStatus,
+        CancellationToken cancellationToken = default)
     {
         if (moveStatus is not null &&
             moveStatus.Value.MoveResult == MoveResult.Invalid)

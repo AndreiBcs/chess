@@ -1,4 +1,5 @@
-﻿using chess.Moves;
+﻿using System.Runtime.CompilerServices;
+using chess.Moves;
 using chess.Validation.MoveValidation;
 
 namespace chess.Game;
@@ -24,10 +25,12 @@ public sealed class Game
         return Players.Single(p => p.Color == color);
     }
 
-    public async IAsyncEnumerable<GameSnapshot> GameLoop()
+    public async IAsyncEnumerable<GameSnapshot> GameLoop(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         while (_currentSnapshot.Status == GameStatus.InProgress)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             yield return _currentSnapshot;
             
             MoveStatus? moveStatus = null;
@@ -35,7 +38,10 @@ public sealed class Game
             while (true) // wait for player move and validate
             {
                 var currentPlayer = GetPlayer(_currentSnapshot.CurrentTurn);
-                var move = await currentPlayer.GetMoveAsync(_currentSnapshot, moveStatus);
+                var move = await currentPlayer.GetMoveAsync(
+                    _currentSnapshot,
+                    moveStatus,
+                    cancellationToken);
                 
                 moveStatus = MoveValidator.ValidateMove(_currentSnapshot, move);
 

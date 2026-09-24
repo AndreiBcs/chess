@@ -25,7 +25,10 @@ public sealed class EnginePlayer : Player, IAsyncDisposable
         Uci = new Uci(engineFilePath);
     }
     
-    public override async Task<Move> GetMoveAsync(GameSnapshot snapshot, MoveStatus? moveStatus)
+    public override async Task<Move> GetMoveAsync(
+        GameSnapshot snapshot,
+        MoveStatus? moveStatus,
+        CancellationToken cancellationToken = default)
     {
         var fen = GameSnapshot
             .ToFen(

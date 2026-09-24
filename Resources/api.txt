@@ -1,51 +1,287 @@
-GET /health
+------------------
 
-WS Hub /gamehub
+  GET http://localhost:5204/health
+  SignalR http://localhost:5204/gamehub
+
+--------------------
+
+  Program.cs
+    Creates the web application, configures CORS and SignalR, registers
+    services, and maps /health and /gamehub.
+
+  Hubs/GameHub.cs
+    The public real-time API. Clients call FindMatch, CancelMatch,
+    StartGame, and SubmitMove here.
+
+  Game/GameSessionManager.cs
+    Stores all GameSession objects, maps SignalR connection IDs to
+    sessions, broadcasts game events, and removes inactive sessions.
+
+  Game/GameSession.cs
+    Owns one running game. It maps a connection to White or Black,
+    starts and cancels the game loop, and disposes the runner.
+
+  Game/GameRunner.cs
+    Chooses player versus Stockfish or player versus player, then streams
+    snapshots from Chess.Core.
+
+  Player/HttpPlayer.cs
+    Represents a human connected through SignalR. It waits on a channel
+    until SubmitMove supplies a move.
+
+  Matchmaking/MatchmakingService.cs
+    Coordinates queue pairing, random colors, multiplayer session
+    creation, SignalR groups, and MatchFound notifications.
+
+  Matchmaking/MatchmakingQueue.cs
+    Holds at most one waiting player and pairs the next caller with it.
+
+----------------------
+
+The application is assembled in this order:
+
+  WebApplication.CreateBuilder(args)
+    Loads appsettings.json, appsettings.Development.json, environment
+    variables, and command-line configuration.
+
+  AddCors("Frontend")
+    Allows only origins listed under Cors:AllowedOrigins. Credentials are
+    enabled because the hub uses a session cookie.
+
+  AddSignalR()
+    Enables the SignalR hub. JsonStringEnumConverter makes values such as
+    White and InProgress travel as strings instead of numbers.
+
+  AddSingleton<GameSessionManager>()
+  AddSingleton<MatchmakingService>()
+    Creates one manager and one queue for the whole server process.
+
+  UseCors("Frontend")
+    Applies the CORS policy before the endpoints run.
+
+  MapHub<GameHub>("/gamehub")
+    Publishes the real-time endpoint.
+
+  MapGet("/health", ...)
+    Returns { "status": "ok" } for deployment health checks.
+
+------------------
+
+GameHub.OnDisconnectedAsync(Exception? exception)
+
+Called automatically by SignalR when a client connection closes. It removes
+the connection from the matchmaking queue and from its active game session.
+It does not immediately delete the session. The session becomes idle and is
+cleaned by GameSessionManager after ten minutes with no connections.
 
 
-Client
-  |
-  | SignalR connection
-  v
-GameHub
-  |
-  +--> GameSessionManager
-  |       |
-  |       +--> GameSession
-  |              |
-  |              +--> GameRunner
-  |                     |
-  |                     +--> Chess.Core game rules
-  |                     +--> HttpPlayer
-  |                     +--> Engine
-  |
-  +--> MatchmakingService
-          |
-          +--> MatchmakingQueue
-          +--> GameSessionManager
+GameHub.StartGame(StartRequestDto request)
+
+Starts or resumes a player-versus-Stockfish game. It returns no value. The
+client receives game data through ReceiveMessage.
+
+Request example:
+
+  await connection.invoke("StartGame", {
+    playerColor: "white",
+    engineType: "stockfish",
+    elo: 1600,
+    gameId: null
+  });
+
+Request fields:
+
+  playerColor
+    Required string: white or black.
+
+  engineType
+    Required string: currently stockfish.
+
+  elo
+    Required positive integer. Stockfish later limits the effective value
+    to its supported range.
+
+  gameId
+    Optional session ID. If omitted, the API uses the chess_session_id
+    cookie or creates a new random ID.
+
+What happens:
+
+  1. StartRequestDto.Validate checks the request.
+  2. GameSessionManager finds or creates a GameSession.
+  3. The connection is assigned to the requested color.
+  4. The connection joins a SignalR group named after the session.
+  5. The session starts its GameRunner once.
+  6. The API sets the chess_session_id cookie.
+  7. Existing LastSnapshot data is sent to the caller when reconnecting.
 
 
-------------------------------------------------
-1. player vs engine
+GameHub.FindMatch(string playerId)
 
-client -> /gamehub
-StartGame called -> validates the start options
-GameSessionManager creates a GameSession
-GameSession creates a GameRunner
-GameRunner creates an HttpPlayer and an EnginePlayer
-game loop starts
-the server sends snapshots through ReceiveMessage
-the client sends moves through SubmitMove
-the move is routed to the HttpPlayer
+Adds the caller to the one-player matchmaking queue or pairs it with the
+waiting caller. It returns MatchmakingResponseDto.
 
-2. player vs player
+  const result = await connection.invoke("FindMatch", "player-123");
+  console.log(result);
 
-player A calls FindMatch
-MatchmakingQueue stores Player A
-Player A receives a waiting response
-Player B calls FindMatch
-the queue atomically removes Player A and pairs both players
-color are randomized
-GameSession creates a GameRunner with 2 HttpPlayer
-connections join SignalR group
-both clients receive MatchFound
+When nobody is waiting:
+
+  {
+    "matched": false,
+    "sessionId": null,
+    "playerColor": null
+  }
+
+When a match is created, both players also receive a MatchFound event:
+
+  {
+    "matched": true,
+    "sessionId": "generated-session-id",
+    "playerColor": "White"
+  }
+
+The player ID is used internally for queue records and is not returned to the
+other client. The connection ID is also never returned to clients.
+
+Important: FindMatch sends MatchFound to both clients after the session and
+SignalR group have been created. The direct return value is useful to the
+caller, but the event is the reliable notification for the UI.
+
+
+GameHub.CancelMatch()
+
+Removes the caller if it is waiting in matchmaking:
+
+  const wasRemoved = await connection.invoke("CancelMatch");
+
+It returns true when a waiting record was removed and false when the caller was
+not waiting. It does not cancel an already-created active game.
+
+
+GameHub.SubmitMove(MoveRequestDto moveRequest)
+
+Queues a move for the caller's HttpPlayer. It returns no value. The server
+validates the move inside Chess.Core and later broadcasts a new snapshot.
+
+Request example:
+
+  await connection.invoke("SubmitMove", {
+    from: { row: 6, column: 4 },
+    to: { row: 4, column: 4 },
+    promotion: null
+  });
+
+Promotion values are bishop, knight, rook, or queen. Rows and columns are
+zero-based. The caller must already be registered with a session and color.
+
+
+Server events
+----------------
+
+ReceiveMessage
+
+The server uses this event for snapshots, invalid move status, and errors.
+The frontend should inspect the payload type.
+
+Snapshot payload:
+
+  {
+    "boardSquares": [[...], [...], ...],
+    "status": "InProgress",
+    "currentTurn": "White"
+  }
+
+Snapshot status values are InProgress, WhiteWon, BlackWon,
+DrawByStalemate, DrawByInsufficientMaterial, DrawByThreefoldRepetition, and
+DrawBy75MoveRule.
+
+Invalid move payload:
+
+  {
+    "resultReason": "reason supplied by the chess validator"
+  }
+
+Error payload:
+
+  "No active game session for this connection."
+
+MatchFound
+
+Sent only when two queued clients have been paired:
+
+  {
+    "matched": true,
+    "sessionId": "...",
+    "playerColor": "Black"
+  }
+
+The client should use playerColor to decide which pieces it can select and
+sessionId for display or reconnect state.
+
+Sessions and lifecycle
+-----------------------------
+
+GameSessionManager.CreateSession
+  Creates an engine session, wires notifications, and stores it.
+
+GameSessionManager.CreateMultiplayerSession
+  Creates a session with two HttpPlayer objects and no Stockfish process.
+
+GameSessionManager.RegisterConnection
+  Maps a SignalR connection ID to a session and cancels idle eviction.
+
+GameSessionManager.RemoveConnection
+  Removes the connection from the manager and GameSession. If no connections
+  remain, the session gets an idle timestamp.
+
+GameSessionManager.SweepStaleSessions
+  Runs every minute. Sessions with no connections for ten minutes are removed
+  and cancelled.
+
+GameSession.StartAsync
+  Starts the game loop only once. Later calls return the same task.
+
+GameSession.Cancel
+  Cancels the game token. Chess.Core passes that token to HttpPlayer, so a
+  player waiting for a move stops waiting instead of blocking forever.
+
+GameSession.RunGameLoopAsync
+  Publishes each snapshot, handles cancellation/errors, and always disposes
+  GameRunner in its finally block.
+
+GameRunner.Run
+  Initializes Stockfish for engine games and streams snapshots from
+  Chess.Core.Game.GameLoop.
+
+GameRunner.DisposeAsync
+  Disposes EnginePlayer and its UCI process. Multiplayer sessions have no
+  engine and therefore have nothing extra to dispose.
+
+The ten-minute rule is therefore a real cleanup path: the timer removes the
+session, cancellation interrupts a blocked human move, and the finally block
+closes Stockfish. It is not a chess clock and does not forfeit a player after
+ten minutes while a connection is still active.
+
+Matchmaking
+----------------------
+
+MatchmakingQueue.Enqueue
+  If empty, stores one QueuedPlayer and returns Matched=false. If occupied,
+  removes the waiting player and returns both players.
+
+MatchmakingQueue.TryCancel
+  Removes the waiting record only when its connection ID matches.
+
+MatchmakingService.Enqueue
+  Serializes pairing, generates a session ID, randomly assigns White/Black,
+  creates HttpPlayers, registers both connections, joins both SignalR groups,
+  starts the session, and sends MatchFound.
+
+MatchmakingService.Cancel
+  Delegates cancellation to the queue. Active sessions are not cancelled by
+  this method.
+
+The current queue supports exactly one waiting player. For a real queue with
+many waiting players, replace the single QueuedPlayer field with a concurrent
+queue and add rules for duplicate users, time controls, ratings, and queue
+timeouts.

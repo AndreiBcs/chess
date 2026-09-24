@@ -7,7 +7,7 @@ using chess.Game;
 
 namespace Chess.Api.Game;
 
-public sealed class GameRunner
+public sealed class GameRunner : IAsyncDisposable
 {
     private readonly chess.Game.Game _game;
     private readonly EnginePlayer? _enginePlayer;
@@ -55,9 +55,12 @@ public sealed class GameRunner
             await _enginePlayer.Uci.NewGame();   
         }
 
-        await foreach (var snapshot in _game.GameLoop().WithCancellation(ct))
+        await foreach (var snapshot in _game.GameLoop(ct).WithCancellation(ct))
         {
             yield return snapshot;
         }
     }
+
+    public ValueTask DisposeAsync() =>
+        _enginePlayer?.DisposeAsync() ?? ValueTask.CompletedTask;
 }

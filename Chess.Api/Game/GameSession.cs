@@ -21,10 +21,12 @@ public sealed class GameSession
 
     public static GameSession Create(string id, StartRequestDto request)
     {
+        // build a session containing one HTTP player and one Stockfish player
         StartRequestDto.Validate(request);
         return new GameSession(id, new GameRunner(request));
     }
 
+    // build a session containing two http players
     public static GameSession Create(string id, HttpPlayer white, HttpPlayer black)
         => new(id, new GameRunner(white, black));
 
@@ -50,6 +52,7 @@ public sealed class GameSession
     
     public void RegisterConnection(string connectionId, Color color)
     {
+        // remember which chess color this SignalR connection is allowed to play
         if (!_runner.HttpPlayers.ContainsKey(color))
         {
             throw new InvalidOperationException($"Color {color} is not assigned to this session.");
@@ -58,11 +61,13 @@ public sealed class GameSession
         _connectionColors[connectionId] = color;
     }
 
+    // forget a connection so it can no longer submit moves
     public void RemoveConnection(string connectionId)
         => _connectionColors.Remove(connectionId);
 
     public void ProvideMoveFromClient(string connectionId, Move move)
     {
+        // deliver a move to the HTTP player assigned to this connection
         if (!_connectionColors.TryGetValue(connectionId, out var color))
         {
             throw new InvalidOperationException("Connection is not assigned to a player.");
@@ -73,6 +78,7 @@ public sealed class GameSession
 
     public Task StartAsync()
     {
+        // start the game loop once; repeated calls reuse the same task
         lock (_startLock)
         {
             if (_gameLoopTask is not null)
@@ -108,6 +114,11 @@ public sealed class GameSession
         catch (Exception ex)
         {
             await OnErrorOccurredAsync(ex.Message, ct);
+        }
+        finally
+        {
+            await _runner.DisposeAsync();
+            GameCts?.Dispose();
         }
     }
     

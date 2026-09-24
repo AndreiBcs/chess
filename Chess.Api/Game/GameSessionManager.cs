@@ -29,6 +29,7 @@ public sealed class GameSessionManager : IDisposable
 
     public GameSession CreateSession(string id, StartRequestDto request)
     {
+        // create and register a new engine game, rejecting duplicate session IDs
         lock (_lock)
         {
             if (_sessions.ContainsKey(id))
@@ -47,6 +48,7 @@ public sealed class GameSessionManager : IDisposable
 
     public GameSession CreateMultiplayerSession(string id, HttpPlayer white, HttpPlayer black)
     {
+        // create and register a game whose two players are controlled by clients
         lock (_lock)
         {
             if (_sessions.ContainsKey(id))
@@ -79,6 +81,7 @@ public sealed class GameSessionManager : IDisposable
 
     public GameSession? GetSession(string id)
     {
+        // look up a session without creating it
         lock (_lock)
         {
             _sessions.TryGetValue(id, out var session);
@@ -88,6 +91,7 @@ public sealed class GameSessionManager : IDisposable
 
     public string? GetSessionIdForConnection(string connectionId)
     {
+        // find the session currently associated with a SignalR connection
         lock (_lock)
         {
             _connectionToSession.TryGetValue(connectionId, out var sessionId);
@@ -97,6 +101,7 @@ public sealed class GameSessionManager : IDisposable
 
     public void RegisterConnection(string connectionId, string sessionId)
     {
+        // associate a live connection with a session and prevent idle eviction
         lock (_lock)
         {
             if (_connectionToSession.TryGetValue(connectionId, out var previousSessionId) &&
@@ -128,6 +133,7 @@ public sealed class GameSessionManager : IDisposable
 
     public void RemoveConnection(string connectionId)
     {
+        // remove a connection and mark its session idle when nobody remains
         lock (_lock)
         {
             if (!_connectionToSession.Remove(connectionId, out var sessionId))
@@ -152,6 +158,7 @@ public sealed class GameSessionManager : IDisposable
 
     private void SweepStaleSessions()
     {
+        // cancel games that have had no connected clients for ten minutes
         lock (_lock)
         {
             var cutoff = DateTime.UtcNow - IdleTimeout;
@@ -173,5 +180,17 @@ public sealed class GameSessionManager : IDisposable
         }
     }
 
-    public void Dispose() => _sweepTimer.Dispose();
+    public void Dispose()
+    {
+        // stop the timer and ask every active session to release its resources
+        _sweepTimer.Dispose();
+
+        lock (_lock)
+        {
+            foreach (var session in _sessions.Values)
+            {
+                session.Cancel();
+            }
+        }
+    }
 }

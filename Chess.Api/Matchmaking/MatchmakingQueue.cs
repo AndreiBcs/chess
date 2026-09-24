@@ -7,6 +7,7 @@ public sealed class MatchmakingQueue
 
     public MatchResult Enqueue(string connectionId, string playerId)
     {
+        // store the first caller or atomically pair it with the next caller
         lock (_lock)
         {
             if (_waiting == null)
@@ -29,6 +30,7 @@ public sealed class MatchmakingQueue
 
     public bool TryCancel(string connectionId)
     {
+        // cancel the waiting caller only when the connection IDs match
         lock (_lock)
         {
             if (_waiting?.ConnectionId == connectionId)
