@@ -1,13 +1,16 @@
 ﻿using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Hubs;
+using Chess.Api.Player;
+using chess;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Game;
 
 public sealed class GameSessionManager : IDisposable
 {
-    private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(7);
+    private const int IdleMinutes = 10;
+    private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(IdleMinutes);
     private static readonly TimeSpan SweepInterval = TimeSpan.FromMinutes(1);
 
     private readonly Dictionary<string, GameSession> _sessions = new();
@@ -37,6 +40,25 @@ public sealed class GameSessionManager : IDisposable
             WireNotifications(session);
             _sessions[id] = session;
             _sessionConnections[id] = new HashSet<string>();
+            _idleSince[id] = DateTime.UtcNow;
+            return session;
+        }
+    }
+
+    public GameSession CreateMultiplayerSession(string id, HttpPlayer white, HttpPlayer black)
+    {
+        lock (_lock)
+        {
+            if (_sessions.ContainsKey(id))
+            {
+                throw new InvalidOperationException($"Session {id} already exists");
+            }
+
+            var session = GameSession.Create(id, white, black);
+            WireNotifications(session);
+            _sessions[id] = session;
+            _sessionConnections[id] = new HashSet<string>();
+            _idleSince[id] = DateTime.UtcNow;
             return session;
         }
     }
@@ -116,6 +138,9 @@ public sealed class GameSessionManager : IDisposable
             if (_sessionConnections.TryGetValue(sessionId, out var connections))
             {
                 connections.Remove(connectionId);
+
+                _sessions.TryGetValue(sessionId, out var session);
+                session?.RemoveConnection(connectionId);
 
                 if (connections.Count == 0)
                 {

@@ -1,8 +1,8 @@
 ﻿using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
+using Chess.Api.Matchmaking;
 using chess.Game;
-using chess.Moves;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Hubs;
@@ -11,17 +11,41 @@ public sealed class GameHub : Hub
 {
     private const string SessionCookieName = "chess_session_id";
     private readonly GameSessionManager _sessionManager;
+    private readonly MatchmakingService _matchmakingService;
 
-    public GameHub(GameSessionManager sessionManager)
+    public GameHub(GameSessionManager sessionManager, MatchmakingService matchmakingService)
     {
         _sessionManager = sessionManager;
+        _matchmakingService = matchmakingService;
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)
     {
+        _matchmakingService.Cancel(Context.ConnectionId);
         _sessionManager.RemoveConnection(Context.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
+
+    public async Task<MatchmakingResponseDto> FindMatch(string playerId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                throw new ArgumentException("Player id is required.", nameof(playerId));
+            }
+
+            var result = await _matchmakingService.Enqueue(Context.ConnectionId, playerId);
+            return MatchmakingService.ToResponse(result);
+        }
+        catch (Exception ex)
+        {
+            await SendErrorAsync(ex.Message);
+            return new MatchmakingResponseDto(false, null, null);
+        }
+    }
+
+    public Task CancelMatch() => Task.FromResult(_matchmakingService.Cancel(Context.ConnectionId));
 
     public async Task StartGame(StartRequestDto request)
     {
@@ -35,12 +59,16 @@ public sealed class GameHub : Hub
             if (session is null)
             {
                 session = _sessionManager.CreateSession(sessionId, request);
-                _ = session.StartAsync();
             }
 
+            var playerColor = request.PlayerColor.Trim().Equals("white", StringComparison.OrdinalIgnoreCase)
+                ? chess.Color.White
+                : chess.Color.Black;
+            session.RegisterConnection(Context.ConnectionId, playerColor);
             await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
             _sessionManager.RegisterConnection(Context.ConnectionId, sessionId);
             SetSessionCookie(sessionId);
+            _ = session.StartAsync();
 
             if (session.LastSnapshot is not null)
             {
@@ -79,7 +107,9 @@ public sealed class GameHub : Hub
                 return;
             }
 
-            session.ProvideMoveFromClient(MoveRequestDto.FromMoveDto(moveRequest));
+            session.ProvideMoveFromClient(
+                Context.ConnectionId,
+                MoveRequestDto.FromMoveDto(moveRequest));
         }
         catch (Exception ex)
         {

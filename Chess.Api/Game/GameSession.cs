@@ -1,4 +1,6 @@
+using chess;
 using Chess.Api.Dtos.RequestDtos;
+using Chess.Api.Player;
 using chess.Game;
 using chess.Moves;
 
@@ -9,6 +11,7 @@ public sealed class GameSession
     private readonly Lock _startLock = new();
     private readonly GameRunner _runner;
     private Task? _gameLoopTask;
+    private readonly Dictionary<string, Color> _connectionColors = new();
     public string SessionId { get; }
     public GameSnapshot? LastSnapshot { get; private set; }
     private CancellationTokenSource? GameCts { get; set; }
@@ -22,18 +25,50 @@ public sealed class GameSession
         return new GameSession(id, new GameRunner(request));
     }
 
+    public static GameSession Create(string id, HttpPlayer white, HttpPlayer black)
+        => new(id, new GameRunner(white, black));
+
     private GameSession(string id, GameRunner runner)
     {
         SessionId = id;
         _runner = runner;
 
-        _runner.HttpPlayer.MoveStatusReceived += async moveStatus =>
+        foreach (var kvp in _runner.HttpPlayers)
         {
-            if (moveStatus.MoveResult == MoveResult.Invalid)
+            var color = kvp.Key;
+            var player = kvp.Value;
+            
+            player.MoveStatusReceived += async moveStatus =>
             {
-                await OnMoveStatusReceivedAsync(moveStatus, CancellationToken.None);
-            }
-        };
+                if (moveStatus.MoveResult == MoveResult.Invalid)
+                {
+                    await OnMoveStatusReceivedAsync(moveStatus, CancellationToken.None);
+                }
+            };
+        }
+    }
+    
+    public void RegisterConnection(string connectionId, Color color)
+    {
+        if (!_runner.HttpPlayers.ContainsKey(color))
+        {
+            throw new InvalidOperationException($"Color {color} is not assigned to this session.");
+        }
+
+        _connectionColors[connectionId] = color;
+    }
+
+    public void RemoveConnection(string connectionId)
+        => _connectionColors.Remove(connectionId);
+
+    public void ProvideMoveFromClient(string connectionId, Move move)
+    {
+        if (!_connectionColors.TryGetValue(connectionId, out var color))
+        {
+            throw new InvalidOperationException("Connection is not assigned to a player.");
+        }
+
+        _runner.HttpPlayers[color].ProvideMoveFromClient(move);
     }
 
     public Task StartAsync()
@@ -74,11 +109,6 @@ public sealed class GameSession
         {
             await OnErrorOccurredAsync(ex.Message, ct);
         }
-    }
-
-    public void ProvideMoveFromClient(Move move)
-    {
-        _runner.HttpPlayer.ProvideMoveFromClient(move);
     }
     
     private async Task OnSnapshotPublishedAsync(GameSnapshot snapshot, CancellationToken ct)

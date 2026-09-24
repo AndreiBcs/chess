@@ -1,0 +1,51 @@
+GET /health
+
+WS Hub /gamehub
+
+
+Client
+  |
+  | SignalR connection
+  v
+GameHub
+  |
+  +--> GameSessionManager
+  |       |
+  |       +--> GameSession
+  |              |
+  |              +--> GameRunner
+  |                     |
+  |                     +--> Chess.Core game rules
+  |                     +--> HttpPlayer
+  |                     +--> Engine
+  |
+  +--> MatchmakingService
+          |
+          +--> MatchmakingQueue
+          +--> GameSessionManager
+
+
+------------------------------------------------
+1. player vs engine
+
+client -> /gamehub
+StartGame called -> validates the start options
+GameSessionManager creates a GameSession
+GameSession creates a GameRunner
+GameRunner creates an HttpPlayer and an EnginePlayer
+game loop starts
+the server sends snapshots through ReceiveMessage
+the client sends moves through SubmitMove
+the move is routed to the HttpPlayer
+
+2. player vs player
+
+player A calls FindMatch
+MatchmakingQueue stores Player A
+Player A receives a waiting response
+Player B calls FindMatch
+the queue atomically removes Player A and pairs both players
+color are randomized
+GameSession creates a GameRunner with 2 HttpPlayer
+connections join SignalR group
+both clients receive MatchFound
