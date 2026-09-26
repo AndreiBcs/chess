@@ -29,7 +29,7 @@ public sealed class GameSessionManager : IDisposable
 
     public GameSession CreateSession(string id, StartRequestDto request)
     {
-        // create and register a new engine game, rejecting duplicate session IDs
+        // create and register a new player vs engine game
         lock (_lock)
         {
             if (_sessions.ContainsKey(id))
@@ -38,10 +38,13 @@ public sealed class GameSessionManager : IDisposable
             }
 
             var session = GameSession.Create(id, request);
+            
             WireNotifications(session);
+            
             _sessions[id] = session;
             _sessionConnections[id] = new HashSet<string>();
             _idleSince[id] = DateTime.UtcNow;
+            
             return session;
         }
     }
@@ -57,10 +60,13 @@ public sealed class GameSessionManager : IDisposable
             }
 
             var session = GameSession.Create(id, white, black);
+            
             WireNotifications(session);
+            
             _sessions[id] = session;
             _sessionConnections[id] = new HashSet<string>();
             _idleSince[id] = DateTime.UtcNow;
+            
             return session;
         }
     }
@@ -91,7 +97,7 @@ public sealed class GameSessionManager : IDisposable
 
     public string? GetSessionIdForConnection(string connectionId)
     {
-        // find the session currently associated with a SignalR connection
+        // find the session currently associated with a connection
         lock (_lock)
         {
             _connectionToSession.TryGetValue(connectionId, out var sessionId);

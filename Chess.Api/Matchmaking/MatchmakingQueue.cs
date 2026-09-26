@@ -10,17 +10,20 @@ public sealed class MatchmakingQueue
         // store the first caller or atomically pair it with the next caller
         lock (_lock)
         {
+            // enqueue if empty
             if (_waiting == null)
             {
                 _waiting = new QueuedPlayer(connectionId, playerId);
                 return MatchResult.Waiting();
             }
 
+            // keep the enqueued user if the connection is the same
             if (_waiting.Value.ConnectionId == connectionId)
             {
                 return MatchResult.Waiting();
             }
 
+            // if the connection is different pair them
             var opponent = _waiting.Value;
             _waiting = null;
             

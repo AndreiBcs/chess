@@ -21,7 +21,7 @@ public sealed class GameSession
 
     public static GameSession Create(string id, StartRequestDto request)
     {
-        // build a session containing one HTTP player and one Stockfish player
+        // build a session containing one HTTP player and one Engine player
         StartRequestDto.Validate(request);
         return new GameSession(id, new GameRunner(request));
     }
@@ -78,7 +78,9 @@ public sealed class GameSession
 
     public Task StartAsync()
     {
-        // start the game loop once; repeated calls reuse the same task
+        // start the game loop once
+        // repeated calls reuse the same task
+        
         lock (_startLock)
         {
             if (_gameLoopTask is not null)
@@ -87,6 +89,8 @@ public sealed class GameSession
             }
 
             GameCts = new CancellationTokenSource();
+            
+            // run the game loop
             _gameLoopTask = RunGameLoopAsync(GameCts.Token);
             return _gameLoopTask;
         }

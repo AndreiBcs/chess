@@ -68,10 +68,19 @@ public sealed class GameHub : Hub
             var playerColor = request.PlayerColor.Trim().Equals("white", StringComparison.OrdinalIgnoreCase)
                 ? chess.Color.White
                 : chess.Color.Black;
+            
+            // assign a color to the connection
             session.RegisterConnection(Context.ConnectionId, playerColor);
+            
             await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
+            
+            // register the new connection to the manager
             _sessionManager.RegisterConnection(Context.ConnectionId, sessionId);
+            
+            // send the reconnect cookie to the connection
             SetSessionCookie(sessionId);
+            
+            // start the game
             _ = session.StartAsync();
 
             if (session.LastSnapshot is not null)
@@ -92,6 +101,7 @@ public sealed class GameHub : Hub
         // convert and route a client move to the player assigned to this connection
         try
         {
+            // find the session by its ID
             var sessionId = _sessionManager.GetSessionIdForConnection(Context.ConnectionId);
             if (string.IsNullOrWhiteSpace(sessionId))
             {
@@ -154,7 +164,7 @@ public sealed class GameHub : Hub
             IsEssential = true,
             SameSite = SameSiteMode.Lax,
             Secure = httpContext.Request.IsHttps,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+            Expires = DateTimeOffset.UtcNow.AddMinutes(10)
         });
     }
 
