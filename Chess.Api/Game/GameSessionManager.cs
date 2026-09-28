@@ -2,17 +2,16 @@
 using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Hubs;
 using Chess.Api.Player;
-using chess;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Game;
 
-public sealed class GameSessionManager : IDisposable
+public class GameSessionManager : IDisposable
 {
     private const int IdleMinutes = 10;
+    private const int SweepMinutes = 1;
     private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(IdleMinutes);
-    private static readonly TimeSpan SweepInterval = TimeSpan.FromMinutes(1);
-
+    private static readonly TimeSpan SweepInterval = TimeSpan.FromMinutes(SweepMinutes);
     private readonly Dictionary<string, GameSession> _sessions = new();
     private readonly Dictionary<string, string> _connectionToSession = new();
     private readonly Dictionary<string, HashSet<string>> _sessionConnections = new();
@@ -26,10 +25,10 @@ public sealed class GameSessionManager : IDisposable
         _hubContext = hubContext;
         _sweepTimer = new Timer(_ => SweepStaleSessions(), null, SweepInterval, SweepInterval);
     }
-
-    public GameSession CreateSession(string id, StartRequestDto request)
+    
+    public GameSession CreateSession(string id, HttpPlayer white, HttpPlayer black)
     {
-        // create and register a new player vs engine game
+        // create and register a game whose two players are controlled by clients
         lock (_lock)
         {
             if (_sessions.ContainsKey(id))
@@ -37,7 +36,7 @@ public sealed class GameSessionManager : IDisposable
                 throw new InvalidOperationException($"Session {id} already exists");
             }
 
-            var session = GameSession.Create(id, request);
+            var session = new GameSession(id, new GameRunner(white, black));
             
             WireNotifications(session);
             
@@ -48,10 +47,10 @@ public sealed class GameSessionManager : IDisposable
             return session;
         }
     }
-
-    public GameSession CreateMultiplayerSession(string id, HttpPlayer white, HttpPlayer black)
+    
+    public GameSession CreateSession(string id, StartRequestDto request)
     {
-        // create and register a game whose two players are controlled by clients
+        // create and register a new player vs engine game
         lock (_lock)
         {
             if (_sessions.ContainsKey(id))
@@ -59,7 +58,9 @@ public sealed class GameSessionManager : IDisposable
                 throw new InvalidOperationException($"Session {id} already exists");
             }
 
-            var session = GameSession.Create(id, white, black);
+            StartRequestDto.Validate(request);
+            
+            var session = new GameSession(id, new GameRunner(request));
             
             WireNotifications(session);
             
