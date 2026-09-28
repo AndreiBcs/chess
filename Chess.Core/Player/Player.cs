@@ -9,8 +9,15 @@ public abstract class Player
     {
         Color = color;
     }
+    
+    protected Player(Color color, List<PieceCustomPosition> clashPieces)
+    {
+        Color = color;
+        ClashPieces = clashPieces;
+    }
 
     public Color Color { get; }
+    public List<PieceCustomPosition>? ClashPieces { get; }
     
     // game passes the last move status only if the move was invalid
     public abstract Task<Move> GetMoveAsync(

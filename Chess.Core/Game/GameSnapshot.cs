@@ -71,6 +71,36 @@ public sealed record GameSnapshot
             positionHistory);
     }
     
+    public static GameSnapshot GetInitialGameSnapshotForClash(
+        List<PieceCustomPosition> whiteCustomPositions, 
+        List<PieceCustomPosition> blackCustomPositions)
+    {
+        const GameStatus status = GameStatus.InProgress;
+        var board = chess.Board.Board.CreateInitialClashBoard(
+            whiteCustomPositions,
+            blackCustomPositions);
+        const Color currentTurn = Color.White;
+        var castlingRightsList = ImmutableList<CastlingRights>.Empty;
+        const int halfMoveClock = 0;
+        const int fullMoveCounter = 1;
+        Position? enPassantTarget = null;
+        var previousMove = new Move(new Position(0, 0), new Position(0, 0));
+        var previousStatus = new MoveStatus(MoveResult.Valid);
+        var positionHistory = new List<string>().ToImmutableList();
+
+        return new GameSnapshot(
+            status,
+            board, 
+            currentTurn,
+            castlingRightsList, 
+            enPassantTarget, 
+            halfMoveClock, 
+            fullMoveCounter, 
+            previousMove,
+            previousStatus,
+            positionHistory);
+    }
+    
     public static string ToFen(
         Board.Board board,
         Color currentTurn,

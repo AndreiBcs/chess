@@ -17,6 +17,30 @@ public sealed class Game
         Status = _currentSnapshot.Status;
     }
     
+    public Game(Player.Player player1, Player.Player player2, ChessMode mode)
+    {
+        Players = [player1, player2];
+        GameSnapshot initialSnapshot;
+        
+        if (mode == ChessMode.Clash)
+        {
+            var whitePlayer = Players.Single(p => p.Color == Color.White);
+            var blackPlayer = Players.Single(p => p.Color == Color.Black);
+            
+            initialSnapshot = GameSnapshot.GetInitialGameSnapshotForClash(
+                whitePlayer.ClashPieces!,
+                blackPlayer.ClashPieces!);
+        }
+        else
+        {
+            initialSnapshot = GameSnapshot.GetInitialGameSnapshot();
+        }
+        
+        Snapshots.Add(initialSnapshot);
+        _currentSnapshot = Snapshots[^1];
+        Status = _currentSnapshot.Status;
+    }
+    
     public readonly List<GameSnapshot> Snapshots = [];
     private GameSnapshot _currentSnapshot;
     private IReadOnlyList<Player.Player> Players { get; }

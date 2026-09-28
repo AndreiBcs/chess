@@ -186,6 +186,60 @@ public sealed record Board
         };
     }
 
+    public static Board CreateInitialClashBoard(
+        List<PieceCustomPosition> whitePieces, 
+        List<PieceCustomPosition> blackPieces)
+    {
+        var squares = new Square[8, 8];
+        
+        for (var row = 0; row < 8; row++)
+        {
+            for (var col = 0; col < 8; col++)
+            {
+                var position = new Position(row, col);
+                var color = (row + col) % 2 == 0
+                    ? Color.White
+                    : Color.Black;
+
+                PieceType? pieceType = row switch
+                {
+                    0 => blackPieces[col].PieceType,
+                    1 => blackPieces[col + 8].PieceType,
+                    6 => whitePieces[col].PieceType,
+                    7 => whitePieces[col + 8].PieceType,
+                    _ => null
+                };
+
+                Piece? piece = pieceType switch
+                {
+                    PieceType.Pawn when row is 0 or 1 => new Pawn(Color.Black),
+                    PieceType.Bishop when row is 0 or 1 => new Bishop(Color.Black),
+                    PieceType.Knight when row is 0 or 1 => new Knight(Color.Black),
+                    PieceType.Rook when row is 0 or 1 => new Rook(Color.Black),
+                    PieceType.Queen when row is 0 or 1 => new Queen(Color.Black),
+                    PieceType.King when row is 0 or 1 => new King(Color.Black),
+
+                    PieceType.Pawn when row is 6 or 7 => new Pawn(Color.White),
+                    PieceType.Bishop when row is 6 or 7 => new Bishop(Color.White),
+                    PieceType.Knight when row is 6 or 7 => new Knight(Color.White),
+                    PieceType.Rook when row is 6 or 7 => new Rook(Color.White),
+                    PieceType.Queen when row is 6 or 7 => new Queen(Color.White),
+                    PieceType.King when row is 6 or 7 => new King(Color.White),
+                    _ => null
+                };
+
+                squares[row, col] = new Square
+                {
+                    Color = color,
+                    Position = position,
+                    Piece = piece
+                };
+            }
+        }
+
+        return new Board(squares);
+    }
+
     public static Board CreateEmptyBoard()
     {
         var squares = new Square[8, 8];
