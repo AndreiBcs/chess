@@ -48,7 +48,7 @@ public sealed class MatchmakingService
             var firstPlayer = new HttpPlayer(firstColor);
             var secondPlayer = new HttpPlayer(secondColor);
 
-            session = _sessionManager.CreateMultiplayerSession(
+            session = _sessionManager.CreateSession(
                 sessionId,
                 firstColor == Color.White ? firstPlayer : secondPlayer,
                 firstColor == Color.White ? secondPlayer : firstPlayer);

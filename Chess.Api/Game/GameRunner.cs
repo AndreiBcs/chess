@@ -55,7 +55,7 @@ public sealed class GameRunner : IAsyncDisposable
             await _enginePlayer.Uci.NewGame();   
         }
 
-        await foreach (var snapshot in _game.GameLoop(ct).WithCancellation(ct))
+        await foreach (var snapshot in _game.GameLoop(ct))
         {
             yield return snapshot;
         }

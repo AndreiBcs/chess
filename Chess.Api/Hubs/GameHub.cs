@@ -52,7 +52,7 @@ public sealed class GameHub : Hub
 
     public async Task StartGame(StartRequestDto request)
     {
-        // create or resume a player-versus-Stockfish session
+        // create or resume a PvE session
         try
         {
             StartRequestDto.Validate(request);

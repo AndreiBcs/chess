@@ -18,26 +18,14 @@ public sealed class GameSession
     public event Func<GameSnapshot, CancellationToken, Task>? SnapshotPublished;
     public event Func<MoveStatus, CancellationToken, Task>? MoveStatusReceived;
     public event Func<string, CancellationToken, Task>? ErrorOccurred;
-
-    public static GameSession Create(string id, StartRequestDto request)
-    {
-        // build a session containing one HTTP player and one Engine player
-        StartRequestDto.Validate(request);
-        return new GameSession(id, new GameRunner(request));
-    }
-
-    // build a session containing two http players
-    public static GameSession Create(string id, HttpPlayer white, HttpPlayer black)
-        => new(id, new GameRunner(white, black));
-
-    private GameSession(string id, GameRunner runner)
+    
+    public GameSession(string id, GameRunner runner)
     {
         SessionId = id;
         _runner = runner;
 
         foreach (var kvp in _runner.HttpPlayers)
         {
-            var color = kvp.Key;
             var player = kvp.Value;
             
             player.MoveStatusReceived += async moveStatus =>
@@ -52,7 +40,7 @@ public sealed class GameSession
     
     public void RegisterConnection(string connectionId, Color color)
     {
-        // remember which chess color this SignalR connection is allowed to play
+        // remember which chess color this connection is allowed to play
         if (!_runner.HttpPlayers.ContainsKey(color))
         {
             throw new InvalidOperationException($"Color {color} is not assigned to this session.");
@@ -67,7 +55,7 @@ public sealed class GameSession
 
     public void ProvideMoveFromClient(string connectionId, Move move)
     {
-        // deliver a move to the HTTP player assigned to this connection
+        // deliver a move to the http player assigned to this connection
         if (!_connectionColors.TryGetValue(connectionId, out var color))
         {
             throw new InvalidOperationException("Connection is not assigned to a player.");
