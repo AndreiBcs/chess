@@ -17,12 +17,12 @@ public sealed class Game
         Status = _currentSnapshot.Status;
     }
     
-    public Game(Player.Player player1, Player.Player player2, ChessMode mode)
+    public Game(Player.Player player1, Player.Player player2, ChessGameMode gameMode)
     {
         Players = [player1, player2];
         GameSnapshot initialSnapshot;
         
-        if (mode == ChessMode.Clash)
+        if (gameMode == ChessGameMode.Clash)
         {
             var whitePlayer = Players.Single(p => p.Color == Color.White);
             var blackPlayer = Players.Single(p => p.Color == Color.Black);

@@ -72,8 +72,8 @@ public sealed record GameSnapshot
     }
     
     public static GameSnapshot GetInitialGameSnapshotForClash(
-        List<PieceCustomPosition> whiteCustomPositions, 
-        List<PieceCustomPosition> blackCustomPositions)
+        List<PieceType> whiteCustomPositions, 
+        List<PieceType> blackCustomPositions)
     {
         const GameStatus status = GameStatus.InProgress;
         var board = chess.Board.Board.CreateInitialClashBoard(
