@@ -3,6 +3,7 @@ using Chess.Api.Dtos.ResponseDtos;
 using Chess.Api.Game;
 using Chess.Api.Matchmaking;
 using chess.Game;
+using chess.Moves;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Hubs;
@@ -96,7 +97,7 @@ public sealed class GameHub : Hub
         }
     }
 
-    public async Task SubmitMove(MoveRequestDto moveRequest)
+    public async Task SubmitMove(Move moveRequest)
     {
         // convert and route a client move to the player assigned to this connection
         try
@@ -124,7 +125,7 @@ public sealed class GameHub : Hub
 
             session.ProvideMoveFromClient(
                 Context.ConnectionId,
-                MoveRequestDto.FromMoveDto(moveRequest));
+                moveRequest);
         }
         catch (Exception ex)
         {

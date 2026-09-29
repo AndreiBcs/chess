@@ -19,7 +19,7 @@ public class UciTests
     [Fact]
     public async Task Stockfish_ReturnsValidMove()
     {
-        var enginePlayer = new EnginePlayer(Color.White, ChessEngine.Stockfish);
+        var enginePlayer = new EnginePlayer(Color.White, ChessEngineType.Stockfish);
         var engine = enginePlayer.Uci;
 
         await engine.StartEngine();

@@ -16,7 +16,7 @@ internal sealed class GameRunner : IAsyncDisposable
     private readonly Color _playerColor;
     private readonly int _elo;
     private readonly bool _textRender;
-    private readonly ChessEngine _engineType;
+    private readonly ChessEngineType _engineTypeType;
 
     public GameRunner(Options options)
     {
@@ -26,12 +26,12 @@ internal sealed class GameRunner : IAsyncDisposable
             Color.Black : 
             Color.White;
 
-        _engineType = options.Engine;
+        _engineTypeType = options.EngineType;
         
         _elo = options.Elo;
         
         _consolePlayer = new ConsolePlayer(_playerColor);
-        _enginePlayer = new EnginePlayer(engineColor, _engineType);
+        _enginePlayer = new EnginePlayer(engineColor, _engineTypeType);
         
         _enginePlayer.Uci.Depth = options.Depth;
         _enginePlayer.Uci.MoveTime = options.MoveTime;
@@ -62,7 +62,7 @@ internal sealed class GameRunner : IAsyncDisposable
                     _game.Snapshots,
                     _playerColor,
                     playerName, 
-                    _engineType.ToString(),
+                    _engineTypeType.ToString(),
                     _elo);
 
                 try

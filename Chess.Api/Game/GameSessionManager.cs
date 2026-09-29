@@ -80,7 +80,7 @@ public class GameSessionManager : IDisposable
             group.SendAsync("ReceiveMessage", SnapshotDto.ToSnapshotDto(snapshot), ct);
 
         session.MoveStatusReceived += (moveStatus, ct) =>
-            group.SendAsync("ReceiveMessage", MoveStatusDto.ToMoveStatusDto(moveStatus), ct);
+            group.SendAsync("ReceiveMessage", moveStatus.InvalidMoveReason, ct);
 
         session.ErrorOccurred += (message, ct) =>
             group.SendAsync("ReceiveMessage", message, ct);

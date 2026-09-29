@@ -112,22 +112,22 @@ public static partial class ConsoleInteraction
                 .DefaultValue(Color.White));
         
         var engineType = AnsiConsole.Prompt(
-            new SelectionPrompt<ChessEngine>()
+            new SelectionPrompt<ChessEngineType>()
                 .Title("Choose a chess engine:")
-                .AddChoices(ChessEngine.Stockfish, ChessEngine.Deakfish)
+                .AddChoices(ChessEngineType.Stockfish, ChessEngineType.Deakfish)
                 .UseConverter(engine => engine switch
                 {
-                    ChessEngine.Stockfish => "Stockfish",
-                    ChessEngine.Deakfish => "Deakfish (in development)",
+                    ChessEngineType.Stockfish => "Stockfish",
+                    ChessEngineType.Deakfish => "Deakfish (in development)",
                     _ => engine.ToString()
                 })
-                .DefaultValue(ChessEngine.Stockfish));
+                .DefaultValue(ChessEngineType.Stockfish));
 
         var elo = AnsiConsole.Prompt(
             new TextPrompt<int>("Chess engine Elo:")
                 .DefaultValue(1500)
                 .Validate(value =>
-                    value is >= 1320 and <= 3190 && engineType == ChessEngine.Stockfish
+                    value is >= 1320 and <= 3190 && engineType == ChessEngineType.Stockfish
                         ? ValidationResult.Success()
                         : ValidationResult.Error("[red]Stockfish elo ranges between 1320 and 3190.[/]")));
         

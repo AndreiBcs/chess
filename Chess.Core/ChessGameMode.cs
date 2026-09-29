@@ -2,6 +2,8 @@
 
 public enum ChessGameMode
 {
-    Normal,
-    Clash
+    NormalPvE,
+    NormalPvP,
+    ClashPvE,
+    ClashPvP
 }

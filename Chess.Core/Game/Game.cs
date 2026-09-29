@@ -22,7 +22,7 @@ public sealed class Game
         Players = [player1, player2];
         GameSnapshot initialSnapshot;
         
-        if (gameMode == ChessGameMode.Clash)
+        if (gameMode is ChessGameMode.ClashPvE or ChessGameMode.ClashPvP)
         {
             var whitePlayer = Players.Single(p => p.Color == Color.White);
             var blackPlayer = Players.Single(p => p.Color == Color.Black);

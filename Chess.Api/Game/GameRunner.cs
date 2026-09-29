@@ -25,7 +25,7 @@ public sealed class GameRunner : IAsyncDisposable
 
         _elo = request.Elo;
         var httpPlayer = new HttpPlayer(playerColor);
-        _enginePlayer = new EnginePlayer(engineColor, ChessEngine.Stockfish);
+        _enginePlayer = new EnginePlayer(engineColor, ChessEngineType.Stockfish);
         HttpPlayers = new Dictionary<Color, HttpPlayer> { [playerColor] = httpPlayer };
 
         _game = new chess.Game.Game(httpPlayer, _enginePlayer);

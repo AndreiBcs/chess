@@ -11,11 +11,11 @@ public sealed class EnginePlayer : Player, IAsyncDisposable
 {
     public readonly Uci Uci; // consumer handles start / stop / set elo
 
-    public EnginePlayer(Color color, ChessEngine chessEngine) : base(color)
+    public EnginePlayer(Color color, ChessEngineType chessEngineType) : base(color)
     {
-        var engineFilePath = chessEngine switch
+        var engineFilePath = chessEngineType switch
         {
-            ChessEngine.Stockfish => 
+            ChessEngineType.Stockfish => 
                 Path.Combine(AppContext.BaseDirectory, 
                     "Stockfish", 
                     "stockfish-windows-x86-64-avx2.exe"),
@@ -66,7 +66,7 @@ public sealed class EnginePlayer : Player, IAsyncDisposable
     }
 }
 
-public enum ChessEngine
+public enum ChessEngineType
 {
     Stockfish,
     Deakfish
