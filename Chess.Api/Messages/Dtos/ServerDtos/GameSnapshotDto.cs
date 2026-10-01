@@ -4,13 +4,13 @@ using chess.Game;
 
 namespace Chess.Api.Messages.Dtos.ServerDtos;
 
-public readonly record struct SnapshotDto
+public readonly record struct GameSnapshotDto
 {
     public Square[][] BoardSquares { get; init; }
     public GameStatus Status { get; init; }
     public Color CurrentTurn { get; init; }
     
-    public static SnapshotDto ToSnapshotDto(GameSnapshot snapshot)
+    public static GameSnapshotDto ToSnapshotDto(GameSnapshot snapshot)
     {
         var squares = snapshot.Board.CopySquares();
         var squaresDto = new Square[8][];
@@ -24,7 +24,7 @@ public readonly record struct SnapshotDto
             }
         }
         
-        var snapshotDto = new SnapshotDto
+        var snapshotDto = new GameSnapshotDto
         {
             CurrentTurn = snapshot.CurrentTurn,
             Status = snapshot.Status,

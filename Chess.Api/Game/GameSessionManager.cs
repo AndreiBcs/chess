@@ -77,7 +77,7 @@ public class GameSessionManager : IDisposable
         var group = _hubContext.Clients.Group(session.SessionId);
 
         session.SnapshotPublished += (snapshot, ct) =>
-            group.SendAsync("ReceiveMessage", SnapshotDto.ToSnapshotDto(snapshot), ct);
+            group.SendAsync("ReceiveMessage", GameSnapshotDto.ToSnapshotDto(snapshot), ct);
 
         session.MoveStatusReceived += (moveStatus, ct) =>
             group.SendAsync("ReceiveMessage", moveStatus.InvalidMoveReason, ct);

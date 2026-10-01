@@ -2,7 +2,6 @@ using chess;
 
 namespace Chess.Api.Messages.Dtos.ServerDtos;
 
-public readonly record struct MatchmakingResponseDto(
+public readonly record struct MatchmakingDto(
     bool Matched,
-    string? SessionId,
     Color? PlayerColor);

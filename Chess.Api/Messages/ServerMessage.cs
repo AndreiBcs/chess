@@ -10,5 +10,6 @@ public readonly record struct ServerMessage(
 public enum ServerMessageType
 {
     GameSnapshotDto,
+    MatchmakingDto,
     MoveRejectedDto
 }

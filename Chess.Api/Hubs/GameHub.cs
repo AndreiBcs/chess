@@ -28,7 +28,7 @@ public sealed class GameHub : Hub
         return base.OnDisconnectedAsync(exception);
     }
 
-    public async Task<MatchmakingResponseDto> FindMatch(string playerId)
+    public async Task<MatchmakingDto> FindMatch(string playerId)
     {
         // put this connection in the one-player queue or start a match
         try
@@ -44,7 +44,7 @@ public sealed class GameHub : Hub
         catch (Exception ex)
         {
             await SendErrorAsync(ex.Message);
-            return new MatchmakingResponseDto(false, null, null);
+            return new MatchmakingDto(false, null);
         }
     }
 
@@ -88,7 +88,7 @@ public sealed class GameHub : Hub
             {
                 await Clients.Caller.SendAsync(
                     "ReceiveMessage",
-                    SnapshotDto.ToSnapshotDto(session.LastSnapshot));
+                    GameSnapshotDto.ToSnapshotDto(session.LastSnapshot));
             }
         }
         catch (Exception ex)

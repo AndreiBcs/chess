@@ -90,6 +90,6 @@ public sealed class MatchmakingService
         }
     }
 
-    public static MatchmakingResponseDto ToResponse(MatchResult result) =>
-        new(result.Matched, result.SessionId, result.PlayerColor);
+    public static MatchmakingDto ToResponse(MatchResult result) =>
+        new(result.Matched, result.PlayerColor);
 }
