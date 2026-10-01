@@ -11,5 +11,6 @@ public enum ServerMessageType
 {
     GameSnapshotDto,
     MatchmakingDto,
-    MoveRejectedDto
+    MoveRejectedDto,
+    ErrorDto
 }
