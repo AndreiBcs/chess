@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using chess;
-using Chess.Api.Dtos.RequestDtos;
+using Chess.Api.Messages.Dtos.ClientDtos;
 using Chess.Api.Player;
 using Chess.Engine;
 using chess.Game;

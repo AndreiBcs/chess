@@ -1,5 +1,4 @@
 using chess;
-using Chess.Api.Dtos.RequestDtos;
 using Chess.Api.Player;
 using chess.Game;
 using chess.Moves;

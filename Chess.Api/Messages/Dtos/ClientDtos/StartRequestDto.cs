@@ -1,4 +1,4 @@
-﻿namespace Chess.Api.Dtos.RequestDtos;
+﻿namespace Chess.Api.Messages.Dtos.ClientDtos;
 
 public readonly record struct StartRequestDto(
     string PlayerColor,

@@ -4,67 +4,24 @@ using Chess.Engine;
 using chess.Pieces;
 using chess.Validation.ClashModeValidation;
 
-namespace Chess.Api.Dtos.RequestDtos;
+namespace Chess.Api.Messages.Dtos.ClientDtos;
 
-public readonly record struct StartGameDto(
-    string? SessionId,
-    ChessGameMode GameMode,
-    NormalPvEDto? NormalPvE = null,
-    ClashPvEDto? ClashPvE = null,
-    NormalPvPDto? NormalPvP = null,
-    ClashPvPDto? ClashPvP = null)
+public abstract record StartGameDto(
+    ChessGameMode GameMode)
 {
-    public void Validate()
-    {
-        switch (GameMode)
-        {
-            case ChessGameMode.NormalPvE:
-                if (NormalPvE is null)
-                {
-                    throw new InvalidOperationException("Data for selected mode cannot be null.");
-                }
-                NormalPvE.Value.Validate();
-                break;
-                
-            case ChessGameMode.NormalPvP:
-                if (NormalPvP is null)
-                {
-                    throw new InvalidOperationException("Data for selected mode cannot be null.");
-                }
-                NormalPvP.Value.Validate();
-                break;
-                
-            case ChessGameMode.ClashPvE:
-                if (ClashPvE is null)
-                {
-                    throw new InvalidOperationException("Data for selected mode cannot be null.");
-                }
-                ClashPvE.Value.Validate();
-                break;
-                
-            case ChessGameMode.ClashPvP:
-                if (ClashPvP is null)
-                {
-                    throw new InvalidOperationException("Data for selected mode cannot be null.");
-                }
-                ClashPvP.Value.Validate();
-                break;
-                
-            default:
-                throw new ArgumentOutOfRangeException(nameof(GameMode), "Unrecognized game mode.");
-        }
-    }
+    public abstract void Validate();
 }
 
-public readonly record struct NormalPvEDto(
+public sealed record NormalPvEStartDto(
+    ChessGameMode GameMode,
     Color PlayerColor,
     ChessEngineType ChessEngineType,
     int Elo,
     int Depth,
     int MoveTime,
-    long Nodes)
+    long Nodes) : StartGameDto(GameMode)
 {
-    public void Validate()
+    public override void Validate()
     {
         if (PlayerColor is not Color.White and not Color.Black)
         {
@@ -98,7 +55,8 @@ public readonly record struct NormalPvEDto(
     }
 }
 
-public readonly record struct ClashPvEDto(
+public sealed record ClashPvEStartDto(
+    ChessGameMode GameMode,
     Color PlayerColor,
     ChessEngineType ChessEngineType,
     int Elo,
@@ -107,9 +65,9 @@ public readonly record struct ClashPvEDto(
     long Nodes,
     bool RandomizeChessEnginePieces,
     ChessPiecesBuffer PlayerPieces,
-    ChessPiecesBuffer? ChessEnginePieces)
+    ChessPiecesBuffer? ChessEnginePieces) : StartGameDto(GameMode)
 {
-    public void Validate()
+    public override void Validate()
     {
         if (PlayerColor is not Color.White and not Color.Black)
         {
@@ -177,10 +135,11 @@ public readonly record struct ClashPvEDto(
     }
 }
 
-public readonly record struct NormalPvPDto(
-    string Nickname)
+public sealed record NormalPvPStartDto(
+    ChessGameMode GameMode,
+    string Nickname) : StartGameDto(GameMode)
 {
-    public void Validate()
+    public override void Validate()
     {
         if (string.IsNullOrWhiteSpace(Nickname.Trim()))
         {
@@ -189,11 +148,12 @@ public readonly record struct NormalPvPDto(
     }
 }
 
-public readonly record struct ClashPvPDto(
+public sealed record ClashPvPStartDto(
+    ChessGameMode GameMode,
     string Nickname,
-    ChessPiecesBuffer PlayerPieces)
+    ChessPiecesBuffer PlayerPieces) : StartGameDto(GameMode)
 {
-    public void Validate()
+    public override void Validate()
     {
         if (string.IsNullOrWhiteSpace(Nickname.Trim()))
         {

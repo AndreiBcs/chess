@@ -1,7 +1,7 @@
-﻿using Chess.Api.Dtos.RequestDtos;
-using Chess.Api.Dtos.ResponseDtos;
-using Chess.Api.Game;
+﻿using Chess.Api.Game;
 using Chess.Api.Matchmaking;
+using Chess.Api.Messages.Dtos.ClientDtos;
+using Chess.Api.Messages.Dtos.ServerDtos;
 using chess.Game;
 using chess.Moves;
 using Microsoft.AspNetCore.SignalR;
