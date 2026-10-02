@@ -11,9 +11,4 @@
     <ProjectReference Include="..\Chess.Engine\Chess.Engine.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Dtos\RequestDtos\" />
-    <Folder Include="Dtos\ResponseDtos\" />
-  </ItemGroup>
-
 </Project>

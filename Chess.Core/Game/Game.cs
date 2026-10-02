@@ -9,7 +9,7 @@ public sealed class Game
     public GameStatus Status;
     public Game(Player.Player player1, Player.Player player2)
     {
-        Players = [player1, player2];
+        Players = [player1, player2]; // kept for backwards compatibility
         
         var initialSnapshot = GameSnapshot.GetInitialGameSnapshot();
         Snapshots.Add(initialSnapshot);

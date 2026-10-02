@@ -1,176 +1,209 @@
-﻿using Chess.Api.Game;
-using Chess.Api.Matchmaking;
+﻿using System.Collections.Concurrent;
+using chess;
+using Chess.Api.Game;
 using Chess.Api.Messages.Dtos.ClientDtos;
 using Chess.Api.Messages.Dtos.ServerDtos;
-using chess.Game;
 using chess.Moves;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Hubs;
 
-public sealed class GameHub : Hub
+public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
 {
-    private const string SessionCookieName = "chess_session_id";
-    private readonly GameSessionManager _sessionManager;
-    private readonly MatchmakingService _matchmakingService;
+    // map id - session
+    private static readonly ConcurrentDictionary<string, GameSession> Sessions = new();
+    // map game mode - id and start options
+    private static readonly Dictionary<ChessGameMode, (string Conn, StartGameDto Dto)> Waiting = new();
+    private static readonly Lock MatchLock = new();
 
-    public GameHub(GameSessionManager sessionManager, MatchmakingService matchmakingService)
+    private static GameSession? FindSession(string connId) =>
+        Sessions.Values.FirstOrDefault(s => s.HasConnection(connId));
+
+    public override Task OnDisconnectedAsync(Exception? ex)
     {
-        _sessionManager = sessionManager;
-        _matchmakingService = matchmakingService;
+        lock (MatchLock)
+        {
+            // remove waiting connections if disconnected
+            foreach (var mode in Waiting
+                         .Where(w => w.Value.Conn == Context.ConnectionId)
+                         .Select(w => w.Key)
+                         .ToList())
+            {
+                Waiting.Remove(mode);
+            }
+        }
+
+        // remove active sessions if disconnected
+        var session = FindSession(Context.ConnectionId);
+        
+        if (session is not null)
+        {
+            session.Leave(Context.ConnectionId);
+            if (!session.HasConnections)
+            {
+                _ = CancelAfterGraceAsync(session);
+            }
+        }
+        
+        return base.OnDisconnectedAsync(ex);
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    private static async Task CancelAfterGraceAsync(GameSession s)
     {
-        // remove disconnected users from the queue and their active session
-        _matchmakingService.Cancel(Context.ConnectionId);
-        _sessionManager.RemoveConnection(Context.ConnectionId);
-        return base.OnDisconnectedAsync(exception);
+        // after 10 minutes check if the session still has connections and cancel if not
+        await Task.Delay(TimeSpan.FromMinutes(10));
+        
+        if (!s.HasConnections)
+        {
+            s.Cancel();
+        }
     }
 
-    public async Task<MatchmakingDto> FindMatch(string playerId)
+    public async Task<string?> StartGame(StartGameDto dto)
     {
-        // put this connection in the one-player queue or start a match
         try
         {
-            if (string.IsNullOrWhiteSpace(playerId))
+            dto.Validate();
+
+            if (dto.GameMode is not (ChessGameMode.NormalPvE or ChessGameMode.ClashPvE))
             {
-                throw new ArgumentException("Player id is required.", nameof(playerId));
+                throw new InvalidOperationException("Use FindMatch for multiplayer modes.");
             }
 
-            var result = await _matchmakingService.Enqueue(Context.ConnectionId, playerId);
-            return MatchmakingService.ToResponse(result);
+            var id = Guid.NewGuid().ToString("N");
+            var session = GameSession.CreatePvE(
+                id,
+                dto,
+                ctx,
+                sid => Sessions.TryRemove(sid, out _));
+            
+            Sessions[id] = session;
+
+            session.Join(Context.ConnectionId, session.SoleClientColor!.Value);
+            await Groups.AddToGroupAsync(Context.ConnectionId, id);
+            session.Start();
+            
+            return id;
         }
         catch (Exception ex)
         {
-            await SendErrorAsync(ex.Message);
-            return new MatchmakingDto(false, null);
+            await Send("Error", new ErrorDto(ex.Message)); 
+            return null; 
         }
     }
 
-    // remove this connection from matchmaking without ending an active game
-    public Task CancelMatch() => Task.FromResult(_matchmakingService.Cancel(Context.ConnectionId));
-
-    public async Task StartGame(StartRequestDto request)
+    public async Task Rejoin(string sessionId)
     {
-        // create or resume a PvE session
         try
         {
-            StartRequestDto.Validate(request);
-
-            var sessionId = ResolveSessionId(request.GameId);
-            var session = _sessionManager.GetSession(sessionId);
-
-            if (session is null)
+            // search in pvp sessions or pve sole client match
+            if (!Sessions.TryGetValue(sessionId, out var session) ||
+                session.SoleClientColor is not { } color)
             {
-                session = _sessionManager.CreateSession(sessionId, request);
+                throw new InvalidOperationException("Game not found.");
             }
 
-            var playerColor = request.PlayerColor.Trim().Equals("white", StringComparison.OrdinalIgnoreCase)
-                ? chess.Color.White
-                : chess.Color.Black;
-            
-            // assign a color to the connection
-            session.RegisterConnection(Context.ConnectionId, playerColor);
-            
+            session.Join(Context.ConnectionId, color);
             await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
             
-            // register the new connection to the manager
-            _sessionManager.RegisterConnection(Context.ConnectionId, sessionId);
-            
-            // send the reconnect cookie to the connection
-            SetSessionCookie(sessionId);
-            
-            // start the game
-            _ = session.StartAsync();
-
             if (session.LastSnapshot is not null)
             {
-                await Clients.Caller.SendAsync(
-                    "ReceiveMessage",
-                    GameSnapshotDto.ToSnapshotDto(session.LastSnapshot));
+                await Send("Snapshot", GameSnapshotDto.ToSnapshotDto(session.LastSnapshot));
             }
         }
         catch (Exception ex)
         {
-            await SendErrorAsync(ex.Message);
+            await Send("Error", new ErrorDto(ex.Message));
         }
     }
 
-    public async Task SubmitMove(Move moveRequest)
+    public async Task FindMatch(StartGameDto dto)
     {
-        // convert and route a client move to the player assigned to this connection
         try
         {
-            // find the session by its ID
-            var sessionId = _sessionManager.GetSessionIdForConnection(Context.ConnectionId);
-            if (string.IsNullOrWhiteSpace(sessionId))
+            dto.Validate();
+
+            if (dto.GameMode is not (ChessGameMode.NormalPvP or ChessGameMode.ClashPvP))
             {
-                await SendErrorAsync("No active game session for this connection.");
-                return;
+                throw new InvalidOperationException("Not a multiplayer mode.");
             }
 
-            var session = _sessionManager.GetSession(sessionId);
-            if (session is null)
+            (string Conn, StartGameDto Dto)? opponent = null;
+            
+            lock (MatchLock)
             {
-                await SendErrorAsync("Game session not found.");
-                return;
+                if (Waiting.Remove(dto.GameMode, out var w) &&
+                    w.Conn != Context.ConnectionId)
+                {
+                    opponent = w;
+                }
+                else
+                {
+                    Waiting[dto.GameMode] = (Context.ConnectionId, dto);
+                }
             }
 
-            if (session.LastSnapshot is not null && session.LastSnapshot.Status != GameStatus.InProgress)
-            {
-                await SendErrorAsync("The game is already over.");
+            if (opponent is not { } opp) 
                 return;
+
+            var me = (Conn: Context.ConnectionId, Dto: dto);
+            var (white, black) = Random.Shared.Next(2) == 0 ? (me, opp) : (opp, me);
+
+            var id = Guid.NewGuid().ToString("N");
+            var session = GameSession.CreatePvP(
+                id,
+                dto.GameMode,
+                GameSession.CreatePlayer(Color.White, white.Dto),
+                GameSession.CreatePlayer(Color.Black, black.Dto),
+                ctx,
+                sid => Sessions.TryRemove(sid, out _));
+
+            Sessions[id] = session;
+
+            foreach (var (conn, color) in new[] { (white.Conn, Color.White), (black.Conn, Color.Black) })
+            {
+                session.Join(conn, color);
+                await ctx.Groups.AddToGroupAsync(conn, id);
+                await ctx.Clients
+                    .Client(conn)
+                    .SendAsync("MatchFound", new MatchmakingDto(true, color));
             }
 
-            session.ProvideMoveFromClient(
-                Context.ConnectionId,
-                moveRequest);
+            session.Start();
         }
         catch (Exception ex)
         {
-            await SendErrorAsync(ex.Message);
+            await Send("Error", new ErrorDto(ex.Message));
         }
     }
 
-    private string ResolveSessionId(string? providedSessionId)
+    public void CancelMatch()
     {
-        var httpContext = Context.GetHttpContext();
-        var cookieSessionId = httpContext?.Request.Cookies[SessionCookieName];
-
-        if (!string.IsNullOrWhiteSpace(providedSessionId))
+        lock (MatchLock)
         {
-            return providedSessionId;
+            foreach (var mode in Waiting
+                         .Where(w => w.Value.Conn == Context.ConnectionId)
+                         .Select(w => w.Key)
+                         .ToList())
+            {
+                Waiting.Remove(mode);
+            }
         }
-
-        if (!string.IsNullOrWhiteSpace(cookieSessionId))
-        {
-            return cookieSessionId;
-        }
-
-        return Guid.NewGuid().ToString("N");
     }
 
-    private void SetSessionCookie(string sessionId)
+    public async Task SubmitMove(Move move)
     {
-        var httpContext = Context.GetHttpContext();
-        if (httpContext is null)
+        try
         {
-            return;
+            var session = FindSession(Context.ConnectionId)
+                          ?? throw new InvalidOperationException("No active game for this connection.");
+            session.SubmitMove(Context.ConnectionId, move);
         }
-
-        httpContext.Response.Cookies.Append(SessionCookieName, sessionId, new CookieOptions
+        catch (Exception ex)
         {
-            HttpOnly = true,
-            IsEssential = true,
-            SameSite = SameSiteMode.Lax,
-            Secure = httpContext.Request.IsHttps,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(10)
-        });
+            await Send("Error", new ErrorDto(ex.Message));
+        }
     }
 
-    private async Task SendErrorAsync(string message)
-    {
-        await Clients.Caller.SendAsync("ReceiveMessage", message);
-    }
+    private Task Send(string method, object payload) => Clients.Caller.SendAsync(method, payload);
 }

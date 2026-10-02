@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Text.Json.Serialization;
 using chess;
 using Chess.Engine;
 using chess.Pieces;
@@ -6,6 +6,11 @@ using chess.Validation.ClashModeValidation;
 
 namespace Chess.Api.Messages.Dtos.ClientDtos;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(NormalPvEStartDto), "normalPvE")]
+[JsonDerivedType(typeof(ClashPvEStartDto),  "clashPvE")]
+[JsonDerivedType(typeof(NormalPvPStartDto), "normalPvP")]
+[JsonDerivedType(typeof(ClashPvPStartDto),  "clashPvP")]
 public abstract record StartGameDto(
     ChessGameMode GameMode)
 {
@@ -64,8 +69,8 @@ public sealed record ClashPvEStartDto(
     int MoveTime,
     long Nodes,
     bool RandomizeChessEnginePieces,
-    ChessPiecesBuffer PlayerPieces,
-    ChessPiecesBuffer? ChessEnginePieces) : StartGameDto(GameMode)
+    PieceType[] PlayerPieces,
+    PieceType[]? ChessEnginePieces) : StartGameDto(GameMode)
 {
     public override void Validate()
     {
@@ -151,7 +156,7 @@ public sealed record NormalPvPStartDto(
 public sealed record ClashPvPStartDto(
     ChessGameMode GameMode,
     string Nickname,
-    ChessPiecesBuffer PlayerPieces) : StartGameDto(GameMode)
+    PieceType[] PlayerPieces) : StartGameDto(GameMode)
 {
     public override void Validate()
     {
@@ -173,11 +178,4 @@ public sealed record ClashPvPStartDto(
                                            " Either piece count doesn't match or King is in the first rank.");
         }
     }
-}
-
-
-[InlineArray(16)]
-public struct ChessPiecesBuffer
-{
-    private PieceType _element0;
 }

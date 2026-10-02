@@ -20,7 +20,7 @@ public class HttpPlayer : chess.Player.Player
         MoveStatus? moveStatus,
         CancellationToken cancellationToken = default)
     {
-        // wait asynchronously for the client move, or stop when the session is cancelled
+        // wait asynchronously for the client move, or stop when the session is canceled
         if (moveStatus is not null)
         {
             MoveStatusReceived?.Invoke(moveStatus.Value);

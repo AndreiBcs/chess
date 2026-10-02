@@ -18,7 +18,7 @@ public abstract class Player
     }
 
     public Color Color { get; }
-    public List<PieceType>? ClashPieces { get; }
+    public List<PieceType>? ClashPieces { get; set; }
     
     // game passes the last move status only if the move was invalid
     public abstract Task<Move> GetMoveAsync(
