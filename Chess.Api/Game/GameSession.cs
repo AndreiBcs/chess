@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using chess;
+using Chess.Api.Dtos.ServerDtos;
 using Chess.Api.Hubs;
-using Chess.Api.Messages.Dtos.ServerDtos;
 using Chess.Api.Player;
 using Chess.Engine;
 using chess.Game;
@@ -19,9 +19,11 @@ public sealed partial class GameSession
     private readonly IHubContext<GameHub> _hub;
     private readonly Action<string> _onFinished;
     private Task? _loop;
-
+    private int _over; // 0 = running, 1 = ended
+    private Lock _startLock = new();
     private string SessionId { get; }
     public GameSnapshot? LastSnapshot { get; private set; }
+    public DateTime? IdleSince;
     public bool HasConnections => !_connections.IsEmpty;
     public bool HasConnection(string connId) => _connections.ContainsKey(connId);
 
@@ -60,9 +62,14 @@ public sealed partial class GameSession
         }
         
         _connections[connId] = color;
+        IdleSince = null;
     }
 
-    public void Leave(string connId) => _connections.TryRemove(connId, out _);
+    public void Leave(string connId)
+    {
+        _connections.TryRemove(connId, out _);
+        IdleSince ??= DateTime.UtcNow;
+    } 
 
     public void SubmitMove(string connId, Move move)
     {
@@ -77,7 +84,7 @@ public sealed partial class GameSession
 
     public void Start()
     {
-        lock (new Lock())
+        lock (_startLock)
         {
             _loop ??= RunAsync();
         }
@@ -139,5 +146,22 @@ public sealed partial class GameSession
                     new MoveRejectedDto(status.InvalidMoveReason ?? "Invalid move."));
         }
         catch { /* client gone; nothing to do */ }
+    }
+
+    public async Task ResignAsync(string connId)
+    {
+        if (!_connections.TryGetValue(connId, out var color))
+            throw new InvalidOperationException("Not a player in this game.");
+
+        if (Interlocked.Exchange(ref _over, 1) == 1)
+            throw new InvalidOperationException("The game is already over.");
+
+        var final = _game.Resign(color);
+        LastSnapshot = final;
+
+        Cancel();
+        await _hub.Clients
+            .Group(SessionId)
+            .SendAsync("Snapshot", GameSnapshotDto.ToSnapshotDto(final));
     }
 }

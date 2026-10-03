@@ -4,7 +4,7 @@ using Chess.Engine;
 using chess.Pieces;
 using chess.Validation.ClashModeValidation;
 
-namespace Chess.Api.Messages.Dtos.ClientDtos;
+namespace Chess.Api.Dtos.ClientDtos;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [JsonDerivedType(typeof(NormalPvEStartDto), "normalPvE")]
@@ -110,33 +110,27 @@ public sealed record ClashPvEStartDto(
             throw new NotSupportedException("Chess engine pieces must be manually set or randomized.");
         }
 
-        var playerPieces = new List<PieceType>();
         var enginePieces = new List<PieceType>();
+
+        var playerPieces = PlayerPieces.ToList();
         
-        foreach (var piece in PlayerPieces)
-        {
-            playerPieces.Add(piece);
-        }
-
-        if (ChessEnginePieces != null)
-        {
-            foreach (var piece in ChessEnginePieces)
-            {
-                enginePieces.Add(piece);
-            }
-        }
-
         if(!StartingPositionValidator.ValidateStartingPosition(playerPieces))
         {
             throw new InvalidDataException("Player pieces are invalid." +
                                            " Either piece count doesn't match or King is in the first rank.");
         }
-        
-        if(!StartingPositionValidator.ValidateStartingPosition(enginePieces))
+
+        if (RandomizeChessEnginePieces && ChessEnginePieces != null)
         {
-            throw new InvalidDataException("Chess engine pieces are invalid." +
-                                           " Either piece count doesn't match or King is in the first rank.");
+            enginePieces.AddRange(ChessEnginePieces);
+
+            if(!StartingPositionValidator.ValidateStartingPosition(enginePieces))
+            {
+                throw new InvalidDataException("Chess engine pieces are invalid." +
+                                               " Either piece count doesn't match or King is in the first rank.");
+            }
         }
+        
     }
 }
 

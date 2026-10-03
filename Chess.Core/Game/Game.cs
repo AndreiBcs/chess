@@ -48,11 +48,12 @@ public sealed class Game
     {
         return Players.Single(p => p.Color == color);
     }
+    private Lock _lock = new();
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        while (_currentSnapshot.Status == GameStatus.InProgress)
+        while (Status == GameStatus.InProgress)
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return _currentSnapshot;
@@ -88,5 +89,20 @@ public sealed class Game
         }
         // return final snapshot after game is over
         yield return _currentSnapshot;
+    }
+
+    public GameSnapshot Resign(Color color)
+    {
+        lock (_lock)
+        {
+            Status = color switch
+            {
+                Color.White => GameStatus.BlackWonByResignation,
+                Color.Black => GameStatus.WhiteWonByResignation,
+                _ => Status
+            };
+            
+            return Snapshots[^1];
+        }
     }
 }

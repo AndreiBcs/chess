@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using chess;
+using Chess.Api.Dtos.ClientDtos;
+using Chess.Api.Dtos.ServerDtos;
 using Chess.Api.Game;
-using Chess.Api.Messages.Dtos.ClientDtos;
-using Chess.Api.Messages.Dtos.ServerDtos;
 using chess.Moves;
 using Microsoft.AspNetCore.SignalR;
 
@@ -41,6 +41,7 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
             session.Leave(Context.ConnectionId);
             if (!session.HasConnections)
             {
+                // wait 10 mins before cancel in case of reconnect
                 _ = CancelAfterGraceAsync(session);
             }
         }
@@ -53,7 +54,8 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
         // after 10 minutes check if the session still has connections and cancel if not
         await Task.Delay(TimeSpan.FromMinutes(10));
         
-        if (!s.HasConnections)
+        if (s.IdleSince is { } t && 
+            DateTime.UtcNow - t >= TimeSpan.FromMinutes(10))
         {
             s.Cancel();
         }
@@ -63,8 +65,18 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
     {
         try
         {
+            if (FindSession(Context.ConnectionId) is not null)
+            {
+                throw new InvalidOperationException("Already bound to a session.");   
+            }
+            
             dto.Validate();
 
+            if (ModeOf(dto) != dto.GameMode)
+            {
+                throw new InvalidOperationException("Invalid game mode.");
+            }
+            
             if (dto.GameMode is not (ChessGameMode.NormalPvE or ChessGameMode.ClashPvE))
             {
                 throw new InvalidOperationException("Use FindMatch for multiplayer modes.");
@@ -121,8 +133,18 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
     {
         try
         {
+            if (FindSession(Context.ConnectionId) is not null)
+            {
+                throw new InvalidOperationException("Already bound to a session.");   
+            }
+            
             dto.Validate();
 
+            if (ModeOf(dto) != dto.GameMode)
+            {
+                throw new InvalidOperationException("Invalid game mode.");
+            }
+            
             if (dto.GameMode is not (ChessGameMode.NormalPvP or ChessGameMode.ClashPvP))
             {
                 throw new InvalidOperationException("Not a multiplayer mode.");
@@ -191,6 +213,25 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
         }
     }
 
+    public async Task ResignGame()
+    {
+        try
+        {
+            var s = FindSession(Context.ConnectionId);
+            
+            if (s is null)
+            {
+                throw new InvalidOperationException("No active game for this connection.");
+            }
+            
+            await s.ResignAsync(Context.ConnectionId);
+        }
+        catch (Exception ex)
+        {
+            await Send("Error", new ErrorDto(ex.Message));
+        }
+    }
+
     public async Task SubmitMove(Move move)
     {
         try
@@ -206,4 +247,13 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
     }
 
     private Task Send(string method, object payload) => Clients.Caller.SendAsync(method, payload);
+    
+    private static ChessGameMode ModeOf(StartGameDto d) => d switch
+    {
+        NormalPvEStartDto => ChessGameMode.NormalPvE,
+        ClashPvEStartDto  => ChessGameMode.ClashPvE,
+        NormalPvPStartDto => ChessGameMode.NormalPvP,
+        ClashPvPStartDto  => ChessGameMode.ClashPvP,
+        _ => throw new InvalidDataException("Unknown start request.")
+    };
 }

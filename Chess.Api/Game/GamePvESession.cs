@@ -1,6 +1,6 @@
 ﻿using chess;
+using Chess.Api.Dtos.ClientDtos;
 using Chess.Api.Hubs;
-using Chess.Api.Messages.Dtos.ClientDtos;
 using Chess.Api.Player;
 using Chess.Engine;
 using chess.Pieces;
@@ -26,6 +26,9 @@ public sealed partial class GameSession
             n.PlayerColor,
             n.ChessEngineType,
             n.Elo,
+            n.Depth,
+            n.MoveTime,
+            n.Nodes,
             null,
             null,
             null,
@@ -38,6 +41,9 @@ public sealed partial class GameSession
             c.PlayerColor,
             c.ChessEngineType,
             c.Elo,
+            c.Depth,
+            c.MoveTime,
+            c.Nodes,
             c.PlayerPieces,
             c.ChessEnginePieces,
             c.RandomizeChessEnginePieces,
@@ -53,6 +59,9 @@ public sealed partial class GameSession
         Color color,
         ChessEngineType engineType,
         int elo,
+        int depth,
+        int moveTime,
+        long nodes,
         PieceType[]? playerPieces,
         PieceType[]? enginePieces,
         bool? randomize,
@@ -62,6 +71,9 @@ public sealed partial class GameSession
         var human = new HttpPlayer(color);
         var oppositeColor = color == Color.White ? Color.Black : Color.White;
         var engine = new EnginePlayer(oppositeColor, engineType);
+        engine.Uci.Depth = depth;
+        engine.Uci.MoveTime = moveTime;
+        engine.Uci.Nodes = nodes;
 
         if (mode == ChessGameMode.ClashPvE)
         {

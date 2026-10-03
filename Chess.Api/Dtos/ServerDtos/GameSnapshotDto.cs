@@ -2,7 +2,7 @@
 using chess.Board;
 using chess.Game;
 
-namespace Chess.Api.Messages.Dtos.ServerDtos;
+namespace Chess.Api.Dtos.ServerDtos;
 
 public readonly record struct GameSnapshotDto
 {

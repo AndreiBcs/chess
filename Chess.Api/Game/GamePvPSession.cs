@@ -1,6 +1,6 @@
 ﻿using chess;
+using Chess.Api.Dtos.ClientDtos;
 using Chess.Api.Hubs;
-using Chess.Api.Messages.Dtos.ClientDtos;
 using Chess.Api.Player;
 using Microsoft.AspNetCore.SignalR;
 

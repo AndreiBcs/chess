@@ -1,6 +1,6 @@
 using chess;
 
-namespace Chess.Api.Messages.Dtos.ServerDtos;
+namespace Chess.Api.Dtos.ServerDtos;
 
 public readonly record struct MatchmakingDto(
     bool Matched,

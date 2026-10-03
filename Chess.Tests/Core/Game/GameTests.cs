@@ -79,8 +79,8 @@ public class GameTests
                     GameStatus.DrawByInsufficientMaterial,
                     GameStatus.DrawByStalemate,
                     GameStatus.DrawByThreefoldRepetition,
-                    GameStatus.BlackWon,
-                    GameStatus.WhiteWon
+                    GameStatus.BlackWonByCheckmate,
+                    GameStatus.WhiteWonByCheckmate
                 });
             }
             catch (Exception ex)
