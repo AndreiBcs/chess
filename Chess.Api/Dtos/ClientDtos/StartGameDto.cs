@@ -120,7 +120,7 @@ public sealed record ClashPvEStartDto(
                                            " Either piece count doesn't match or King is in the first rank.");
         }
 
-        if (RandomizeChessEnginePieces && ChessEnginePieces != null)
+        if (!RandomizeChessEnginePieces && ChessEnginePieces != null)
         {
             enginePieces.AddRange(ChessEnginePieces);
 

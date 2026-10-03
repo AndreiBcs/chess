@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using chess;
 using Chess.Api.Dtos.ServerDtos;
 using Chess.Api.Hubs;
@@ -15,17 +16,19 @@ public sealed partial class GameSession
     private readonly chess.Game.Game _game;
     private readonly Dictionary<Color, HttpPlayer> _clients;
     private readonly ConcurrentDictionary<string, Color> _connections = new();
+    private readonly Dictionary<Color, string> _tokens = new();
     private readonly CancellationTokenSource _cts = new();
     private readonly IHubContext<GameHub> _hub;
     private readonly Action<string> _onFinished;
     private Task? _loop;
     private int _over; // 0 = running, 1 = ended
     private Lock _startLock = new();
-    private string SessionId { get; }
+    public string SessionId { get; }
     public GameSnapshot? LastSnapshot { get; private set; }
     public DateTime? IdleSince;
     public bool HasConnections => !_connections.IsEmpty;
     public bool HasConnection(string connId) => _connections.ContainsKey(connId);
+    public string TokenFor(Color color) => _tokens[color];
 
     private GameSession(
         string sessionId, 
@@ -52,6 +55,11 @@ public sealed partial class GameSession
                     _ = NotifyRejectedMoveAsync(color, status);
             };
         }
+
+        foreach (var color in clients.Keys)
+        {
+            _tokens[color] = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+        }
     }
 
     public void Join(string connId, Color color)
@@ -61,6 +69,15 @@ public sealed partial class GameSession
             throw new InvalidOperationException("Invalid color.");
         }
         
+        // a rejoin replaces any older connection for this color (stale socket or second tab)
+        foreach (var old in _connections
+                     .Where(c => c.Value == color)
+                     .Select(c => c.Key)
+                     .ToList())
+        {
+            _connections.TryRemove(old, out _);
+        }
+        
         _connections[connId] = color;
         IdleSince = null;
     }
@@ -68,7 +85,7 @@ public sealed partial class GameSession
     public void Leave(string connId)
     {
         _connections.TryRemove(connId, out _);
-        IdleSince ??= DateTime.UtcNow;
+        IdleSince = _connections.IsEmpty ? DateTime.UtcNow : null;
     } 
 
     public void SubmitMove(string connId, Move move)
@@ -163,5 +180,19 @@ public sealed partial class GameSession
         await _hub.Clients
             .Group(SessionId)
             .SendAsync("Snapshot", GameSnapshotDto.ToSnapshotDto(final));
+    }
+
+    public bool TryGetColor(string token, out Color color)
+    {
+        foreach (var (c, t) in _tokens)
+        {
+            if (t == token)
+            {
+                color = c;
+                return true;
+            }
+        }
+        color = default;
+        return false;
     }
 }

@@ -65,6 +65,11 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
     {
         try
         {
+            if (Sessions.Count >= 100)
+            {
+                throw new InvalidOperationException("Server full. Try again later.");
+            }
+            
             if (FindSession(Context.ConnectionId) is not null)
             {
                 throw new InvalidOperationException("Already bound to a session.");   
@@ -95,7 +100,7 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
             await Groups.AddToGroupAsync(Context.ConnectionId, id);
             session.Start();
             
-            return id;
+            return session.TokenFor(session.SoleClientColor!.Value);
         }
         catch (Exception ex)
         {
@@ -104,19 +109,27 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
         }
     }
 
-    public async Task Rejoin(string sessionId)
+    public async Task Rejoin(string token)
     {
         try
         {
-            // search in pvp sessions or pve sole client match
-            if (!Sessions.TryGetValue(sessionId, out var session) ||
-                session.SoleClientColor is not { } color)
+            GameSession? session = null;
+            Color color = default;
+
+            foreach (var s in Sessions.Values)
             {
-                throw new InvalidOperationException("Game not found.");
+                if (s.TryGetColor(token, out color))
+                {
+                    session = s;
+                    break;
+                }
             }
+            
+            if (session is null)
+                throw new InvalidOperationException("Game not found.");
 
             session.Join(Context.ConnectionId, color);
-            await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, session.SessionId);
             
             if (session.LastSnapshot is not null)
             {
@@ -133,6 +146,11 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
     {
         try
         {
+            if (Sessions.Count >= 100)
+            {
+                throw new InvalidOperationException("Server full. Try again later.");
+            }
+            
             if (FindSession(Context.ConnectionId) is not null)
             {
                 throw new InvalidOperationException("Already bound to a session.");   
@@ -154,6 +172,15 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
             
             lock (MatchLock)
             {
+                foreach (var m in Waiting
+                             .Where(pair => pair.Value.Conn == Context.ConnectionId 
+                                            && pair.Key != dto.GameMode)
+                             .Select(pair => pair.Key)
+                             .ToList())
+                {
+                    Waiting.Remove(m);
+                }
+                
                 if (Waiting.Remove(dto.GameMode, out var w) &&
                     w.Conn != Context.ConnectionId)
                 {
@@ -188,7 +215,7 @@ public sealed class GameHub(IHubContext<GameHub> ctx) : Hub
                 await ctx.Groups.AddToGroupAsync(conn, id);
                 await ctx.Clients
                     .Client(conn)
-                    .SendAsync("MatchFound", new MatchmakingDto(true, color));
+                    .SendAsync("MatchFound", new MatchmakingDto(true, session.TokenFor(color), color));
             }
 
             session.Start();
