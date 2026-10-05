@@ -1,145 +1,198 @@
+﻿using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using chess;
-using Chess.Api.Dtos.RequestDtos;
+using Chess.Api.Dtos.ServerDtos;
+using Chess.Api.Hubs;
 using Chess.Api.Player;
+using Chess.Engine;
 using chess.Game;
 using chess.Moves;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Game;
 
-public sealed class GameSession
+public sealed partial class GameSession
 {
+    private readonly chess.Game.Game _game;
+    private readonly Dictionary<Color, HttpPlayer> _clients;
+    private readonly ConcurrentDictionary<string, Color> _connections = new();
+    private readonly Dictionary<Color, string> _tokens = new();
+    private readonly CancellationTokenSource _cts = new();
+    private readonly IHubContext<GameHub> _hub;
+    private readonly Action<string> _onFinished;
     private readonly Lock _startLock = new();
-    private readonly GameRunner _runner;
-    private Task? _gameLoopTask;
-    private readonly Dictionary<string, Color> _connectionColors = new();
+    private Task? _loop;
+    private int _over; // 0 = running, 1 = ended
     public string SessionId { get; }
     public GameSnapshot? LastSnapshot { get; private set; }
-    private CancellationTokenSource? GameCts { get; set; }
-    public event Func<GameSnapshot, CancellationToken, Task>? SnapshotPublished;
-    public event Func<MoveStatus, CancellationToken, Task>? MoveStatusReceived;
-    public event Func<string, CancellationToken, Task>? ErrorOccurred;
-    
-    public GameSession(string id, GameRunner runner)
-    {
-        SessionId = id;
-        _runner = runner;
+    public DateTime? IdleSince;
+    public bool HasConnections => !_connections.IsEmpty;
+    public bool HasConnection(string connId) => _connections.ContainsKey(connId);
+    public string TokenFor(Color color) => _tokens[color];
 
-        foreach (var kvp in _runner.HttpPlayers)
+    private GameSession(
+        string sessionId, 
+        chess.Game.Game game,
+        Dictionary<Color, HttpPlayer> clients,
+        EnginePlayer? engine,
+        int? elo,
+        IHubContext<GameHub> hub,
+        Action<string> onFinished)
+    {
+        SessionId = sessionId; 
+        _game = game;
+        _clients = clients;
+        _engine = engine;
+        _elo = elo;
+        _hub = hub;
+        _onFinished = onFinished;
+
+        foreach (var (color, player) in clients)
         {
-            var player = kvp.Value;
-            
-            player.MoveStatusReceived += async moveStatus =>
+            player.MoveStatusReceived += status =>
             {
-                if (moveStatus.MoveResult == MoveResult.Invalid)
-                {
-                    await OnMoveStatusReceivedAsync(moveStatus, CancellationToken.None);
-                }
+                if (status.MoveResult == MoveResult.Invalid)
+                    _ = NotifyRejectedMoveAsync(color, status);
             };
         }
-    }
-    
-    public void RegisterConnection(string connectionId, Color color)
-    {
-        // remember which chess color this connection is allowed to play
-        if (!_runner.HttpPlayers.ContainsKey(color))
+
+        foreach (var color in clients.Keys)
         {
-            throw new InvalidOperationException($"Color {color} is not assigned to this session.");
+            _tokens[color] = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
         }
-
-        _connectionColors[connectionId] = color;
     }
 
-    // forget a connection so it can no longer submit moves
-    public void RemoveConnection(string connectionId)
-        => _connectionColors.Remove(connectionId);
-
-    public void ProvideMoveFromClient(string connectionId, Move move)
+    public void Join(string connId, Color color)
     {
-        // deliver a move to the http player assigned to this connection
-        if (!_connectionColors.TryGetValue(connectionId, out var color))
+        if (!_clients.ContainsKey(color))
         {
-            throw new InvalidOperationException("Connection is not assigned to a player.");
+            throw new InvalidOperationException("Invalid color.");
         }
-
-        _runner.HttpPlayers[color].ProvideMoveFromClient(move);
-    }
-
-    public Task StartAsync()
-    {
-        // start the game loop once
-        // repeated calls reuse the same task
         
+        // a rejoin replaces any older connection for this color (stale socket or second tab)
+        foreach (var old in _connections
+                     .Where(c => c.Value == color)
+                     .Select(c => c.Key)
+                     .ToList())
+        {
+            _connections.TryRemove(old, out _);
+        }
+        
+        _connections[connId] = color;
+        IdleSince = null;
+    }
+
+    public void Leave(string connId)
+    {
+        _connections.TryRemove(connId, out _);
+        IdleSince = _connections.IsEmpty ? DateTime.UtcNow : null;
+    } 
+
+    public void SubmitMove(string connId, Move move)
+    {
+        if (LastSnapshot is { Status: not GameStatus.InProgress })
+            throw new InvalidOperationException("The game is already over.");
+        
+        if (!_connections.TryGetValue(connId, out var color))
+            throw new InvalidOperationException("Not a player in this game.");
+        
+        _clients[color].ProvideMoveFromClient(move);
+    }
+
+    public void Start()
+    {
         lock (_startLock)
         {
-            if (_gameLoopTask is not null)
-            {
-                return _gameLoopTask;
-            }
-
-            GameCts = new CancellationTokenSource();
-            
-            // run the game loop
-            _gameLoopTask = RunGameLoopAsync(GameCts.Token);
-            return _gameLoopTask;
+            _loop ??= RunAsync();
         }
     }
 
-    private async Task RunGameLoopAsync(CancellationToken ct)
+    private async Task RunAsync()
     {
+        var ct = _cts.Token;
         try
         {
-            await foreach (var snapshot in _runner.Run(ct))
+            if (_engine is not null)
             {
-                LastSnapshot = snapshot;
-                await OnSnapshotPublishedAsync(snapshot, ct);
+                await _engine.Uci.StartEngine();
+                await _engine.Uci.SetElo(_elo!.Value);
+                await _engine.Uci.NewGame();
+            }
 
-                if (snapshot.Status != GameStatus.InProgress)
-                {
+            await foreach (var snap in _game.GameLoop(ct))
+            {
+                LastSnapshot = snap;
+                await _hub.Clients
+                    .Group(SessionId)
+                    .SendAsync("Snapshot", GameSnapshotDto.ToSnapshotDto(snap), ct);
+                
+                if (snap.Status != GameStatus.InProgress)
                     break;
-                }
             }
         }
-        catch (OperationCanceledException)
-        {
-            // game was canceled by the server lifecycle
-        }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            await OnErrorOccurredAsync(ex.Message, ct);
+            await _hub.Clients
+                .Group(SessionId)
+                .SendAsync("Error", new ErrorDto(ex.Message), cancellationToken: ct);
         }
         finally
         {
-            await _runner.DisposeAsync();
-            GameCts?.Dispose();
-        }
-    }
-    
-    private async Task OnSnapshotPublishedAsync(GameSnapshot snapshot, CancellationToken ct)
-    {
-        if (SnapshotPublished is not null)
-        {
-            await SnapshotPublished.Invoke(snapshot, ct);
+            _onFinished(SessionId);
+            if (_engine is not null)
+                await _engine.DisposeAsync();
         }
     }
 
-    private async Task OnMoveStatusReceivedAsync(MoveStatus moveStatus, CancellationToken ct)
+    public void Cancel() => _cts.Cancel();
+
+    private async Task NotifyRejectedMoveAsync(Color color, MoveStatus status)
     {
-        if (MoveStatusReceived is not null)
+        try
         {
-            await MoveStatusReceived.Invoke(moveStatus, ct);
+            var conns = _connections
+                .Where(c => c.Value == color)
+                .Select(c => c.Key)
+                .ToList();
+            
+            await _hub.Clients
+                .Clients(conns)
+                .SendAsync(
+                    "MoveRejected",
+                    new MoveRejectedDto(status.InvalidMoveReason ?? "Invalid move."));
         }
+        catch { /* client gone; nothing to do */ }
     }
 
-    private async Task OnErrorOccurredAsync(string message, CancellationToken ct)
+    public async Task ResignAsync(string connId)
     {
-        if (ErrorOccurred is not null)
-        {
-            await ErrorOccurred.Invoke(message, ct);
-        }
+        if (!_connections.TryGetValue(connId, out var color))
+            throw new InvalidOperationException("Not a player in this game.");
+
+        if (Interlocked.Exchange(ref _over, 1) == 1)
+            throw new InvalidOperationException("The game is already over.");
+
+        var final = _game.Resign(color);
+        LastSnapshot = final;
+
+        Cancel();
+        await _hub.Clients
+            .Group(SessionId)
+            .SendAsync("Snapshot", GameSnapshotDto.ToSnapshotDto(final));
     }
-    
-    public void Cancel()
+
+    public bool TryGetColor(string token, out Color color)
     {
-        GameCts?.Cancel();
+        foreach (var (c, t) in _tokens)
+        {
+            if (t == token)
+            {
+                color = c;
+                return true;
+            }
+        }
+        color = default;
+        return false;
     }
 }

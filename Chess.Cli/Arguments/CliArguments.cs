@@ -14,11 +14,11 @@ public sealed class CliArguments
         DefaultValueFactory = _ => Color.White
     };
 
-    private readonly Option<ChessEngine> _chessEngine = new(
+    private readonly Option<ChessEngineType> _chessEngine = new(
         "--engine")
     {
         Description = "Choose the engine to play against",
-        DefaultValueFactory = _ => ChessEngine.Stockfish
+        DefaultValueFactory = _ => ChessEngineType.Stockfish
     };
     
     private readonly Option<int> _elo = new(

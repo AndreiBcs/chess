@@ -105,8 +105,8 @@ public static class StateValidator
         {
             // in check and no legal moves => checkmate
             true when !hasLegalMoves => snapshot.CurrentTurn == Color.White 
-                ? GameStatus.BlackWon 
-                : GameStatus.WhiteWon,
+                ? GameStatus.BlackWonByCheckmate 
+                : GameStatus.WhiteWonByCheckmate,
             
             // not in check and no legal moves => stalemate 
             false when !hasLegalMoves => GameStatus.DrawByStalemate,

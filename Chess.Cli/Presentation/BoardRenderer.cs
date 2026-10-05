@@ -59,8 +59,8 @@ public static class BoardRenderer
 
         var endMessage = snapshot.Status switch
         {
-            GameStatus.WhiteWon => "White won by checkmate.",
-            GameStatus.BlackWon => "Black won by checkmate.",
+            GameStatus.WhiteWonByCheckmate => "White won by checkmate.",
+            GameStatus.BlackWonByCheckmate => "Black won by checkmate.",
             GameStatus.DrawBy75MoveRule => "Draw by 75 more rule.",
             GameStatus.DrawByInsufficientMaterial => "Draw by insufficient material.",
             GameStatus.DrawByStalemate => "Draw by stalemate.",

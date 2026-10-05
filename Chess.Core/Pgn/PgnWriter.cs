@@ -41,11 +41,11 @@ public static class PgnWriter
             pgn.Append($"[Black \"{playerName}\"]").AppendLine();
         }
 
-        if (snapshots[^1].Status is GameStatus.WhiteWon)
+        if (snapshots[^1].Status is GameStatus.WhiteWonByCheckmate)
         {
             pgn.Append("[Result \"1-0\"]").AppendLine();    
         }
-        else if (snapshots[^1].Status is GameStatus.BlackWon)
+        else if (snapshots[^1].Status is GameStatus.BlackWonByCheckmate)
         {
             pgn.Append("[Result \"0-1\"]").AppendLine();    
         }
@@ -122,13 +122,13 @@ public static class PgnWriter
                 }
 
                 // game status
-                if (snapshot.Status is GameStatus.BlackWon)
+                if (snapshot.Status is GameStatus.BlackWonByCheckmate)
                 {
                     moves.Append("# 0-1");
                     break;
                 }
                 
-                if (snapshot.Status is GameStatus.WhiteWon)
+                if (snapshot.Status is GameStatus.WhiteWonByCheckmate)
                 {
                     moves.Append("# 1-0");
                     break;

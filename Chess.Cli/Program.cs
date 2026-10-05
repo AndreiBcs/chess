@@ -34,7 +34,7 @@ else
 
 try
 {
-    if (options.Engine is ChessEngine.Deakfish)
+    if (options.EngineType is ChessEngineType.Deakfish)
     {
         throw new EngineException("Deakfish is currently in development.");
     }

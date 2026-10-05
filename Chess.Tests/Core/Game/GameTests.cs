@@ -27,8 +27,8 @@ public class GameTests
             Console.WriteLine($"Starting game {gameNumber}");
             //_output.WriteLine($"======== Game {gameNumber} ========");
             
-            await using var white = new EnginePlayer(Color.White, ChessEngine.Stockfish);
-            await using var black = new EnginePlayer(Color.Black, ChessEngine.Stockfish);
+            await using var white = new EnginePlayer(Color.White, ChessEngineType.Stockfish);
+            await using var black = new EnginePlayer(Color.Black, ChessEngineType.Stockfish);
             
             Console.WriteLine("Starting white Stockfish...");
             await white.Uci.StartEngine();
@@ -79,8 +79,8 @@ public class GameTests
                     GameStatus.DrawByInsufficientMaterial,
                     GameStatus.DrawByStalemate,
                     GameStatus.DrawByThreefoldRepetition,
-                    GameStatus.BlackWon,
-                    GameStatus.WhiteWon
+                    GameStatus.BlackWonByCheckmate,
+                    GameStatus.WhiteWonByCheckmate
                 });
             }
             catch (Exception ex)

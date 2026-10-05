@@ -3,8 +3,10 @@
 public enum GameStatus
 {
     InProgress,
-    WhiteWon,
-    BlackWon,
+    WhiteWonByCheckmate,
+    BlackWonByCheckmate,
+    WhiteWonByResignation,
+    BlackWonByResignation,
     DrawByStalemate,
     DrawByInsufficientMaterial,
     DrawByThreefoldRepetition,

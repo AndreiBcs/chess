@@ -186,6 +186,58 @@ public sealed record Board
         };
     }
 
+    public static Board CreateInitialClashBoard(
+        List<PieceType> whitePieces, 
+        List<PieceType> blackPieces)
+    {
+        var squares = new Square[8, 8];
+        blackPieces.Reverse();
+        var index = 0;
+        
+        for (var row = 0; row < 8; row++)
+        {
+            for (var col = 0; col < 8; col++)
+            {
+                var position = new Position(row, col);
+                var color = (row + col) % 2 == 0
+                    ? Color.White
+                    : Color.Black;
+
+                PieceType? pieceType = null;
+                
+                if (row is 0 or 1)
+                {
+                    pieceType = blackPieces[index++];
+                }
+
+                if (row is 6 or 7)
+                {
+                    pieceType = whitePieces[index++ % 16];
+                }
+
+                Piece? piece = pieceType switch
+                {
+                    PieceType.Pawn => new Pawn(Color.White),
+                    PieceType.Bishop => new Bishop(Color.Black),
+                    PieceType.Knight => new Knight(Color.Black),
+                    PieceType.Rook => new Rook(Color.Black),
+                    PieceType.Queen => new Queen(Color.Black),
+                    PieceType.King => new King(Color.Black),
+                    _ => null
+                };
+
+                squares[row, col] = new Square
+                {
+                    Color = color,
+                    Position = position,
+                    Piece = piece
+                };
+            }
+        }
+
+        return new Board(squares);
+    }
+
     public static Board CreateEmptyBoard()
     {
         var squares = new Square[8, 8];

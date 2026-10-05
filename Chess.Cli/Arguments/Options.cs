@@ -5,7 +5,7 @@ namespace Chess.Cli.Arguments;
 
 public sealed record Options(
     Color PlayerColor, 
-    ChessEngine Engine, 
+    ChessEngineType EngineType, 
     int Elo,
     int Depth,
     int MoveTime,

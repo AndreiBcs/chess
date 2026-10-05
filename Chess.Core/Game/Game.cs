@@ -9,9 +9,33 @@ public sealed class Game
     public GameStatus Status;
     public Game(Player.Player player1, Player.Player player2)
     {
-        Players = [player1, player2];
+        Players = [player1, player2]; // kept for backwards compatibility
         
         var initialSnapshot = GameSnapshot.GetInitialGameSnapshot();
+        Snapshots.Add(initialSnapshot);
+        _currentSnapshot = Snapshots[^1];
+        Status = _currentSnapshot.Status;
+    }
+    
+    public Game(Player.Player player1, Player.Player player2, ChessGameMode gameMode)
+    {
+        Players = [player1, player2];
+        GameSnapshot initialSnapshot;
+        
+        if (gameMode is ChessGameMode.ClashPvE or ChessGameMode.ClashPvP)
+        {
+            var whitePlayer = Players.Single(p => p.Color == Color.White);
+            var blackPlayer = Players.Single(p => p.Color == Color.Black);
+            
+            initialSnapshot = GameSnapshot.GetInitialGameSnapshotForClash(
+                whitePlayer.ClashPieces!,
+                blackPlayer.ClashPieces!);
+        }
+        else
+        {
+            initialSnapshot = GameSnapshot.GetInitialGameSnapshot();
+        }
+        
         Snapshots.Add(initialSnapshot);
         _currentSnapshot = Snapshots[^1];
         Status = _currentSnapshot.Status;
@@ -24,11 +48,12 @@ public sealed class Game
     {
         return Players.Single(p => p.Color == color);
     }
+    private Lock _lock = new();
 
     public async IAsyncEnumerable<GameSnapshot> GameLoop(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        while (_currentSnapshot.Status == GameStatus.InProgress)
+        while (Status == GameStatus.InProgress)
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return _currentSnapshot;
@@ -64,5 +89,20 @@ public sealed class Game
         }
         // return final snapshot after game is over
         yield return _currentSnapshot;
+    }
+
+    public GameSnapshot Resign(Color color)
+    {
+        lock (_lock)
+        {
+            Status = color switch
+            {
+                Color.White => GameStatus.BlackWonByResignation,
+                Color.Black => GameStatus.WhiteWonByResignation,
+                _ => Status
+            };
+            
+            return Snapshots[^1];
+        }
     }
 }
