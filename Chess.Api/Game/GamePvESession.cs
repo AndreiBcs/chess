@@ -4,6 +4,7 @@ using Chess.Api.Hubs;
 using Chess.Api.Player;
 using Chess.Engine;
 using chess.Pieces;
+using chess.Validation.ClashModeValidation;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chess.Api.Game;
@@ -79,7 +80,7 @@ public sealed partial class GameSession
         {
             human.ClashPieces = playerPieces!.ToList();
             engine.ClashPieces = randomize!.Value
-                ? RandomClashSetup()
+                ? StartingPositionValidator.RandomClashSetup()
                 : enginePieces!.ToList();
         }
 
@@ -93,10 +94,5 @@ public sealed partial class GameSession
             elo,
             hub,
             onFinished);
-    }
-
-    private static List<PieceType> RandomClashSetup()
-    {
-        throw new NotImplementedException();
     }
 }

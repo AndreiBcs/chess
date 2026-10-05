@@ -20,9 +20,9 @@ public sealed partial class GameSession
     private readonly CancellationTokenSource _cts = new();
     private readonly IHubContext<GameHub> _hub;
     private readonly Action<string> _onFinished;
+    private readonly Lock _startLock = new();
     private Task? _loop;
     private int _over; // 0 = running, 1 = ended
-    private Lock _startLock = new();
     public string SessionId { get; }
     public GameSnapshot? LastSnapshot { get; private set; }
     public DateTime? IdleSince;
