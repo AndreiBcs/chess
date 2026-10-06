@@ -13,12 +13,15 @@ public sealed class EnginePlayer : Player, IAsyncDisposable
 
     public EnginePlayer(Color color, ChessEngineType chessEngineType) : base(color)
     {
+        var configuredEnginePath = Environment.GetEnvironmentVariable("STOCKFISH_PATH");
         var engineFilePath = chessEngineType switch
         {
-            ChessEngineType.Stockfish => 
-                Path.Combine(AppContext.BaseDirectory, 
-                    "Stockfish", 
+            ChessEngineType.Stockfish when !string.IsNullOrWhiteSpace(configuredEnginePath) => configuredEnginePath,
+            ChessEngineType.Stockfish when OperatingSystem.IsWindows() =>
+                Path.Combine(AppContext.BaseDirectory,
+                    "Stockfish",
                     "stockfish-windows-x86-64-avx2.exe"),
+            ChessEngineType.Stockfish => "/usr/games/stockfish",
             _ => ""
         };
         
