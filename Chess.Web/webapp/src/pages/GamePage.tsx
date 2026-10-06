@@ -226,6 +226,11 @@ export default function GamePage({config, initialToken, initialPlayerColor, onSe
                 <button className="text-lg leading-none text-[#cfcfcf] hover:text-white" type="button" aria-label="Dismiss warning" onClick={() => setInvalidMove(undefined)}>x</button>
             </div>}
         </section>
+        <footer className="absolute bottom-2 left-1/2 -translate-x-1/2 text-center text-[10px] text-[#d9c8aa]/80 transition-colors hover:text-[#f5ecd9]">
+            <a href="https://www.flaticon.com/free-icons/chess-piece" title="chess piece icons" target="_blank" rel="noreferrer">
+                Chess piece icons created by rizal2109 - Flaticon
+            </a>
+        </footer>
         {pendingPromotion && <PromotionDialog onPromote={promotePiece} onCancel={() => setPendingPromotion(undefined)} />}
         {gameEnded && <GameResultDialog result={resultText} onNewGame={onNewGame} onHome={onExit} />}
     </main>;
