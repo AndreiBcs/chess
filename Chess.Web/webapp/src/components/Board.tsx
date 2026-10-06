@@ -1,5 +1,5 @@
 ﻿import SquareComponent from "./Square";
-import type { Color, Position, Square, Board } from "../game/types.ts";
+import type { Color, Position, Board } from "../game/types.ts";
 
 type BoardProps = {
     board: Board;
@@ -10,12 +10,12 @@ type BoardProps = {
 
 export default function Board({ board, playerColor, selected, onSquareClick }: BoardProps) {
     
-    const squares = board.squares.map((square) => (
+    const squares = board.map((square) => (
         <SquareComponent
             key={`${square.position.row}-${square.position.col}`}
             square={square}
             rotated={playerColor === "Black"}
-            selected={selected && square.position}
+            selected={selected !== undefined && selected.row === square.position.row && selected.col === square.position.col}
             onClick={onSquareClick}
         />
     ));

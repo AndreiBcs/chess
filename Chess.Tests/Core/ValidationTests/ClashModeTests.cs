@@ -1,4 +1,5 @@
-﻿using chess.Pieces;
+﻿using chess.Board;
+using chess.Pieces;
 using chess.Validation.ClashModeValidation;
 
 namespace Chess.Tests.Core.ValidationTests;
@@ -100,4 +101,48 @@ public class ClashModeTests
             Assert.True(result);
         }
     }
+
+    [Fact]
+    public void ClashBoardUsesOneColorPerSideAndPreservesPieceSetups()
+    {
+        var whitePieces = StandardSetup();
+        var blackPieces = StandardSetup();
+        var whiteSetup = whitePieces.ToArray();
+        var blackSetup = blackPieces.ToArray();
+
+        var board = Board.CreateInitialClashBoard(whitePieces, blackPieces).CopySquares();
+
+        Assert.Equal(whiteSetup, whitePieces);
+        Assert.Equal(blackSetup, blackPieces);
+
+        for (var row = 0; row < 8; row++)
+        {
+            for (var column = 0; column < 8; column++)
+            {
+                var piece = board[row, column].Piece;
+                if (row is 0 or 1)
+                {
+                    Assert.NotNull(piece);
+                    Assert.Equal(chess.Color.Black, piece.Color);
+                }
+                else if (row is 6 or 7)
+                {
+                    Assert.NotNull(piece);
+                    Assert.Equal(chess.Color.White, piece.Color);
+                }
+                else
+                {
+                    Assert.Null(piece);
+                }
+            }
+        }
+    }
+
+    private static List<PieceType> StandardSetup() =>
+    [
+        PieceType.Pawn, PieceType.Pawn, PieceType.Pawn, PieceType.Pawn,
+        PieceType.Pawn, PieceType.Pawn, PieceType.Pawn, PieceType.Pawn,
+        PieceType.King, PieceType.Rook, PieceType.Knight, PieceType.Bishop,
+        PieceType.Queen, PieceType.Bishop, PieceType.Knight, PieceType.Rook
+    ];
 }

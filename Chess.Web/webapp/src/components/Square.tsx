@@ -10,7 +10,7 @@ import queenBlack from "../assets/queen_black.png";
 import queenWhite from "../assets/queen_white.png";
 import rookBlack from "../assets/rook_black.png";
 import rookWhite from "../assets/rook_white.png";
-import type { Color, Piece, Square, PieceType, Position } from "../game/types.ts";
+import type { Color, Square, PieceType, Position } from "../game/types.ts";
 
 type SquareProps = {
     square: Square

@@ -44,6 +44,18 @@ public sealed record GameSnapshot
         PositionHistory = positionHistory;
         PreviousMoveStatus = previousMoveStatus;
     }
+
+    public GameSnapshot WithStatus(GameStatus status) => new(
+        status,
+        Board,
+        CurrentTurn,
+        CastlingRights,
+        EnPassantTarget,
+        HalfMoveClock,
+        FullMoveCounter,
+        PreviousMove,
+        PreviousMoveStatus,
+        PositionHistory);
     
     public static GameSnapshot GetInitialGameSnapshot()
     {

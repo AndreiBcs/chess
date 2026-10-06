@@ -191,8 +191,9 @@ public sealed record Board
         List<PieceType> blackPieces)
     {
         var squares = new Square[8, 8];
-        blackPieces.Reverse();
-        var index = 0;
+        var blackSetup = blackPieces.AsEnumerable().Reverse().ToArray();
+        var whiteIndex = 0;
+        var blackIndex = 0;
         
         for (var row = 0; row < 8; row++)
         {
@@ -204,25 +205,26 @@ public sealed record Board
                     : Color.Black;
 
                 PieceType? pieceType = null;
+                var pieceColor = row is 0 or 1 ? Color.Black : Color.White;
                 
                 if (row is 0 or 1)
                 {
-                    pieceType = blackPieces[index++];
+                    pieceType = blackSetup[blackIndex++];
                 }
 
                 if (row is 6 or 7)
                 {
-                    pieceType = whitePieces[index++ % 16];
+                    pieceType = whitePieces[whiteIndex++];
                 }
 
                 Piece? piece = pieceType switch
                 {
-                    PieceType.Pawn => new Pawn(Color.White),
-                    PieceType.Bishop => new Bishop(Color.Black),
-                    PieceType.Knight => new Knight(Color.Black),
-                    PieceType.Rook => new Rook(Color.Black),
-                    PieceType.Queen => new Queen(Color.Black),
-                    PieceType.King => new King(Color.Black),
+                    PieceType.Pawn => new Pawn(pieceColor),
+                    PieceType.Bishop => new Bishop(pieceColor),
+                    PieceType.Knight => new Knight(pieceColor),
+                    PieceType.Rook => new Rook(pieceColor),
+                    PieceType.Queen => new Queen(pieceColor),
+                    PieceType.King => new King(pieceColor),
                     _ => null
                 };
 

@@ -1,5 +1,5 @@
 import { HubConnectionBuilder, LogLevel, type HubConnection } from "@microsoft/signalr";
-import type { GameConfig, Move } from "../game/types.ts";
+import type { Move, StartGameOptions } from "../game/types.ts";
 
 const hubUrl = import.meta.env.VITE_SIGNALR_URL || "/gamehub";
 
@@ -11,19 +11,30 @@ export function createConnection() {
         .build();
 }
 
-export function startGame(connection: HubConnection, config: GameConfig, gameId: string) {
-    return connection.invoke("StartGame", {
-        playerColor: config.playerColor,
-        engineType: config.engineType,
-        elo: config.elo,
-        gameId
-    });
+export function startGame(connection: HubConnection, options: StartGameOptions) {
+    return connection.invoke<string | null>("StartGame", options);
+}
+
+export function findMatch(connection: HubConnection, options: StartGameOptions) {
+    return connection.invoke("FindMatch", options);
+}
+
+export function rejoinGame(connection: HubConnection, token: string) {
+    return connection.invoke("Rejoin", token);
+}
+
+export function cancelMatch(connection: HubConnection) {
+    return connection.invoke("CancelMatch");
+}
+
+export function resignGame(connection: HubConnection) {
+    return connection.invoke("ResignGame");
 }
 
 export function submitMove(connection: HubConnection, move: Move) {
     return connection.invoke("SubmitMove", {
-        from: { row: move.from.row, column: move.from.col },
-        to: { row: move.to.row, column: move.to.col },
-        promotion: move.promotion?.toLowerCase() ?? null
+        from: {row: move.from.row, column: move.from.col},
+        to: {row: move.to.row, column: move.to.col},
+        promotion: move.promotion ?? null
     });
 }

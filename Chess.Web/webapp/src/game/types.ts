@@ -1,10 +1,12 @@
-﻿export type GameStatus = 
+﻿export type GameStatus =
     "InProgress" |
-    "WhiteWon" |
-    "BlackWon" |
+    "WhiteWonByCheckmate" |
+    "BlackWonByCheckmate" |
+    "WhiteWonByResignation" |
+    "BlackWonByResignation" |
     "DrawByStalemate" |
-    "DrawByThreefoldRepetition" |
     "DrawByInsufficientMaterial" |
+    "DrawByThreefoldRepetition" |
     "DrawBy75MoveRule"
 
 export type Color =
@@ -20,20 +22,27 @@ export type PieceType =
     "King"
 
 export type Piece = {
-    color: Color, 
+    color: Color,
     type: PieceType,
+    hasMoved: boolean,
     letterId: string
 }
 
+// Internal board positions use col; the API's Position DTO uses column.
 export type Position = {
     row: number,
     col: number
 }
 
+export type PositionDto = {
+    row: number,
+    column: number
+}
+
 export type Move = {
     from: Position,
     to: Position,
-    promotion?: PieceType
+    promotion?: PieceType | null
 }
 
 export type Square = {
@@ -42,9 +51,22 @@ export type Square = {
     piece: Piece | null
 }
 
-export type Board = {
-    squares: Square[],
+export type Board = Square[]
+
+export type SnapshotDto = {
+    boardSquares: Array<Array<Omit<Square, "position"> & {position: PositionDto}>>,
+    status: GameStatus,
+    currentTurn: Color
 }
+
+export type MatchFoundDto = {
+    matched: boolean,
+    token: string | null,
+    playerColor: Color
+}
+
+export type ErrorDto = {message: string}
+export type MoveRejectedDto = {reason: string}
 
 export type GameState = {
     status: GameStatus,
@@ -52,15 +74,9 @@ export type GameState = {
     currentTurn: Color
 }
 
-export type ChessEngineType = 
+export type ChessEngineType =
     "Stockfish" |
     "Deakfish"
-
-export type GameConfig = {
-    playerColor: Color,
-    engineType: ChessEngineType,
-    elo: number
-}
 
 export type ChessGameMode =
     "NormalPvE" |
@@ -69,8 +85,10 @@ export type ChessGameMode =
     "ClashPvP" 
 
 export type NormalPvEConfig = {
+    type: "normalPvE",
+    gameMode: "NormalPvE",
     playerColor: Color,
-    engineType: ChessEngineType,
+    chessEngineType: ChessEngineType,
     elo: number,
     depth: number,
     moveTime: number,
@@ -78,8 +96,10 @@ export type NormalPvEConfig = {
 }
 
 export type ClashPvEConfig = {
+    type: "clashPvE",
+    gameMode: "ClashPvE",
     playerColor: Color,
-    engineType: ChessEngineType,
+    chessEngineType: ChessEngineType,
     elo: number,
     depth: number,
     moveTime: number,
@@ -90,19 +110,17 @@ export type ClashPvEConfig = {
 }
 
 export type NormalPvPConfig = {
+    type: "normalPvP",
+    gameMode: "NormalPvP",
     nickname: string
 }
 
 export type ClashPvPConfig = {
+    type: "clashPvP",
+    gameMode: "ClashPvP",
     nickname: string,
     playerPieces: PieceType[]
 }
 
-export type StartGameOptions = {
-    sessionId: string | null,
-    gameMode: ChessGameMode,
-    normalPvEConfig: NormalPvEConfig | null,
-    clashPvEConfig: ClashPvEConfig | null,
-    normalPvPConfig: NormalPvPConfig | null,
-    clashPvPConfig: ClashPvPConfig | null,
-}
+export type StartGameOptions = NormalPvEConfig | ClashPvEConfig | NormalPvPConfig | ClashPvPConfig
+export type GameConfig = StartGameOptions

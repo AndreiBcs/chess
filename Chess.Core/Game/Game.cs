@@ -101,8 +101,10 @@ public sealed class Game
                 Color.Black => GameStatus.WhiteWonByResignation,
                 _ => Status
             };
-            
-            return Snapshots[^1];
+
+            _currentSnapshot = _currentSnapshot.WithStatus(Status);
+            Snapshots.Add(_currentSnapshot);
+            return _currentSnapshot;
         }
     }
 }

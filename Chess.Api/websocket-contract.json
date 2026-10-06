@@ -1,101 +1,118 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Chess single-player websocket contract",
-  "description": "Exact payload contract currently implemented by the SignalR hub for a single player vs engine game.",
+  "description": "SignalR contract implemented by GameHub at /gamehub. JSON property names are camelCase; enum values are strings.",
   "clientToServer": [
     {
       "method": "StartGame",
-      "description": "Starts or resumes a game. The server resolves the session id from the payload or the chess_session_id cookie.",
+      "description": "Starts a player-versus-engine game. The polymorphic type discriminator selects classic or clash options.",
       "payload": {
-        "playerColor": "white | black",
-        "engineType": "stockfish",
-        "elo": 1320,
-        "gameId": "string | null"
+        "type": "normalPvE | clashPvE",
+        "gameMode": "NormalPvE | ClashPvE",
+        "playerColor": "White | Black",
+        "chessEngineType": "Stockfish | Deakfish",
+        "elo": "integer, 1320..3190",
+        "depth": "integer, 1..50",
+        "moveTime": "integer milliseconds, 1..600000",
+        "nodes": "integer, 1..1000000000",
+        "randomizeChessEnginePieces": "boolean (clashPvE only)",
+        "playerPieces": "PieceType[16] (clashPvE only)",
+        "chessEnginePieces": "PieceType[16] | null (clashPvE only)"
       },
       "example": {
-        "playerColor": "white",
-        "engineType": "stockfish",
+        "type": "normalPvE",
+        "gameMode": "NormalPvE",
+        "playerColor": "White",
+        "chessEngineType": "Stockfish",
         "elo": 1600,
-        "gameId": null
+        "depth": 20,
+        "moveTime": 1000,
+        "nodes": 1000000
       }
     },
     {
-      "method": "SubmitMove",
-      "description": "Submits a move for the active session. The server validates it and either updates the game or returns a move-status error.",
+      "method": "FindMatch",
+      "description": "Joins the queue for a player-versus-player game. A match is created when another player requests the same mode.",
       "payload": {
-        "from": {
-          "row": 0,
-          "column": 0
-        },
-        "to": {
-          "row": 0,
-          "column": 1
-        },
-        "promotion": "queen | rook | bishop | knight | null"
+        "type": "normalPvP | clashPvP",
+        "gameMode": "NormalPvP | ClashPvP",
+        "nickname": "non-empty string",
+        "playerPieces": "PieceType[16] (clashPvP only)"
       },
       "example": {
-        "from": {
-          "row": 6,
-          "column": 4
-        },
-        "to": {
-          "row": 4,
-          "column": 4
-        },
+        "type": "clashPvP",
+        "gameMode": "ClashPvP",
+        "nickname": "Player",
+        "playerPieces": ["Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "King", "Rook", "Knight", "Bishop", "Queen", "Bishop", "Knight", "Rook"]
+      }
+    },
+    {
+      "method": "Rejoin",
+      "description": "Rejoins an existing session using the per-player token returned when the game starts or a match is found.",
+      "payload": { "token": "string" }
+    },
+    {
+      "method": "CancelMatch",
+      "description": "Removes the caller from all multiplayer matchmaking queues.",
+      "payload": null
+    },
+    {
+      "method": "ResignGame",
+      "description": "Resigns the caller from the active game.",
+      "payload": null
+    },
+    {
+      "method": "SubmitMove",
+      "description": "Submits a move for the active session.",
+      "payload": {
+        "from": { "row": 0, "column": 0 },
+        "to": { "row": 0, "column": 1 },
+        "promotion": "Pawn | Rook | Knight | Bishop | Queen | King | null"
+      },
+      "example": {
+        "from": { "row": 6, "column": 4 },
+        "to": { "row": 4, "column": 4 },
         "promotion": null
       }
     }
   ],
   "serverToClient": [
     {
-      "method": "ReceiveMessage",
-      "description": "The server emits one concrete payload at a time. The payload is not wrapped in a Type/Data envelope.",
-      "payloads": [
-        {
-          "type": "SnapshotDto",
-          "shape": {
-            "boardSquares": [
-              [
-                {
-                  "color": "White | Black",
-                  "position": {
-                    "row": 0,
-                    "column": 0
-                  },
-                  "piece": {
-                    "color": "White | Black",
-                    "type": "Pawn | Rook | Knight | Bishop | Queen | King",
-                    "hasMoved": true,
-                    "letterId": "P | R | N | B | Q | K"
-                  }
-                }
-              ]
-            ],
-            "status": "InProgress | WhiteWon | BlackWon | DrawByStalemate | DrawByInsufficientMaterial | DrawByThreefoldRepetition | DrawBy75MoveRule",
-            "currentTurn": "White | Black"
-          }
-        },
-        {
-          "type": "MoveStatusDto",
-          "shape": {
-            "resultReason": "string"
-          }
-        },
-        {
-          "type": "string",
-          "description": "Error message sent when the game cannot be started, the session is missing, the move is rejected due to lifecycle state, or another server-side issue occurs."
+      "method": "Snapshot",
+      "description": "Emitted when the game state changes or after a successful rejoin.",
+      "payload": {
+        "boardSquares": "Square[8][8]",
+        "status": "InProgress | WhiteWonByCheckmate | BlackWonByCheckmate | WhiteWonByResignation | BlackWonByResignation | DrawByStalemate | DrawByInsufficientMaterial | DrawByThreefoldRepetition | DrawBy75MoveRule",
+        "currentTurn": "White | Black"
+      },
+      "square": {
+        "color": "White | Black",
+        "position": { "row": "integer", "column": "integer" },
+        "piece": {
+          "color": "White | Black",
+          "type": "Pawn | Rook | Knight | Bishop | Queen | King",
+          "hasMoved": "boolean",
+          "letterId": "string"
         }
-      ]
+      }
+    },
+    {
+      "method": "MatchFound",
+      "description": "Sent to each player once matched. The token is required to rejoin that player's session.",
+      "payload": { "matched": "boolean", "token": "string | null", "playerColor": "White | Black" }
+    },
+    {
+      "method": "MoveRejected",
+      "description": "Sent when a submitted move is invalid.",
+      "payload": { "reason": "string" }
+    },
+    {
+      "method": "Error",
+      "description": "Sent when a hub operation fails.",
+      "payload": { "message": "string" }
     }
   ],
   "sessionLifecycle": {
-    "cookieName": "chess_session_id",
-    "cookieLifeMinutes": 5,
-    "sessionBehavior": [
-      "A session is created when StartGame is called with a new session id.",
-      "The session id is stored in the chess_session_id cookie and reused on reconnect.",
-      "The server keeps the session in memory in GameSessionManager.",
-      "Once the snapshot status is no longer InProgress, the game is treated as complete and the session is effectively closed."
-    ]
+    "token": "Returned by StartGame or in MatchFound; pass it to Rejoin.",
+    "reconnectGraceMinutes": 10,
+    "storage": "Sessions are held in server memory and are not durable across server restarts."
   }
 }

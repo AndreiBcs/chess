@@ -1,4 +1,5 @@
 ﻿using chess;
+using Chess.Api.Player;
 using Chess.Engine;
 using chess.Game;
 using Xunit.Abstractions;
@@ -13,6 +14,20 @@ public class GameTests
     public GameTests(ITestOutputHelper output)
     {
         _output = output;
+    }
+
+    [Theory]
+    [InlineData(Color.White, GameStatus.BlackWonByResignation)]
+    [InlineData(Color.Black, GameStatus.WhiteWonByResignation)]
+    public void ResignationReturnsFinalWinnerSnapshot(Color resigningColor, GameStatus expectedStatus)
+    {
+        var game = new chess.Game.Game(new HttpPlayer(Color.White), new HttpPlayer(Color.Black));
+
+        var finalSnapshot = game.Resign(resigningColor);
+
+        Assert.Equal(expectedStatus, finalSnapshot.Status);
+        Assert.Equal(expectedStatus, game.Status);
+        Assert.Same(finalSnapshot, game.Snapshots[^1]);
     }
 
     // dotnet test Chess.Tests --filter "FullyQualifiedName~GameTests.StockfishPlaysStockfish" --logger "console;verbosity=minimal"
